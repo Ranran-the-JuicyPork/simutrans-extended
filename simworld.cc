@@ -4282,14 +4282,6 @@ void karte_t::set_tool( tool_t *tool_in, player_t *player )
 void karte_t::local_set_tool( tool_t *tool_in, player_t * player )
 {
 	tool_in->flags |= tool_t::WFL_LOCAL;
-
-	if (get_scenario())
-	{
-		if (get_scenario()->is_scripted() && !get_scenario()->is_tool_allowed(player, tool_in->get_id())) {
-			tool_in->flags = 0;
-			return;
-		}
-	}
 	// now call init
 	bool init_result = tool_in->init(player);
 	// for unsafe tools init() must return false
