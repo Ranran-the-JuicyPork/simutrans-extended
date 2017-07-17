@@ -15,6 +15,7 @@
 #include "../tpl/stringhashtable_tpl.h"
 #include "../simunits.h"
 
+template<class T> class vector_tpl;
 class tool_selector_t;
 
 /**
@@ -200,6 +201,8 @@ public:
 	const roadsign_desc_t* find_best_upgrade(bool underground);
 
 	static const roadsign_desc_t *find_desc(const char *name) { return table.get(name); }
+
+	static const vector_tpl<const roadsign_desc_t*>& get_available_signs(const waytype_t wt);
 
 	static void set_scale(uint16 scale_factor);
 
