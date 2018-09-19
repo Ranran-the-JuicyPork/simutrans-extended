@@ -465,7 +465,7 @@ void potential_convoy_t::update_vehicle_summary(vehicle_summary_t &vehicle)
 	}
 	if (count > 0)
 	{
-		vehicle.update_summary(vehicles[count - 1]->get_length());
+		vehicle.update_summary();
 	}
 }
 
@@ -574,7 +574,7 @@ void existing_convoy_t::update_vehicle_summary(vehicle_summary_t &vehicle)
 	}
 	if (count > 0)
 	{
-		vehicle.update_summary(convoy.get_vehicle(count-1)->get_desc()->get_length());
+		vehicle.update_summary();
 	}
 }
 

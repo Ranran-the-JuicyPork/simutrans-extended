@@ -7067,7 +7067,7 @@ uint16 convoi_t::get_tile_length() const
 	//     see at the end of vehicle_t::hop()
 	// (2) for length of convoi for loading in stations the length of the last vehicle matters
 	//     see convoi_t::hat_gehalten
-	carunits += max(CARUNITS_PER_TILE/2, vehicle[vehicle_count-1]->get_desc()->get_length());
+	carunits += vehicle[vehicle_count - 1]->get_desc()->get_length();
 
 	uint16 tiles = (carunits + CARUNITS_PER_TILE - 1) / CARUNITS_PER_TILE;
 	return tiles;
@@ -7989,7 +7989,7 @@ void convoi_t::update_vehicle_summary(vehicle_summary_t &vehicle)
 		{
 			vehicle.add_vehicle(*(*i)->get_desc());
 		}
-		vehicle.update_summary(get_vehicle(count-1)->get_desc()->get_length());
+		vehicle.update_summary();
 	}
 }
 
