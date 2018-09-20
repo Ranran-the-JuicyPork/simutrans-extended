@@ -1054,20 +1054,20 @@ void convoi_t::calc_acceleration(uint32 delta_t)
 		const convoi_t::route_info_t &limit_info = route_infos.get_element(next_stop_index - 1);
 		steps_til_limit = route_infos.calc_steps(current_info.steps_from_start, limit_info.steps_from_start);
 		steps_til_brake = steps_til_limit - brake_steps;
-		switch(limit_info.direction)
-		{
-			case ribi_t::north:
-			case ribi_t::west:
-				// BG, 10-11-2011: vehicle_t::hop() reduces the length of the tile, if convoy is going to stop on the tile.
-				// Most probably for eye candy reasons vehicles do not exactly move on their tiles.
-				// We must do the same here to avoid abrupt stopping.
-				sint32 	delta_tile_len = current_info.steps_from_start;
-				if(i > 0) delta_tile_len -= route_infos.get_element(i - 1).steps_from_start;
-				delta_tile_len -= (delta_tile_len/2) + 1;
-				steps_til_limit -= delta_tile_len;
-				steps_til_brake -= delta_tile_len;
-				break;
-		}
+		//switch(limit_info.direction)
+		//{
+		//	case ribi_t::north:
+		//	case ribi_t::west:
+		//		// BG, 10-11-2011: vehicle_t::hop() reduces the length of the tile, if convoy is going to stop on the tile.
+		//		// Most probably for eye candy reasons vehicles do not exactly move on their tiles.
+		//		// We must do the same here to avoid abrupt stopping.
+		//		sint32 	delta_tile_len = current_info.steps_from_start;
+		//		if(i > 0) delta_tile_len -= route_infos.get_element(i - 1).steps_from_start;
+		//		delta_tile_len -= (delta_tile_len/2) + 1;
+		//		steps_til_limit -= delta_tile_len;
+		//		steps_til_brake -= delta_tile_len;
+		//		break;
+		//}
 #ifdef DEBUG_ACCELERATION
 		static const char *debug_fmt1 = "%d) at tile% 4u next limit of% 4d km/h, current speed% 4d km/h,% 6d steps til brake,% 6d steps til stop";
 		dbg->warning("convoi_t::calc_acceleration 1", debug_fmt1, current_route_index - 1, next_stop_index, speed_to_kmh(next_speed_limit), speed_to_kmh(akt_speed), steps_til_brake, steps_til_limit);

@@ -1786,10 +1786,10 @@ void vehicle_t::hop(grund_t* gr)
 		speed_limit = speed_unlimited();
 	}
 
-	if(  check_for_finish  &  leading && (direction==ribi_t::north  || direction==ribi_t::west))
-	{
-		steps_next = (steps_next/2)+1;
-	}
+//	if(  check_for_finish  &  leading && (direction==ribi_t::north  || direction==ribi_t::west))
+//	{
+//		steps_next = (steps_next/2)+1;
+//	}
 
 	// speedlimit may have changed
 	cnv->must_recalc_data();
