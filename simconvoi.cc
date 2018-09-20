@@ -3401,23 +3401,23 @@ void convoi_t::vorfahren()
 
 			// move one train length to the start position ...
 			// in north/west direction, we leave the vehicle away to start as much back as possible
-			ribi_t::ribi neue_direction = front()->get_direction_of_travel();
-			if(neue_direction==ribi_t::south  ||  neue_direction==ribi_t::east)
-			{
-				// drive the convoi to the same position, but do not hop into next tile!
-				if(  train_length%16==0  ) {
-					// any space we need => just add
-					train_length += vehicle[vehicle_count-1]->get_desc()->get_length();
-				}
-				else {
-					// limit train to front of tile
-					train_length += min( (train_length%CARUNITS_PER_TILE)-1, vehicle[vehicle_count-1]->get_desc()->get_length() );
-				}
-			}
-			else
-			{
-				train_length += 1;
-			}
+			//ribi_t::ribi neue_direction = front()->get_direction_of_travel();
+			//if(neue_direction==ribi_t::south  ||  neue_direction==ribi_t::east)
+			//{
+			//	// drive the convoi to the same position, but do not hop into next tile!
+			//	if(  train_length%16==0  ) {
+			//		// any space we need => just add
+			//		train_length += vehicle[vehicle_count-1]->get_desc()->get_length();
+			//	}
+			//	else {
+			//		// limit train to front of tile
+			//		train_length += min( (train_length%CARUNITS_PER_TILE)-1, vehicle[vehicle_count-1]->get_desc()->get_length() );
+			//	}
+			//}
+			//else
+			//{
+			//	train_length += 1;
+			//}
 			train_length = max(1,train_length);
 
 			// now advance all convoi until it is completely on the track
