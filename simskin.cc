@@ -52,6 +52,11 @@ const skin_desc_t* skinverwaltung_t::intown             = NULL;
 const skin_desc_t* skinverwaltung_t::passengers         = NULL;
 const skin_desc_t* skinverwaltung_t::mail               = NULL;
 const skin_desc_t* skinverwaltung_t::goods              = NULL;
+const skin_desc_t* skinverwaltung_t::happy              = NULL;
+const skin_desc_t* skinverwaltung_t::unhappy            = NULL;
+const skin_desc_t* skinverwaltung_t::no_route           = NULL;
+const skin_desc_t* skinverwaltung_t::too_slow           = NULL;
+const skin_desc_t* skinverwaltung_t::railway_signal     = NULL;
 const skin_desc_t* skinverwaltung_t::station_type       = NULL;
 const skin_desc_t* skinverwaltung_t::seasons_icons      = NULL;
 const skin_desc_t* skinverwaltung_t::message_options    = NULL;
@@ -120,6 +125,11 @@ static spezial_obj_tpl<skin_desc_t> const symbol_objekte[] = {
 	{ &skinverwaltung_t::passengers,         "Passagiere"     },
 	{ &skinverwaltung_t::mail,               "Post"           },
 	{ &skinverwaltung_t::goods,              "Waren"          },
+	{ &skinverwaltung_t::happy,              "Happy"          },
+	{ &skinverwaltung_t::unhappy,            "Unhappy"        },
+	{ &skinverwaltung_t::no_route,           "NoRoute"        },
+	{ &skinverwaltung_t::too_slow,           "TooSlow"        },
+	{ &skinverwaltung_t::railway_signal,     "RailwaySignal"  },
 	{ NULL, NULL }
 };
 
