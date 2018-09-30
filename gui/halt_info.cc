@@ -386,24 +386,36 @@ void halt_info_t::draw(scr_coord pos, scr_size size)
 			left += display_proportional(left, top, info_buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 			// happy
 			display_color_img(skinverwaltung_t::happy->get_image_id(0), left, top, 0, false, false);
+			if (abs((int)(left - get_mouse_x())) < 14 && abs((int)(top - get_mouse_y())) < 10) {
+				win_set_tooltip(left, top, translator::translate("HALT_TOOLTIP_HELP_HAPPY"), 0);
+			}
 			left += 10;
 			info_buf.clear();
 			// unhappy
 			info_buf.printf(",  %d", halt->haltestelle_t::get_pax_unhappy());
 			left += display_proportional(left, top, info_buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 			display_color_img(skinverwaltung_t::unhappy->get_image_id(0), left, top, 0, false, false);
+			if (abs((int)(left - get_mouse_x())) < 14 && abs((int)(top - get_mouse_y())) < 10) {
+				win_set_tooltip(left, top, translator::translate("HALT_TOOLTIP_HELP_UNHAPPY"), 0);
+			}
 			left += 10;
 			info_buf.clear();
 			// no route
 			info_buf.printf(",  %d", halt->haltestelle_t::get_pax_no_route());
 			left += display_proportional(left, top, info_buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 			display_color_img(skinverwaltung_t::no_route->get_image_id(0), left, top, 0, false, false);
+			if (abs((int)(left - get_mouse_x())) < 14 && abs((int)(top - get_mouse_y())) < 10) {
+				win_set_tooltip(left, top, translator::translate("HALT_TOOLTIP_HELP_NO_ROUTE"), 0);
+			}
 			left += 10;
 			info_buf.clear();
 			// too slow (extended unique)
 			info_buf.printf(",  %d", halt->haltestelle_t::get_pax_too_slow());
 			left += display_proportional(left, top, info_buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 			display_color_img(skinverwaltung_t::too_slow->get_image_id(0), left, top, 0, false, false);
+			if (abs((int)(left - get_mouse_x())) < 14 && abs((int)(top - get_mouse_y())) < 10) {
+				win_set_tooltip(left, top, translator::translate("HALT_TOOLTIP_HELP_TOO_SLOW"), 0);
+			}
 		}
 		else {
 			// current style
