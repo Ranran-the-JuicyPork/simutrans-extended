@@ -189,11 +189,11 @@ void convoi_detail_t::draw(scr_coord pos, scr_size size)
 			// Current working method
 			rail_vehicle_t* rv1 = (rail_vehicle_t*)v1;
 			rail_vehicle_t* rv2 = (rail_vehicle_t*)cnv->get_vehicle(cnv->get_vehicle_count() - 1);
-			const char* current_signal_method = rv1->is_leading() ? roadsign_t::get_working_method_name(rv1->get_working_method()) : roadsign_t::get_working_method_name(rv2->get_working_method());
+			const char* current_working_method = rv1->is_leading() ? roadsign_t::get_working_method_name(rv1->get_working_method()) : roadsign_t::get_working_method_name(rv2->get_working_method());
 			buf.clear();
 			buf.printf("%s: ", translator::translate("Current working method"));
 			offset_x += display_proportional_clip(offset_x, offset_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-			if (current_signal_method && current_signal_method != "drive_by_sight"){
+			if (current_working_method && current_working_method != "drive_by_sight"){
 				display_color_img(skinverwaltung_t::railway_signal->get_image_id(0), offset_x, offset_y, 0, false, false);
 				if (abs((int)(offset_x + SYMBOL_ICON_WIDTH / 2 - get_mouse_x())) < SYMBOL_ICON_WIDTH / 2 + 1 && abs((int)(offset_y + LINESPACE / 2 - get_mouse_y())) < LINESPACE / 2 + 2) {
 					win_set_tooltip(offset_x + SYMBOL_ICON_WIDTH / 2, offset_y, translator::translate("SYMBOL_HELP_SIGNAL_METHOD"), 0);
@@ -201,7 +201,7 @@ void convoi_detail_t::draw(scr_coord pos, scr_size size)
 				offset_x += SYMBOL_ICON_WIDTH;
 			}
 			buf.clear();
-			buf.printf("%s", translator::translate(current_signal_method));
+			buf.printf("%s", translator::translate(current_working_method));
 			display_proportional_clip( offset_x, offset_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true );
 			offset_y += LINESPACE;
 		}
