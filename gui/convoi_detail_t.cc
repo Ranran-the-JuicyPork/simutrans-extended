@@ -196,7 +196,7 @@ void convoi_detail_t::draw(scr_coord pos, scr_size size)
 			if (current_working_method && current_working_method != "drive_by_sight"){
 				display_color_img(skinverwaltung_t::railway_signal->get_image_id(0), offset_x, offset_y, 0, false, false);
 				if (abs((int)(offset_x + SYMBOL_ICON_WIDTH / 2 - get_mouse_x())) < SYMBOL_ICON_WIDTH / 2 + 1 && abs((int)(offset_y + LINESPACE / 2 - get_mouse_y())) < LINESPACE / 2 + 2) {
-					win_set_tooltip(offset_x + SYMBOL_ICON_WIDTH / 2, offset_y, translator::translate("SYMBOL_HELP_SIGNAL_METHOD"), 0);
+					win_set_tooltip(offset_x + SYMBOL_ICON_WIDTH / 2, offset_y, translator::translate("SYMBOL_HELP_WORKING_METHOD"), 0);
 				}
 				offset_x += SYMBOL_ICON_WIDTH;
 			}
