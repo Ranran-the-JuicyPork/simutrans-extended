@@ -141,6 +141,12 @@ uint8 env_t::cities_like_water = 60;
 bool env_t::left_to_right_graphs = true;
 uint32 env_t::tooltip_delay;
 uint32 env_t::tooltip_duration;
+//sint8 env_t::show_money_message;
+sint8 env_t::show_station_coverage_goods;
+sint8 env_t::show_station_coverage_player;
+
+//std::string env_t::fontname = FONT_PATH_X "prop.fnt";
+//uint8 env_t::fontsize = 11;
 
 uint8 env_t::front_window_bar_color;
 uint8 env_t::front_window_text_color;
@@ -176,6 +182,8 @@ void env_t::init()
 	/* station stuff */
 	use_transparency_station_coverage = true;
 	station_coverage_show = 0;
+	show_station_coverage_goods = 4; // show all
+	show_station_coverage_player = 0; // show all
 
 	show_names = 3;
 	player_finance_display_account = true;

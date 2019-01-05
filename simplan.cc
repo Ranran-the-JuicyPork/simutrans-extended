@@ -628,6 +628,21 @@ void planquadrat_t::display_overlay(const sint16 xpos, const sint16 ypos) const
 			image_id img = overlay_img(gr);
 
 			for(int halt_count = 0; halt_count < halt_list_count; halt_count++) {
+				switch (env_t::show_station_coverage_player) {
+					case 0: break;
+					case 1: if (halt_list[halt_count].halt->get_owner() != welt->get_active_player()) { continue; } break;
+					case 2: if (halt_list[halt_count].halt->get_owner() == welt->get_active_player()) { continue; } break;
+					case 3: if (halt_count != 0) { continue; } break;
+					case 4: if (halt_list_count == 1) { continue; } break;
+					default: break;
+				}
+				switch (env_t::show_station_coverage_goods) {
+					case 0: continue;
+					case 1: if (!halt_list[halt_count].halt->get_pax_enabled()) { continue; } break;
+					case 2: if (!halt_list[halt_count].halt->get_mail_enabled()) { continue; } break;
+					case 3: if (!halt_list[halt_count].halt->get_ware_enabled()) {continue; } break;
+					default: break;
+				}
 				const PLAYER_COLOR_VAL transparent = PLAYER_FLAG | OUTLINE_FLAG | (halt_list[halt_count].halt->get_owner()->get_player_color1() + 4);
 				display_img_blend( img, xpos, ypos, transparent | TRANSPARENT25_FLAG, 0, 0);
 			}
@@ -664,6 +679,21 @@ void planquadrat_t::display_overlay(const sint16 xpos, const sint16 ypos) const
 			const sint16 off = (raster_tile_width>>5);
 			// suitable start search
 			for (size_t h = halt_list_count; h-- != 0;) {
+				switch (env_t::show_station_coverage_player) {
+					case 0: break;
+					case 1: if (halt_list[h].halt->get_owner() != welt->get_active_player()) { continue; } break;
+					case 2: if (halt_list[h].halt->get_owner() == welt->get_active_player()) { continue; } break;
+					case 3: if (h != 0) { continue; } break;
+					case 4: if (halt_list_count == 1) { continue; } break;
+					default: break;
+				}
+				switch (env_t::show_station_coverage_goods) {
+					case 0: continue;
+					case 1: if (!halt_list[h].halt->get_pax_enabled()) { continue; } break;
+					case 2: if (!halt_list[h].halt->get_mail_enabled()) { continue; } break;
+					case 3: if (!halt_list[h].halt->get_ware_enabled()) { continue; } break;
+					default: break;
+				}
 				display_fillbox_wh_clip(x - h * off, y + h * off, r, r, PLAYER_FLAG | (halt_list[h].halt->get_owner()->get_player_color1() + 4), kartenboden_dirty);
 			}
 		}

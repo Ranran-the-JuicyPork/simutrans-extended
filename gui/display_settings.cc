@@ -54,7 +54,8 @@
 
 #define USE_TRANSPARENCY_STATIONS		(SEPERATE2+4)
 #define SHOW_STATION_COVERAGE			(USE_TRANSPARENCY_STATIONS+13)
-#define SHOW_STATION_SIGNS				(SHOW_STATION_COVERAGE+13)
+#define STATION_COVERAGE_USER			(SHOW_STATION_COVERAGE+13)
+#define SHOW_STATION_SIGNS				(STATION_COVERAGE_USER+13)
 #define SHOW_STATION_GOODS				(SHOW_STATION_SIGNS+13)
 
 #define SEPERATE3						(SHOW_STATION_GOODS+13)
@@ -91,6 +92,10 @@
 color_gui_t::color_gui_t() :
 gui_frame_t( translator::translate("Helligk. u. Farben") )
 {
+	// Use one of the edit controls to calculate width
+	inp_underground_level.set_width_by_len(3);
+	const scr_coord_val edit_width = inp_underground_level.get_size().w;
+
 	// brightness
 	brightness.set_pos( scr_coord(L_DIALOG_WIDTH-10-40,BRIGHTNESS-1) );
 	brightness.set_size( scr_size( 40, D_BUTTON_HEIGHT-1 ) );
@@ -181,11 +186,28 @@ gui_frame_t( translator::translate("Helligk. u. Farben") )
 
 	//15
 	buttons[++b].set_pos( scr_coord(10,SHOW_STATION_COVERAGE) );
-	buttons[b].set_typ(button_t::square_state);
-	buttons[b].set_text("show station coverage");
+	buttons[b].set_typ(button_t::arrowright);
+	station_coverage_label.init("show station coverage", scr_coord(10, SHOW_STATION_COVERAGE) + scr_coord(buttons[b].get_size().w + D_H_SPACE, 0));
+	station_coverage_label.align_to(&buttons[b], ALIGN_CENTER_V);
+	add_component(&station_coverage_label);
+	station_coverage_goods_label.init("", scr_coord(10, SHOW_STATION_COVERAGE));
+	station_coverage_goods_label.set_width(edit_width);
+	add_component(&station_coverage_goods_label);
 	buttons[b].set_tooltip("Show from how far that passengers or goods will come to use your stops. Toggle with the v key.");
 
-	//16
+	//16 Show station coverage left/right arrows
+	buttons[27].set_pos( scr_coord(10, STATION_COVERAGE_USER) );
+	buttons[27].set_typ(button_t::arrowleft);
+	buttons[27].set_tooltip("Toggle the target player of stops coverage display.");
+	// Show station coverage label
+	station_coverage_player_label.init("", scr_coord(buttons[27].get_size().w + D_H_SPACE + 10, STATION_COVERAGE_USER));
+	station_coverage_player_label.align_to(&buttons[27], ALIGN_CENTER_V);
+	add_component(&station_coverage_player_label);
+	//17
+	buttons[28].set_pos( scr_coord(10, STATION_COVERAGE_USER) );
+	buttons[28].set_typ(button_t::arrowright);
+	
+	//18
 	buttons[++b].set_pos( scr_coord(10,UNDERGROUND) );
 	buttons[b].set_typ(button_t::square_state);
 	buttons[b].set_text("underground mode");
@@ -273,6 +295,8 @@ gui_frame_t( translator::translate("Helligk. u. Farben") )
 	add_component( buttons+13 );
 	add_component( buttons+14 );
 	add_component( buttons+15 );
+	add_component( buttons+27 );
+	add_component( buttons+28 );
 	add_component( buttons+18 );
 	add_component( buttons+19 );
 	add_component( buttons+8 );
@@ -319,6 +343,7 @@ void color_gui_t::set_windowsize(scr_size size)
 	column = size.w - D_MARGIN_RIGHT - D_ARROW_RIGHT_WIDTH;
 	buttons[1].set_pos            ( scr_coord( column, buttons[1].get_pos().y            ) );
 	buttons[13].set_pos           ( scr_coord( column, buttons[13].get_pos().y           ) );
+	buttons[28].set_pos           ( scr_coord( column, buttons[28].get_pos().y           ) );
 
 	column = size.w - D_MARGINS_X;
 	divider1.set_width            ( column );
@@ -380,7 +405,8 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t v)
 		env_t::use_transparency_station_coverage = !env_t::use_transparency_station_coverage;
 		buttons[14].pressed ^= 1;
 	} else if((buttons+15)==comp) {
-		env_t::station_coverage_show = env_t::station_coverage_show==0 ? 0xFF : 0;
+		env_t::show_station_coverage_goods = (env_t::show_station_coverage_goods + 1) % 5;
+		env_t::station_coverage_show = env_t::show_station_coverage_goods == 0 ? 0 : 0xFF;
 	} else if((buttons+16)==comp) {
 		// see simtool.cc::tool_show_underground_t::init
 		grund_t::set_underground_mode(buttons[16].pressed ? grund_t::ugm_none : grund_t::ugm_all, inp_underground_level.get_value());
@@ -433,6 +459,17 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t v)
 		env_t::left_to_right_graphs = !env_t::left_to_right_graphs;
 		buttons[21].pressed ^= 1;
 	}
+
+	// Show station coverage player
+	if ((buttons + 27) == comp) {
+		env_t::show_station_coverage_player = (env_t::show_station_coverage_player + 4) % 5;
+	}
+	if ((buttons + 28) == comp) {
+		env_t::show_station_coverage_player = (env_t::show_station_coverage_player + 1) % 5;
+	}
+	//if (&money_booking == comp) {
+	//	env_t::show_money_message = v.i;
+	//}
 
 	welt->set_dirty();
 	return true;
@@ -530,6 +567,47 @@ void color_gui_t::draw(scr_coord pos, scr_size size)
 	len = 15+display_proportional_clip(x+10, y+LOOP_DATA, translator::translate("Sim:"), ALIGN_LEFT, SYSCOL_TEXT, true);
 	sprintf( buf, "%d%c%d", loops/10, get_fraction_sep(), loops%10 );
 	display_proportional_clip(x+len, y+LOOP_DATA, buf, ALIGN_LEFT, farbe, true);
+
+	//station_coverage_label
+		switch (env_t::show_station_coverage_goods) {
+		case 0:
+			station_coverage_goods_label.set_text("");
+			break;
+		case 1:
+			station_coverage_goods_label.set_text("Passagiere");
+			break;
+		case 2:
+			station_coverage_goods_label.set_text("Post");
+			break;
+		case 3:
+			station_coverage_goods_label.set_text("Fracht");
+			break;
+		case 4:
+			station_coverage_goods_label.set_text("");
+			break;
+		default:
+			station_coverage_goods_label.set_text("internal ERROR");
+	}
+	station_coverage_goods_label.set_pos(scr_coord(gui_frame_t::get_windowsize().w - D_MARGIN_RIGHT - station_coverage_goods_label.get_size().w, station_coverage_goods_label.get_pos().y));
+	switch (env_t::show_station_coverage_player) {
+	case 0:
+		station_coverage_player_label.set_text("coverage of all players");
+		break;
+	case 1:
+		station_coverage_player_label.set_text("coverage of active player");
+		break;
+	case 2:
+		station_coverage_player_label.set_text("coverage of nonactive player");
+		break;
+	case 3:
+		station_coverage_player_label.set_text("coverage of the main station");
+		break;
+	case 4:
+		station_coverage_player_label.set_text("coverage of multi access");
+		break;
+	default:
+		station_coverage_player_label.set_text("internal ERROR");
+	}
 
 	// Added by : Knightly
 	PLAYER_COLOR_VAL text_colour, figure_colour;

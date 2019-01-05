@@ -233,6 +233,8 @@ public:
 
 	/// show station coverage indicators
 	static uint8 station_coverage_show;
+	static sint8 show_station_coverage_goods;
+	static sint8 show_station_coverage_player;
 
 	/// display station coverage by transparent overlay
 	/// (otherwise by colored squares)
