@@ -195,7 +195,7 @@ gui_frame_t( translator::translate("Helligk. u. Farben") )
 	add_component(&station_coverage_goods_label);
 	buttons[b].set_tooltip("Show from how far that passengers or goods will come to use your stops. Toggle with the v key.");
 
-	//16 Show station coverage left/right arrows
+	// Show station coverage left/right arrows
 	buttons[27].set_pos( scr_coord(10, STATION_COVERAGE_USER) );
 	buttons[27].set_typ(button_t::arrowleft);
 	buttons[27].set_tooltip("Toggle the target player of stops coverage display.");
@@ -203,11 +203,10 @@ gui_frame_t( translator::translate("Helligk. u. Farben") )
 	station_coverage_player_label.init("", scr_coord(buttons[27].get_size().w + D_H_SPACE + 10, STATION_COVERAGE_USER));
 	station_coverage_player_label.align_to(&buttons[27], ALIGN_CENTER_V);
 	add_component(&station_coverage_player_label);
-	//17
 	buttons[28].set_pos( scr_coord(10, STATION_COVERAGE_USER) );
 	buttons[28].set_typ(button_t::arrowright);
 	
-	//18
+	//16
 	buttons[++b].set_pos( scr_coord(10,UNDERGROUND) );
 	buttons[b].set_typ(button_t::square_state);
 	buttons[b].set_text("underground mode");
