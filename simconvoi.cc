@@ -6101,12 +6101,14 @@ void convoi_t::calc_loading()
 	int fracht_menge = 0;
 	int seats_max = 0;
 	int seats_menge = 0;
+	int standing_max = 0;
 
 	for(unsigned i=0; i<vehicle_count; i++) {
 		const vehicle_t* v = vehicle[i];
 		if ( v->get_cargo_type() == goods_manager_t::passengers ) {
 			seats_max += v->get_cargo_max();
 			seats_menge += v->get_total_cargo();
+			standing_max += v->get_desc()->get_overcrowded_capacity();
 		}
 		else {
 			fracht_max += v->get_cargo_max();
@@ -6118,7 +6120,9 @@ void convoi_t::calc_loading()
 		fracht_max += seats_max;
 		fracht_menge += seats_menge;
 	}
-	loading_level = fracht_max > 0 ? (fracht_menge*100)/fracht_max : 100;
+	overcrowded_capacity_rate = standing_max ? standing_max*100/(fracht_max+standing_max) : 0;
+	overcrowding_level = standing_max ? get_overcrowded()*100/standing_max : 0;
+	loading_level = fracht_max > 0 ? ((fracht_menge-get_overcrowded())*100)/fracht_max : 100;
 	loading_limit = 0;	// will be set correctly from hat_gehalten() routine
 	free_seats = seats_max > seats_menge ? seats_max - seats_menge : 0;
 

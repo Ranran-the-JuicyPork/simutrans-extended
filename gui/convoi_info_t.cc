@@ -279,8 +279,14 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv)
 	add_component(&scrolly);
 
 	filled_bar.add_color_value(&cnv->get_loading_limit(), COL_YELLOW);
-	filled_bar.add_color_value(&cnv->get_loading_level(), COL_GREEN);
+	filled_bar.add_color_value(&cnv->get_loading_level(), cnv->get_loading_level() >= 100 ? COL_ORANGE : COL_GREEN);
 	add_component(&filled_bar);
+
+	// overcrowding capacity bar
+	if (cnv->get_overcrowded_capacity_rate()) {
+		overcrowding_bar.add_color_value(&cnv->get_overcrowding_level(), cnv->get_overcrowding_level() == 100 ? COL_DARK_PURPLE : COL_DARK_PURPLE+1);
+		add_component(&overcrowding_bar);
+	}
 
 	speed_bar.set_base(max_convoi_speed);
 	speed_bar.set_vertical(false);
@@ -1182,9 +1188,15 @@ void convoi_info_t::set_windowsize(scr_size size)
 
 	// convoi load indicator
 	filled_bar.set_pos(scr_coord(BUTTON3_X,pos_y+3*LINESPACE));
-	filled_bar.set_size(scr_size(view.get_pos().x - BUTTON3_X - D_INDICATOR_HEIGHT, 4));
+	filled_bar.set_size(scr_size((view.get_pos().x - BUTTON3_X - D_INDICATOR_HEIGHT)*(100-(cnv->get_overcrowded_capacity_rate()))/100, 4));
 
-	// convoi load indicator
+	if (cnv->get_overcrowded_capacity_rate()) {
+		int offset_x = (view.get_pos().x - BUTTON3_X - D_INDICATOR_HEIGHT)*(100-(cnv->get_overcrowded_capacity_rate()))/100 + 1;
+		overcrowding_bar.set_pos(scr_coord(BUTTON3_X + offset_x, pos_y + 3 * LINESPACE));
+		overcrowding_bar.set_size(scr_size((view.get_pos().x - BUTTON3_X - D_INDICATOR_HEIGHT)*(cnv->get_overcrowded_capacity_rate())/100, 4));
+	}
+
+	// convoi progress indicator
 	route_bar.set_pos(scr_coord(BUTTON3_X,pos_y+5*LINESPACE));
 	route_bar.set_size(scr_size(view.get_pos().x - BUTTON3_X - D_INDICATOR_HEIGHT, 4));
 }

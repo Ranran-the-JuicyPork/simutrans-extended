@@ -303,6 +303,8 @@ private:
 	* @date  12.06.2003
 	*/
 	sint32 loading_level;
+	sint32 overcrowding_level;
+	sint32 overcrowded_capacity_rate;
 
 	/**
 	* At which loading level is the train allowed to start? 0 during driving.
@@ -1305,6 +1307,8 @@ public:
 	* @date  12.06.2003
 	*/
 	inline const sint32 &get_loading_level() const { return loading_level; }
+	inline const sint32 &get_overcrowding_level() const { return overcrowding_level; }
+	inline const sint32 &get_overcrowded_capacity_rate() const { return overcrowded_capacity_rate; }
 
 	/**
 	* At which loading level is the train allowed to start? 0 during driving.

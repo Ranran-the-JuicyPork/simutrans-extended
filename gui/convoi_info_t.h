@@ -72,6 +72,7 @@ private:
 	gui_label_t sort_label;
 	gui_textinput_t input;
 	gui_speedbar_t filled_bar;
+	gui_speedbar_t overcrowding_bar;
 	gui_speedbar_t speed_bar;
 	gui_speedbar_t route_bar;
 	gui_chart_t chart;
