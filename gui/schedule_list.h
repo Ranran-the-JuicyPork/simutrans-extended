@@ -49,7 +49,8 @@ private:
 
 	gui_combobox_t livery_selector;
 
-	sint32 selection, capacity, load, loadfactor;
+	sint32 selection, capacity, load, loadfactor, capacity_factor, overcrowding_factor;
+	uint32 line_overcrowded_capacity;
 
 	uint32 old_line_count;
 	schedule_t *last_schedule;

@@ -279,12 +279,12 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv)
 	add_component(&scrolly);
 
 	filled_bar.add_color_value(&cnv->get_loading_limit(), COL_YELLOW);
-	filled_bar.add_color_value(&cnv->get_loading_level(), cnv->get_loading_level() >= 100 ? COL_ORANGE : COL_GREEN);
+	filled_bar.add_color_value(&cnv->get_loading_level(), COL_GREEN);
 	add_component(&filled_bar);
 
 	// overcrowding capacity bar
 	if (cnv->get_overcrowded_capacity_rate()) {
-		overcrowding_bar.add_color_value(&cnv->get_overcrowding_level(), cnv->get_overcrowding_level() == 100 ? COL_DARK_PURPLE : COL_DARK_PURPLE+1);
+		overcrowding_bar.add_color_value(&cnv->get_overcrowding_level(), COL_DARK_PURPLE);
 		add_component(&overcrowding_bar);
 	}
 
@@ -670,7 +670,7 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 			const int freight_weight = gross_weight - empty_weight; // cnv->get_sum_gesamtweight() - cnv->get_sum_weight();
 			sprintf(tmp, translator::translate(freight_weight ? "%g (%g) t" : "%g t"), gross_weight * 0.001f, freight_weight * 0.001f);
 			display_proportional(pos_x + len, pos_y, tmp, ALIGN_LEFT,
-				cnv->get_overcrowded() > 0 ? COL_DARK_PURPLE : // overcrowded
+				//cnv->get_overcrowded() > 0 ? COL_DARK_PURPLE : // overcrowded
 				!cnv->get_finance_history(0, convoi_t::CONVOI_TRANSPORTED_GOODS) && !cnv->get_finance_history(1, convoi_t::CONVOI_TRANSPORTED_GOODS) ? COL_YELLOW : // nothing moved in this and past month
 				SYSCOL_TEXT, true);
 		}

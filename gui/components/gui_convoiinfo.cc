@@ -33,12 +33,12 @@ gui_convoiinfo_t::gui_convoiinfo_t(convoihandle_t cnv)
     filled_bar.set_pos(scr_coord(2, 33));
     filled_bar.set_size(scr_size(100 - cnv->get_overcrowded_capacity_rate(), 4));
     filled_bar.add_color_value(&cnv->get_loading_limit(), COL_YELLOW);
-	filled_bar.add_color_value(&cnv->get_loading_level(), cnv->get_loading_level() >= 100 ? COL_ORANGE : COL_GREEN);
+	filled_bar.add_color_value(&cnv->get_loading_level(), COL_GREEN);
 	// overcrowding capacity bar
 	if (cnv->get_overcrowded_capacity_rate()) {
 		overcrowding_bar.set_pos(scr_coord(3 + 100 - cnv->get_overcrowded_capacity_rate(), 33));
 		overcrowding_bar.set_size(scr_size(cnv->get_overcrowded_capacity_rate(), 4));
-		overcrowding_bar.add_color_value(&cnv->get_overcrowding_level(), cnv->get_overcrowding_level() == 100 ? COL_DARK_PURPLE : COL_DARK_PURPLE + 1);
+		overcrowding_bar.add_color_value(&cnv->get_overcrowding_level(), COL_DARK_PURPLE);
 	}
 }
 

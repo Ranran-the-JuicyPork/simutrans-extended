@@ -33,6 +33,7 @@ private:
 	convoihandle_t cnv;
 
 	gui_speedbar_t filled_bar;
+	gui_speedbar_t overcrowding_bar;
 
 public:
 	/**

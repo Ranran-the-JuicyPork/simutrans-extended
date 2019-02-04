@@ -126,8 +126,9 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	stop_infos()
 {
 	capacity = load = 0;
+	line_overcrowded_capacity = 0;
 	selection = -1;
-	loadfactor = 0;
+	loadfactor = capacity_factor = overcrowding_factor = 0;
 	schedule_filter[0] = 0;
 	old_schedule_filter[0] = 0;
 	last_schedule = NULL;
@@ -188,6 +189,8 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	add_component(&inp_name);
 
 	// load display
+	filled_bar.add_color_value(&overcrowding_factor, COL_DARK_PURPLE);
+	filled_bar.add_color_value(&capacity_factor, MN_GREY0);
 	filled_bar.add_color_value(&loadfactor, COL_GREEN);
 	filled_bar.set_pos(scr_coord(LINE_NAME_COLUMN_WIDTH + 3*D_BUTTON_WIDTH + 10, 14 + SCL_HEIGHT + D_BUTTON_HEIGHT + 4 + 2));
 	filled_bar.set_visible(false);
@@ -582,10 +585,14 @@ void schedule_list_gui_t::display(scr_coord pos)
 	display_proportional_clip(pos.x + LINE_NAME_COLUMN_WIDTH, pos.y + 7 + SCL_HEIGHT + D_MARGIN_TOP, buf, ALIGN_LEFT, line->get_state_color(), true);
 	
 	capacity = load = loadfactor = 0; // total capacity and load of line (=sum of all conv's cap/load)
+	overcrowding_factor = 0;
+	capacity_factor = 100;
+	line_overcrowded_capacity = 0;
 
 	sint64 profit = line->get_finance_history(0,LINE_PROFIT);
 	
 	sint64 total_trip_times = 0;
+	sint32 total_standing_pax = 0;
 	sint64 convoys_with_trip_data = 0;
 	for (int i = 0; i<icnv; i++) {
 		convoihandle_t const cnv = line->get_convoy(i);
@@ -597,9 +604,13 @@ void schedule_list_gui_t::display(scr_coord pos)
 				convoys_with_trip_data++;
 			}
 			for (unsigned j = 0; j<cnv->get_vehicle_count(); j++) {
-				capacity += cnv->get_vehicle(j)->get_cargo_max();
+				capacity += (sint32)cnv->get_vehicle(j)->get_cargo_max();
 				load += cnv->get_vehicle(j)->get_total_cargo();
+				if (cnv->get_vehicle(j)->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS) {
+					line_overcrowded_capacity += cnv->get_vehicle(j)->get_desc()->get_overcrowded_capacity();
+				}
 			}
+			total_standing_pax += cnv->get_overcrowded();
 		}
 	}
 
@@ -607,7 +618,13 @@ void schedule_list_gui_t::display(scr_coord pos)
 	// conv can consist of only 1 vehicle, which has no cap (eg. locomotive)
 	// and we do not like to divide by zero, do we?
 	if (capacity > 0) {
-		loadfactor = (load * 100) / capacity;
+		loadfactor = ((load-total_standing_pax) * 100) / capacity;
+	}
+	if (line_overcrowded_capacity > 0) {
+		// calculate the ratio of capacity to overcrowded capacity
+		overcrowding_factor = ((total_standing_pax + capacity) * 100) / ((sint32)line_overcrowded_capacity+capacity);
+		capacity_factor = (capacity * 100) / ((sint32)line_overcrowded_capacity + capacity);
+		loadfactor = loadfactor*capacity_factor/100;
 	}
 
 	sint64 service_frequency = convoys_with_trip_data ? total_trip_times / convoys_with_trip_data : 0; // In ticks.
@@ -661,7 +678,12 @@ void schedule_list_gui_t::display(scr_coord pos)
 		int rest_width = max( (get_windowsize().w-LINE_NAME_COLUMN_WIDTH)/2, max(len2,len) );
 		number_to_string(ctmp, capacity, 2);
 		buf.clear();
-		buf.printf( translator::translate("Capacity: %s\nLoad: %d (%d%%)"), ctmp, load, loadfactor );
+		buf.printf("%s %s", translator::translate("Capacity:"), ctmp);
+		if (line_overcrowded_capacity) {
+			buf.printf(" (%d)", line_overcrowded_capacity);
+		}
+		buf.printf("\n");
+		buf.printf("%s: %d (%d%%)", translator::translate("loaded"), load+total_standing_pax, (load + total_standing_pax) * 100 / capacity);
 		display_multiline_text(pos.x + LINE_NAME_COLUMN_WIDTH + rest_width + 24, pos.y+16 + 14 + SCL_HEIGHT + D_BUTTON_HEIGHT*2 +4 , buf, SYSCOL_TEXT);
 	}
 	bt_line_class_manager.disable();
