@@ -22,7 +22,7 @@ using std::string;
  */
 static vehicle_desc_t::engine_t get_engine_type(char const* const engine_type)
 {
-	vehicle_desc_t::engine_t uv8 = vehicle_desc_t::diesel;
+	vehicle_desc_t::engine_t uv8 = vehicle_desc_t::unknown;
 
 	if (!STRICMP(engine_type, "diesel")) {
 		uv8 = vehicle_desc_t::diesel;
@@ -171,7 +171,8 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	// Standard 10, 0x300 - whether tall (for height restricted bridges)
 	// Standard 11, 0x400 - 16-bit sound 
 	// Standard 11, 0x500 - classes
-	version += 0x500;
+	// Standard 11, 0x600 - prev=any, fixed_coupling (currently only affect depot display)
+	version += 0x600;
 
 	node.write_uint16(fp, version, pos);
 
@@ -591,8 +592,13 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	//
 	// following/leader vehicle constrains
 	//
+	uint8 coupling_constraint = 0; // constraint flags
+	coupling_constraint |= vehicle_desc_t::CAN_BE_AT_FRONT | vehicle_desc_t::CAN_BE_AT_REAR;
+
 	uint8 leader_count = 0;
+	bool can_be_at_front = true;
 	bool found;
+	bool prev_has_none = false;
 	do {
 		char buf[40];
 
@@ -605,14 +611,34 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 		if (found) {
 			if (!STRICMP(str.c_str(), "none")) {
 				str = "";
+				prev_has_none = true;
 			}
-			xref_writer_t::instance()->write_obj(fp, node, obj_vehicle, str.c_str(), false);
-			leader_count++;
+			if (!STRICMP(str.c_str(), "any"))
+			{
+				// "Any" should not be specified with anything else.
+				can_be_at_front = false;
+				break;
+			}
+			else
+			{
+				xref_writer_t::instance()->write_obj(fp, node, obj_vehicle, str.c_str(), false);
+				leader_count++;
+			}
 		}
 	} while (found);
 
+	// set front-end flags
+	if (leader_count == 1 && prev_has_none && can_be_at_front) {
+		coupling_constraint |= vehicle_desc_t::ONLY_BE_AT_FRONT; // only has "none"
+	}
+	else if (!can_be_at_front || (!prev_has_none && leader_count)) {
+		coupling_constraint &= ~vehicle_desc_t::CAN_BE_AT_FRONT;
+		coupling_constraint &= ~vehicle_desc_t::ONLY_BE_AT_FRONT;
+	}
+
 	uint8 trailer_count = 0;
 	bool can_be_at_rear = true;
+	bool next_has_none = false;
 	do {
 		char buf[40];
 
@@ -628,6 +654,7 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 			if (!STRICMP(str.c_str(), "none")) 
 			{
 				str = "";
+				next_has_none = true;
 			}
 			if(!STRICMP(str.c_str(), "any"))
 			{
@@ -642,6 +669,23 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 			}
 		}
 	} while (found);
+
+	// set back-end flags
+	if (trailer_count == 1 && next_has_none && can_be_at_rear) {
+		coupling_constraint |= vehicle_desc_t::ONLY_BE_AT_REAR; // only has "none"
+	}
+	else if (!can_be_at_rear || (!next_has_none && trailer_count)) {
+		coupling_constraint &= ~vehicle_desc_t::CAN_BE_AT_REAR;
+		coupling_constraint &= ~vehicle_desc_t::ONLY_BE_AT_REAR;
+	}
+
+	// set de-coupling outside depot flags
+	if (obj.get_int("fixed_coupling_prev", 0)) {
+		coupling_constraint |= vehicle_desc_t::fixed_coupling_prev;
+	}
+	if (obj.get_int("fixed_coupling_next", 0)) {
+		coupling_constraint |= vehicle_desc_t::fixed_coupling_next;
+	}
 
 	// Upgrades: these are the vehicle types to which this vehicle
 	// can be upgraded. "None" means that it cannot be upgraded. 
@@ -941,7 +985,8 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	node.write_uint16(fp, air_resistance_hundreds, pos);
 	pos += sizeof(uint16);
 
-	node.write_uint8(fp, (uint8)can_be_at_rear, pos);
+	// can_be_at_rear was integrated into one variable
+	node.write_uint8(fp, coupling_constraint, pos);
 	pos += sizeof(uint8);
 
 	// Obsolescence. Zeros indicate that simuconf.tab values should be used.

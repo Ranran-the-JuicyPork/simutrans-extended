@@ -105,6 +105,15 @@ public:
 		}
 	}
 
+	enum veh_constraint_t {
+		CAN_BE_AT_FRONT = 1,
+		CAN_BE_AT_REAR = 2,
+		ONLY_BE_AT_FRONT = 4,
+		ONLY_BE_AT_REAR = 8,
+		fixed_coupling_prev = 16,
+		fixed_coupling_next = 32
+	};
+
 
 private:
 	uint32 upgrade_price;			// Price if this vehicle is bought as an upgrade, not a new vehicle.
@@ -139,7 +148,8 @@ private:
 
 	bool bidirectional;				// Whether must always travel in one direction
 	bool can_lead_from_rear;		// Whether vehicle can lead a convoy when it is at the rear.
-	bool can_be_at_rear;			// Whether the vehicle may be at the rear of a convoy (default = true).
+	bool can_be_at_rear;			// Whether the vehicle may be at the rear of a convoy (default = true). Ranran: It is used to read the old pak, and the flag takes over to the coupling_constraint.
+	uint8 coupling_constraint;		// Constraints on both sides. Values defined in veh_constraint_t. (@Ranran, March 2019)
 
 	uint8 *comfort;					// How comfortable that a vehicle is for passengers. (Pointer to an array of comfort levels per class)
 
@@ -518,7 +528,7 @@ public:
 	{
 		if(trailer_count == 0) 
 		{
-			if(can_be_at_rear)
+			if(coupling_constraint & CAN_BE_AT_REAR)
 			{
 				return true;
 			}
@@ -547,7 +557,17 @@ public:
 	bool can_follow(const vehicle_desc_t *prev_veh) const
 	{
 		if(  leader_count==0  ) {
-			return true;
+			if (coupling_constraint & CAN_BE_AT_FRONT)
+			{
+				return true;
+			}
+			else
+			{
+				if (prev_veh != NULL)
+				{
+					return true;
+				}
+			}
 		}
 		for( int i=0;  i<leader_count;  i++  ) 
 		{
@@ -733,7 +753,18 @@ public:
 	*@author: jamespetts*/
 	bool get_tilting() const { return is_tilting;	}
 
-	bool get_can_be_at_rear() const { return can_be_at_rear; }
+	bool get_can_be_at_front() const {
+		if (coupling_constraint & CAN_BE_AT_FRONT) {
+			return true;
+		}
+		return false;
+	}
+	bool get_can_be_at_rear() const {
+		if (coupling_constraint & CAN_BE_AT_REAR) {
+			return true;
+		}
+		return false;
+	}
 
 	float32e8_t get_air_resistance() const { return air_resistance; }
 	float32e8_t get_rolling_resistance() const { return rolling_resistance; }
