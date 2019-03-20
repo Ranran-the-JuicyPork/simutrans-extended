@@ -5,6 +5,7 @@
 #include "text_writer.h"
 
 #include "good_writer.h"
+#include "image_writer.h"
 
 using std::string;
 
@@ -127,6 +128,10 @@ void good_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 	{
 		node.write_uint16(fp, class_revenue_percents[i], pos);
 		pos += sizeof(uint16); 
+	}
+
+	if (!catg) {
+		image_writer_t::instance()->write_obj(fp, node, obj.get("image"), 0);
 	}
 
 	node.write(fp);
