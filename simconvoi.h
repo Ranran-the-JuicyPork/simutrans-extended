@@ -472,6 +472,12 @@ private:
 	sint32 wait_lock;
 
 	/**
+	 * threaded_step needs to be able to set wait_lock indirectly, because
+	 * it can run after an indeterminate number of sync_steps.
+	 */
+	sint32 wait_lock_next_step;
+
+	/**
 	 * The flag whether this convoi is requested to change lane by the convoi behind this.
 	 * @author THLeaderH
 	 */
@@ -492,13 +498,6 @@ private:
 	// Used for converting tiles to km.
 	// @author: jamespetts
 	sint64 steps_since_last_odometer_increment;
-
-	/**
-	* Set, when there was a income calculation (avoids some cheats)
-	* Since 99.15 it will stored directly in the vehicle_t
-	* @author prissi
-	*/
-	koord3d last_stop_pos;
 
 	/**
 	* Necessary for registering departure and waiting times.
@@ -768,6 +767,11 @@ private:
 	bool allow_clear_reservation = true;
 
 
+	// This obviates the need to call can_enter_tile
+	// more than once in a step on the same tile
+	koord3d checked_tile_this_step = koord3d::invalid;
+
+
 public:
 	/**
 	 * Some precalculated often used infos about a tile of the convoy's route.
@@ -896,14 +900,13 @@ public:
 	// true if this is a waypoint
 	bool is_waypoint( koord3d ) const;
 
-	/* changes the state of a convoi via tool_t; mandatory for networkmode! *
+	/* changes the state of a convoi via tool_t; mandatory for networkmode!
 	 * for list of commands and parameter see tool_t::tool_change_convoi_t
 	 */
 	void call_convoi_tool( const char function, const char *extra = NULL );
 
 	/**
-	* set state: only use by tool_t convoi tool, or not networking!
-	* @author hsiegeln
+	* set state: only use by tool_t::tool_change_convoi_t
 	*/
 	void set_state( uint16 new_state ) { assert(new_state<MAX_STATES); state = (states)new_state; }
 
@@ -1233,6 +1236,8 @@ public:
 
 	inline bool get_allow_clear_reservation() const { return allow_clear_reservation; }
 
+	bool all_vehicles_are_buildable() const; 
+
 private:
 	journey_times_map average_journey_times;
 public:
@@ -1514,6 +1519,9 @@ public:
 
 	uint32 calc_current_loading_time(uint16 load_charge);
 	inline uint16 get_current_loading_time() const { return current_loading_time; }
+
+	koord3d get_checked_tile_this_step() const { return checked_tile_this_step; }
+	void set_checked_tile_this_step(koord3d value) { checked_tile_this_step = value; }
 
 	/**
 	 * Calculate the number of tiles over which this convoy
