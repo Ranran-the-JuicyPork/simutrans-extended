@@ -301,6 +301,9 @@ void vehicle_desc_t::calc_checksum(checksum_t *chk) const
 	chk->input(len);
 	chk->input(leader_count);
 	chk->input(trailer_count);
+	chk->input(prev_group_count);
+	chk->input(next_group_count);
+	chk->input(has_group_name);
 	chk->input(engine_type);
 	// freight
 	const xref_desc_t *xref = get_child<xref_desc_t>(2);

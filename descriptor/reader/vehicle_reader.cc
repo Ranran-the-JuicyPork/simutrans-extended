@@ -545,10 +545,16 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 				if (extended && extended_version >= 5)
 				{
 					desc->mixed_load_prohibition = decode_uint8(p);
+					desc->has_group_name = decode_uint8(p);
+					desc->prev_group_count = decode_uint8(p);
+					desc->next_group_count = decode_uint8(p);
 				}
 				else
 				{
 					desc->mixed_load_prohibition = false;
+					desc->has_group_name = 0;
+					desc->prev_group_count = 0;
+					desc->next_group_count = 0;
 				}
 			}
 			else
@@ -677,6 +683,9 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 		desc->basic_constraint_prev = vehicle_desc_t::unknown_constraint;
 		desc->basic_constraint_next = vehicle_desc_t::unknown_constraint;
 		desc->mixed_load_prohibition = false;
+		desc->has_group_name = 0;
+		desc->prev_group_count = 0;
+		desc->next_group_count = 0;
 	}
 	desc->set_way_constraints(way_constraints);
 
@@ -717,7 +726,7 @@ DBG_MESSAGE("vehicle_reader_t::register_obj()","old sound %i to %i",old_id,desc-
 	DBG_DEBUG("vehicle_reader_t::read_node()",
 		"version=%d "
 		"way=%d classes=%d capacity=%d comfort=%d cost=%d topspeed=%d weight=%g axle_load=%d power=%d "
-		"betrieb=%d sound=%d vor=%d nach=%d "
+		"betrieb=%d sound=%d vor=%d nach=%d gr_prev_cnt=%d gr_next_cnt=%d"
 		"date=%d/%d gear=%d engine_type=%d len=%d is_tilting=%d mixed_load_prohibition=%d catering_level=%d "
 		"way_constraints_permissive=%d way_constraints_prohibitive%d bidirectional%d can_lead_from_rear%d coupling_constraint%d",
 		version,
@@ -734,6 +743,9 @@ DBG_MESSAGE("vehicle_reader_t::register_obj()","old sound %i to %i",old_id,desc-
 		desc->sound,
 		desc->leader_count,
 		desc->trailer_count,
+		desc->has_group_name,
+		desc->prev_group_count,
+		desc->next_group_count,
 		(desc->intro_date%12)+1,
 		desc->intro_date/12,
 		desc->gear,

@@ -82,7 +82,7 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	int i;
 	uint8  uv8;
 
-	int total_len = 87;
+	int total_len = 90;
 
 	// prissi: must be done here, since it may affect the len of the header!
 	string sound_str = ltrim( obj.get("sound") );
@@ -632,37 +632,6 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 		}
 	} while (found);
 
-	// set front-end flags
-	if (can_be_at_front) {
-		if (!leader_count) {
-			basic_constraint_prev |= vehicle_desc_t::can_be_tail | vehicle_desc_t::can_be_head; // no constraint setting = free
-		}
-		else if (prev_has_none) {
-			basic_constraint_prev |= vehicle_desc_t::can_be_tail;
-			if (!bidirectional) {
-				basic_constraint_prev |= vehicle_desc_t::can_be_head;
-			}
-			if (has_front_cab || can_lead_from_rear) {
-				basic_constraint_prev |= vehicle_desc_t::can_be_head;
-			}
-			if (leader_count == 1) {
-				basic_constraint_prev |= vehicle_desc_t::unconnectable;
-			}
-		}
-		else {
-			// intermediate side
-			if (leader_count == 1) {
-				basic_constraint_prev |= vehicle_desc_t::intermediate_unique;
-			}
-		}
-	}
-	// auto setting
-	if (has_front_cab == 255) {
-		if (!power && bidirectional && !can_lead_from_rear) {
-			basic_constraint_prev &= ~vehicle_desc_t::can_be_head; // brake van
-		}
-	}
-
 	uint8 trailer_count = 0;
 	bool can_be_at_end = true;
 	bool next_has_none = false;
@@ -697,36 +666,6 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 		}
 	} while (found);
 
-	// set back-end flags
-	if (can_be_at_end) {
-		if (!trailer_count) {
-			basic_constraint_next |= vehicle_desc_t::can_be_tail | vehicle_desc_t::can_be_head; // no constraint setting = free
-		}
-		else if (next_has_none) {
-			basic_constraint_next |= vehicle_desc_t::can_be_tail;
-			if (bidirectional) {
-				basic_constraint_next |= vehicle_desc_t::can_be_head;
-			}
-			if (trailer_count == 1) {
-				basic_constraint_next |= vehicle_desc_t::unconnectable;
-			}
-			if (has_rear_cab || can_lead_from_rear) {
-				basic_constraint_next |= vehicle_desc_t::can_be_head;
-			}
-		}
-		else {
-			// intermediate side
-			if (trailer_count == 1) {
-				basic_constraint_next |= vehicle_desc_t::intermediate_unique;
-			}
-		}
-	}
-	// auto setting (support old dat)
-	if (has_rear_cab == 255 && (basic_constraint_next & vehicle_desc_t::can_be_head)) {
-		if ((bidirectional && !can_lead_from_rear && !power) || !bidirectional) {
-			basic_constraint_next &= ~vehicle_desc_t::can_be_head; // brake van or single derection vehicle 
-		}
-	}
 
 	// Upgrades: these are the vehicle types to which this vehicle
 	// can be upgraded. "None" means that it cannot be upgraded. 
@@ -751,6 +690,104 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 			}
 		}
 	} while (found);
+
+	// constraint group
+	uint8 has_group_name=0;
+	if (obj.get("constraint_group")) {
+		text_writer_t::instance()->write_obj(fp, node, obj.get("constraint_group"));
+		has_group_name = 1;
+	}
+
+	uint8 prev_group_count = 0;
+	do {
+		char buf[40];
+
+		sprintf(buf, "constraint_group[prev][%d]", prev_group_count);
+
+		str = obj.get(buf);
+		found = !str.empty();
+		if (found) {
+			text_writer_t::instance()->write_obj(fp, node, str.c_str());
+			prev_group_count++;
+		}
+	} while (found);
+
+
+	uint8 next_group_count = 0;
+	do {
+		char buf[40];
+
+		sprintf(buf, "constraint_group[next][%d]", next_group_count);
+
+		str = obj.get(buf);
+		found = !str.empty();
+		if (found) {
+			text_writer_t::instance()->write_obj(fp, node, str.c_str());
+			next_group_count++;
+		}
+	} while (found);
+
+	// set front-end flags
+	if (can_be_at_front) {
+		if (!leader_count && !prev_group_count) {
+			basic_constraint_prev |= vehicle_desc_t::can_be_tail | vehicle_desc_t::can_be_head; // no constraint setting = free
+		}
+		else if (prev_has_none) {
+			basic_constraint_prev |= vehicle_desc_t::can_be_tail;
+			if (!bidirectional) {
+				basic_constraint_prev |= vehicle_desc_t::can_be_head;
+			}
+			if (has_front_cab || can_lead_from_rear) {
+				basic_constraint_prev |= vehicle_desc_t::can_be_head;
+			}
+			if (leader_count == 1 && !prev_group_count) {
+				basic_constraint_prev |= vehicle_desc_t::unconnectable;
+			}
+		}
+		else {
+			// intermediate side
+			if (leader_count == 1 && !prev_group_count) {
+				basic_constraint_prev |= vehicle_desc_t::intermediate_unique;
+			}
+		}
+	}
+	// auto setting
+	if (has_front_cab == 255) {
+		if (!power && bidirectional && !can_lead_from_rear) {
+			basic_constraint_prev &= ~vehicle_desc_t::can_be_head; // brake van
+		}
+	}
+
+	// set back-end flags
+	if (can_be_at_end) {
+		if (!trailer_count && !next_group_count) {
+			basic_constraint_next |= vehicle_desc_t::can_be_tail | vehicle_desc_t::can_be_head; // no constraint setting = free
+		}
+		else if (next_has_none) {
+			basic_constraint_next |= vehicle_desc_t::can_be_tail;
+			if (bidirectional) {
+				basic_constraint_next |= vehicle_desc_t::can_be_head;
+			}
+			if (trailer_count == 1 && !next_group_count) {
+				basic_constraint_next |= vehicle_desc_t::unconnectable;
+			}
+			if (has_rear_cab || can_lead_from_rear) {
+				basic_constraint_next |= vehicle_desc_t::can_be_head;
+			}
+		}
+		else {
+			// intermediate side
+			if (trailer_count == 1 && !next_group_count) {
+				basic_constraint_next |= vehicle_desc_t::intermediate_unique;
+			}
+		}
+	}
+	// auto setting (support old dat)
+	if (has_rear_cab == 255 && (basic_constraint_next & vehicle_desc_t::can_be_head)) {
+		if ((bidirectional && !can_lead_from_rear && !power) || !bidirectional) {
+			basic_constraint_next &= ~vehicle_desc_t::can_be_head; // brake van or single derection vehicle 
+		}
+	}
 
 	// multiple freight image types - define what good uses each index
 	// good without index will be an error
@@ -1096,6 +1133,13 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	node.write_uint8(fp, mixed_load_prohibition, pos);
 	pos += sizeof(mixed_load_prohibition);
 
+	node.write_sint8(fp, has_group_name, pos);
+	pos += sizeof(sint8);
+	node.write_sint8(fp, prev_group_count, pos);
+	pos += sizeof(sint8);
+	node.write_sint8(fp, next_group_count, pos);
+	pos += sizeof(sint8);
+
 	sint8 sound_str_len = sound_str.size();
 	if (sound_str_len > 0) {
 		node.write_sint8  (fp, sound_str_len, pos);
@@ -1103,6 +1147,7 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 		node.write_data_at(fp, sound_str.c_str(), pos, sound_str_len);
 		pos += sound_str_len;
 	}
+
 
 	node.write(fp);
 }
