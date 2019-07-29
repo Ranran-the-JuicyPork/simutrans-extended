@@ -82,7 +82,7 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	int i;
 	uint8  uv8;
 
-	int total_len = 90;
+	int total_len = 91;
 
 	// prissi: must be done here, since it may affect the len of the header!
 	string sound_str = ltrim( obj.get("sound") );
@@ -692,12 +692,16 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	} while (found);
 
 	// constraint group
-	uint8 has_group_name=0;
-	if (obj.get("constraint_group")) {
-		text_writer_t::instance()->write_obj(fp, node, obj.get("constraint_group"));
-		has_group_name = 1;
+	uint8 has_front_group_name=0;
+	if (obj.get("group[front]")) {
+		text_writer_t::instance()->write_obj(fp, node, obj.get("group[front]"));
+		has_front_group_name = 1;
 	}
-
+	uint8 has_rear_group_name = 0;
+	if (obj.get("group[rear]")) {
+		text_writer_t::instance()->write_obj(fp, node, obj.get("group[rear]"));
+		has_rear_group_name = 1;
+	}
 	uint8 prev_group_count = 0;
 	do {
 		char buf[40];
@@ -1133,7 +1137,9 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	node.write_uint8(fp, mixed_load_prohibition, pos);
 	pos += sizeof(mixed_load_prohibition);
 
-	node.write_sint8(fp, has_group_name, pos);
+	node.write_sint8(fp, has_front_group_name, pos);
+	pos += sizeof(sint8);
+	node.write_sint8(fp, has_rear_group_name, pos);
 	pos += sizeof(sint8);
 	node.write_sint8(fp, prev_group_count, pos);
 	pos += sizeof(sint8);
@@ -1147,7 +1153,6 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 		node.write_data_at(fp, sound_str.c_str(), pos, sound_str_len);
 		pos += sound_str_len;
 	}
-
 
 	node.write(fp);
 }
