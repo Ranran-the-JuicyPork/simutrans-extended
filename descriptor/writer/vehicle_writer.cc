@@ -692,48 +692,64 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	} while (found);
 
 	// constraint group
-	uint8 has_front_group_name=0;
-	if (obj.get("group[front]")) {
-		text_writer_t::instance()->write_obj(fp, node, obj.get("group[front]"));
-		has_front_group_name = 1;
-	}
-	uint8 has_rear_group_name = 0;
-	if (obj.get("group[rear]")) {
-		text_writer_t::instance()->write_obj(fp, node, obj.get("group[rear]"));
-		has_rear_group_name = 1;
-	}
-	uint8 prev_group_count = 0;
+	uint8 front_group_count=0;
 	do {
 		char buf[40];
 
-		sprintf(buf, "constraint_group[prev][%d]", prev_group_count);
+		sprintf(buf, "group[front][%d]", front_group_count);
+		str = obj.get(buf);
+		found = !str.empty();
+		if (found) {
+			text_writer_t::instance()->write_obj(fp, node, str.c_str());
+			front_group_count++;
+		}
+	} while (found);
+
+	uint8 rear_group_count= 0;
+	do {
+		char buf[40];
+
+		sprintf(buf, "group[rear][%d]", rear_group_count);
+		str = obj.get(buf);
+		found = !str.empty();
+		if (found) {
+			text_writer_t::instance()->write_obj(fp, node, str.c_str());
+			rear_group_count++;
+		}
+	} while (found);
+
+	uint8 leader_group_count = 0;
+	do {
+		char buf[40];
+
+		sprintf(buf, "constraint_group[prev][%d]", leader_group_count);
 
 		str = obj.get(buf);
 		found = !str.empty();
 		if (found) {
 			text_writer_t::instance()->write_obj(fp, node, str.c_str());
-			prev_group_count++;
+			leader_group_count++;
 		}
 	} while (found);
 
 
-	uint8 next_group_count = 0;
+	uint8 trailer_group_count = 0;
 	do {
 		char buf[40];
 
-		sprintf(buf, "constraint_group[next][%d]", next_group_count);
+		sprintf(buf, "constraint_group[next][%d]", trailer_group_count);
 
 		str = obj.get(buf);
 		found = !str.empty();
 		if (found) {
 			text_writer_t::instance()->write_obj(fp, node, str.c_str());
-			next_group_count++;
+			trailer_group_count++;
 		}
 	} while (found);
 
 	// set front-end flags
 	if (can_be_at_front) {
-		if (!leader_count && !prev_group_count) {
+		if (!leader_count && !leader_group_count) {
 			basic_constraint_prev |= vehicle_desc_t::can_be_tail | vehicle_desc_t::can_be_head; // no constraint setting = free
 		}
 		else if (prev_has_none) {
@@ -744,13 +760,13 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 			if (has_front_cab || can_lead_from_rear) {
 				basic_constraint_prev |= vehicle_desc_t::can_be_head;
 			}
-			if (leader_count == 1 && !prev_group_count) {
+			if (leader_count == 1 && !leader_group_count) {
 				basic_constraint_prev |= vehicle_desc_t::unconnectable;
 			}
 		}
 		else {
 			// intermediate side
-			if (leader_count == 1 && !prev_group_count) {
+			if (leader_count == 1 && !leader_group_count) {
 				basic_constraint_prev |= vehicle_desc_t::intermediate_unique;
 			}
 		}
@@ -764,7 +780,7 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 
 	// set back-end flags
 	if (can_be_at_end) {
-		if (!trailer_count && !next_group_count) {
+		if (!trailer_count && !trailer_group_count) {
 			basic_constraint_next |= vehicle_desc_t::can_be_tail | vehicle_desc_t::can_be_head; // no constraint setting = free
 		}
 		else if (next_has_none) {
@@ -772,7 +788,7 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 			if (bidirectional) {
 				basic_constraint_next |= vehicle_desc_t::can_be_head;
 			}
-			if (trailer_count == 1 && !next_group_count) {
+			if (trailer_count == 1 && !trailer_group_count) {
 				basic_constraint_next |= vehicle_desc_t::unconnectable;
 			}
 			if (has_rear_cab || can_lead_from_rear) {
@@ -781,7 +797,7 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 		}
 		else {
 			// intermediate side
-			if (trailer_count == 1 && !next_group_count) {
+			if (trailer_count == 1 && !trailer_group_count) {
 				basic_constraint_next |= vehicle_desc_t::intermediate_unique;
 			}
 		}
@@ -1137,13 +1153,13 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	node.write_uint8(fp, mixed_load_prohibition, pos);
 	pos += sizeof(mixed_load_prohibition);
 
-	node.write_sint8(fp, has_front_group_name, pos);
+	node.write_sint8(fp, front_group_count, pos);
 	pos += sizeof(sint8);
-	node.write_sint8(fp, has_rear_group_name, pos);
+	node.write_sint8(fp, rear_group_count, pos);
 	pos += sizeof(sint8);
-	node.write_sint8(fp, prev_group_count, pos);
+	node.write_sint8(fp, leader_group_count, pos);
 	pos += sizeof(sint8);
-	node.write_sint8(fp, next_group_count, pos);
+	node.write_sint8(fp, trailer_group_count, pos);
 	pos += sizeof(sint8);
 
 	sint8 sound_str_len = sound_str.size();

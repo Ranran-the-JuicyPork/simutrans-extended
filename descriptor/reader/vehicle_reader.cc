@@ -545,18 +545,18 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 				if (extended && extended_version >= 5)
 				{
 					desc->mixed_load_prohibition = decode_uint8(p);
-					desc->has_front_group_name = decode_uint8(p);
-					desc->has_rear_group_name = decode_uint8(p);
-					desc->prev_group_count = decode_uint8(p);
-					desc->next_group_count = decode_uint8(p);
+					desc->front_group_count = decode_uint8(p);
+					desc->rear_group_count = decode_uint8(p);
+					desc->leader_group_count = decode_uint8(p);
+					desc->trailer_group_count = decode_uint8(p);
 				}
 				else
 				{
 					desc->mixed_load_prohibition = false;
-					desc->has_front_group_name = 0;
-					desc->has_rear_group_name = 0;
-					desc->prev_group_count = 0;
-					desc->next_group_count = 0;
+					desc->front_group_count = 0;
+					desc->rear_group_count = 0;
+					desc->leader_group_count = 0;
+					desc->trailer_group_count = 0;
 				}
 			}
 			else
@@ -685,10 +685,10 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 		desc->basic_constraint_prev = vehicle_desc_t::unknown_constraint;
 		desc->basic_constraint_next = vehicle_desc_t::unknown_constraint;
 		desc->mixed_load_prohibition = false;
-		desc->has_front_group_name = 0;
-		desc->has_rear_group_name = 0;
-		desc->prev_group_count = 0;
-		desc->next_group_count = 0;
+		desc->front_group_count = 0;
+		desc->rear_group_count = 0;
+		desc->leader_group_count = 0;
+		desc->trailer_group_count = 0;
 	}
 	desc->set_way_constraints(way_constraints);
 
@@ -747,10 +747,10 @@ DBG_MESSAGE("vehicle_reader_t::register_obj()","old sound %i to %i",old_id,desc-
 		desc->sound,
 		desc->leader_count,
 		desc->trailer_count,
-		desc->has_front_group_name,
-		desc->has_rear_group_name,
-		desc->prev_group_count,
-		desc->next_group_count,
+		desc->front_group_count,
+		desc->rear_group_count,
+		desc->leader_group_count,
+		desc->trailer_group_count,
 		(desc->intro_date%12)+1,
 		desc->intro_date/12,
 		desc->gear,

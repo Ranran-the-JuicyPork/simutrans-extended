@@ -135,10 +135,10 @@ private:
 	uint8 leader_count;				// all defined leading vehicles
 	uint8 trailer_count;			// all defined trailer
 	uint8 upgrades;					// The number of vehicles that are upgrades of this vehicle.
-	uint8 prev_group_count;			// all defined leading groups
-	uint8 next_group_count;			// all defined trailer groups
-	uint8 has_front_group_name;      // 0 or 1, use this for counting node
-	uint8 has_rear_group_name;      // 0 or 1, use this for counting node
+	uint8 leader_group_count;		// all defined leading groups
+	uint8 trailer_group_count;		// all defined trailer groups
+	uint8 front_group_count;		// all defined front side of constraint group names
+	uint8 rear_group_count;			// all defined rear side of constraint group names
 
 	uint8 engine_type;				// diesel, steam, electric (requires electrified ways), fuel_cell, etc.
 
@@ -249,6 +249,9 @@ private:
 	// set basic constraint to the old version data. v14.6, 2019 @Ranran
 	inline void fix_basic_constraint();
 
+	uint8 get_front_group_count() const { return front_group_count; }
+	uint8 get_rear_group_count() const { return rear_group_count; }
+
 public:
 	// since we have a second constructor
 	vehicle_desc_t() : geared_power(0), geared_force(0) { }
@@ -257,7 +260,7 @@ public:
 	// since it has no images and not even a name node any calls to this will case a crash
 	// Also, capacity and comfort are not initialised here
 	vehicle_desc_t(uint8 wtype, uint16 speed, engine_t engine, uint16 al = 0, uint32 weight = 1) : geared_power(0), geared_force(0) {
-		freight_image_type = livery_image_type = price = upgrade_price = overcrowded_capacity = running_cost = intro_date = leader_count = trailer_count = catering_level = upgrades = has_front_group_name = has_rear_group_name = prev_group_count = next_group_count = 0;
+		freight_image_type = livery_image_type = price = upgrade_price = overcrowded_capacity = running_cost = intro_date = leader_count = trailer_count = catering_level = upgrades = front_group_count = rear_group_count = leader_group_count = trailer_group_count = 0;
 		fixed_cost = DEFAULT_FIXED_VEHICLE_MAINTENANCE;
 		classes = power = 1;
 		gear = GEAR_FACTOR;
@@ -325,7 +328,7 @@ public:
 				const uint8 freight_images = freight_image_type == 255 ? 1 : freight_image_type;
 				for(uint8 i = 0; i < livery_image_type; i++) 
 				{
-					if(!strcmp(livery_type, get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + has_front_group_name + has_rear_group_name + prev_group_count + next_group_count + freight_images + i)->get_text()))
+					if(!strcmp(livery_type, get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + front_group_count + rear_group_count + leader_group_count + trailer_group_count + freight_images + i)->get_text()))
 					{
 						livery_index = i;
 						break;
@@ -356,7 +359,7 @@ public:
 				// With the "default" livery, always select livery index 0
 				for(uint8 i = 0; i < livery_image_type; i++) 
 				{
-					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + upgrades + has_front_group_name + has_rear_group_name + prev_group_count + next_group_count + i)->get_text()))
+					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + upgrades + front_group_count + rear_group_count + leader_group_count + trailer_group_count + i)->get_text()))
 					{
 						livery_index = i;
 						break;
@@ -387,7 +390,7 @@ public:
 			for( uint8 i=0;  i<freight_image_type;  i++  ) 
 			{
 				
-				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + has_front_group_name + has_rear_group_name + prev_group_count + next_group_count + i))
+				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + front_group_count + rear_group_count + leader_group_count + trailer_group_count + i))
 				{
 					goods_index = i;
 					break;
@@ -416,7 +419,7 @@ public:
 
 			for( uint8 i=0;  i<freight_image_type;  i++  ) 
 			{
-				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + has_front_group_name + has_rear_group_name + prev_group_count + next_group_count + i))
+				if (ware == get_child<goods_desc_t>(6 + trailer_count + leader_count + upgrades + front_group_count + rear_group_count + leader_group_count + trailer_group_count + i))
 				{
 					goods_index = i;
 					break;
@@ -427,7 +430,7 @@ public:
 			{
 				for(uint8 j = 0; j < livery_image_type; j++) 
 				{
-					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + freight_image_type + upgrades + has_front_group_name + has_rear_group_name + prev_group_count + next_group_count + j)->get_text()))
+					if(!strcmp(livery_type, get_child<text_desc_t>(6 + trailer_count + leader_count + freight_image_type + upgrades + front_group_count + rear_group_count + leader_group_count + trailer_group_count + j)->get_text()))
 					{
 						livery_index = j;
 						break;
@@ -495,7 +498,7 @@ public:
 			for(sint8 i = 0; i < livery_image_type; i++) 
 			{
 				const uint8 freight_images = freight_image_type == 255 ? 1 : freight_image_type;
-				const char* livery_name = get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + has_front_group_name + has_rear_group_name + prev_group_count + next_group_count + freight_images + i)->get_text();
+				const char* livery_name = get_child<text_desc_t>(5 + trailer_count + leader_count + upgrades + front_group_count + rear_group_count + leader_group_count + trailer_group_count + freight_images + i)->get_text();
 				if(!strcmp(name, livery_name))
 				{
 					return true;
@@ -535,7 +538,10 @@ public:
 		return get_child<vehicle_desc_t>(get_add_to_node() + leader_count + i);
 	}
 
+	int get_leader_count() const { return leader_count; }
 	int get_trailer_count() const { return trailer_count; }
+	uint8 get_leader_group_count() const { return leader_group_count; }
+	uint8 get_trailer_group_count() const { return trailer_group_count; }
 
 	/* returns true, if this veh can be before the next_veh
 	 * uses NULL to indicate end of convoi
@@ -545,18 +551,15 @@ public:
 		if (basic_constraint_next & unconnectable && next_veh) {
 			return false;
 		}
-		if(trailer_count == 0) 
+		if(!trailer_count && !trailer_group_count)
 		{
 			if(basic_constraint_next & can_be_tail)
 			{
 				return true;
 			}
-			else
+			else if(next_veh != NULL)
 			{
-				if(next_veh != NULL)
-				{
-					return true;
-				}
+				return true; // intermediate(any)
 			}
 		}
 
@@ -566,15 +569,17 @@ public:
 				return true;
 			}
 		}
-		if (next_veh != NULL && next_group_count)
+		if (next_veh != NULL && trailer_group_count)
 		{
-			if (const char *next_group = next_veh->get_front_coupling_group()) {
-				for (int i = 0; i < next_group_count; i++)
-				{
-					const char *group = get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + has_front_group_name + has_rear_group_name + prev_group_count + i)->get_text();
-					if (!strcmp(group, next_group))
+			for(int j = 0; j < next_veh->get_front_group_count(); j++){
+				if (const char *next_group = next_veh->get_front_coupling_group(j)) {
+					for (int i = 0; i < trailer_group_count; i++)
 					{
-						return true;
+						const char *group = get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + front_group_count + rear_group_count + leader_group_count + i)->get_text();
+						if (!strcmp(group, next_group))
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -591,17 +596,14 @@ public:
 		if (basic_constraint_prev & unconnectable && prev_veh) {
 			return false;
 		}
-		if(  leader_count==0  ) {
+		if(!leader_count && !leader_group_count) {
 			if (basic_constraint_prev & can_be_head)
 			{
 				return true;
 			}
-			else
+			else if (prev_veh != NULL)
 			{
-				if (prev_veh != NULL)
-				{
-					return true;
-				}
+				return true; // intermediate(any)
 			}
 		}
 		for( int i=0;  i<leader_count;  i++  ) 
@@ -612,15 +614,17 @@ public:
 				return true;
 			}
 		}
-		if (prev_veh != NULL && prev_group_count)
+		if (prev_veh != NULL && leader_group_count)
 		{
-			if (const char *prev_group = prev_veh->get_rear_coupling_group()) {
-				for (int i = 0; i < prev_group_count; i++)
-				{
-					const char *group = get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + has_front_group_name + i)->get_text();
-					if (!strcmp(group, prev_group))
+			for (int j = 0; j < prev_veh->get_rear_group_count(); j++) {
+				if (const char *prev_group = prev_veh->get_rear_coupling_group(j)) {
+					for (int i = 0; i < leader_group_count; i++)
 					{
-						return true;
+						const char *group = get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + front_group_count + i)->get_text();
+						if (!strcmp(group, prev_group))
+						{
+							return true;
+						}
 					}
 				}
 			}
@@ -630,25 +634,21 @@ public:
 		return false;
 	}
 
-	int get_leader_count() const { return leader_count; }
-	uint8 get_prev_group_count() const { return prev_group_count; }
-	uint8 get_next_group_count() const { return next_group_count; }
-
-	const char *get_front_coupling_group(bool reversed = false) const
+	const char *get_front_coupling_group(uint8 group_index = 0, bool reversed = false) const
 	{
-		if ((!reversed && !has_front_group_name) || (reversed && !has_rear_group_name)) {
+		if ((!reversed && !front_group_count) || (reversed && !rear_group_count)) {
 			return NULL;
 		}
-		return reversed ? get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + has_front_group_name)->get_text()
-			: get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades)->get_text();
+		return reversed ? get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + front_group_count + group_index)->get_text()
+			: get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + group_index)->get_text();
 	}
-	const char *get_rear_coupling_group(bool reversed = false) const
+	const char *get_rear_coupling_group(uint8 group_index = 0, bool reversed = false) const
 	{
-		if ((reversed && !has_front_group_name) || (!reversed && !has_rear_group_name)) {
+		if ((reversed && !front_group_count) || (!reversed && !rear_group_count)) {
 			return NULL;
 		}
-		return reversed ? get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades)->get_text()
-			: get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + has_front_group_name)->get_text();
+		return reversed ? get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + group_index)->get_text()
+			: get_child<text_desc_t>(get_add_to_node() + trailer_count + leader_count + upgrades + front_group_count + group_index)->get_text();
 	}
 
 	// Returns the vehicle types to which this vehicle type may be upgraded.
