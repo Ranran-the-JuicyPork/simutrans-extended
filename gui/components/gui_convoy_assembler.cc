@@ -275,10 +275,13 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 		livery_scheme_t* scheme = schemes->get_element(i);
 		if(scheme->is_available(welt->get_timeline_year_month()))
 		{
-			livery_selector.append_element(new gui_scrolled_list_t::const_text_scrollitem_t(translator::translate(scheme->get_name()), SYSCOL_TEXT));
-			livery_scheme_indices.append(i);
-			livery_selector.set_selection(i);
-			livery_scheme_index = i;
+			if(scheme->get_waytype() == ignore_wt || scheme->get_waytype() == any_wt || (scheme->get_waytype() && scheme->get_waytype() == wt))
+			{
+				livery_selector.append_element(new gui_scrolled_list_t::const_text_scrollitem_t(translator::translate(scheme->get_name()), SYSCOL_TEXT));
+				livery_scheme_indices.append(i);
+				livery_selector.set_selection(i);
+				livery_scheme_index = i;
+			}
 		}
 	}
 

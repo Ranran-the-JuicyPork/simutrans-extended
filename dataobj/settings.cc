@@ -27,6 +27,7 @@
 #include "tabfile.h"
 #include "translator.h"
 #include "../descriptor/intro_dates.h"
+#include "../descriptor/writer/get_waytype.h"
 
 #include "../tpl/minivec_tpl.h"
 
@@ -1556,7 +1557,7 @@ void settings_t::rdwr(loadsave_t *file)
 					}
 					else
 					{
-						livery_scheme_t* scheme = new livery_scheme_t("default", DEFAULT_RETIRE_DATE);
+						livery_scheme_t* scheme = new livery_scheme_t("default", DEFAULT_RETIRE_DATE, ignore_wt);
 						scheme->rdwr(file);
 						livery_schemes.append(scheme);
 					}
@@ -2660,7 +2661,11 @@ void settings_t::parse_simuconf(tabfile_t& simuconf, sint16& disp_width, sint16&
 			sprintf( name, "retire_month[%i]", i );
 			retire += contents.get_int(name, 1) - 1;
 
-			livery_scheme_t* scheme = new livery_scheme_t(scheme_name, retire);
+			sprintf(name, "livery_scheme_wt[%i]", i);
+			char const* const waytype_name = ltrim(contents.get(name));
+			waytype_t scheme_waytype = waytype_name == "" ? ignore_wt : get_waytype(ltrim(contents.get(name)));
+
+			livery_scheme_t* scheme = new livery_scheme_t(scheme_name, retire, scheme_waytype);
 
 			bool has_liveries = false;
 			for(int j = 0; j < 65536; j ++)

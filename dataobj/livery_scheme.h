@@ -26,11 +26,13 @@ private:
 	std::string scheme_name;
 	vector_tpl<livery_t> liveries;
 	uint16 retire_date;
+	waytype_t scheme_wt;
 
 public:
-	livery_scheme_t(const char* n, const uint16 date);
+	livery_scheme_t(const char* n, const uint16 date, const waytype_t wt);
 	
 	const char* get_name() const { return scheme_name.c_str(); }
+	waytype_t get_waytype() const { return scheme_wt; }
 
 	void add_livery(const char* name, uint16 intro)
 	{

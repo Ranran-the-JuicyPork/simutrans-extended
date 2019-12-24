@@ -2671,6 +2671,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="descriptor\writer\get_waytype.cc" />
     <ClCompile Include="bauer\goods_manager.cc" />
     <ClCompile Include="descriptor\factory_desc.cc" />
     <ClCompile Include="descriptor\obj_base_desc.cc" />
