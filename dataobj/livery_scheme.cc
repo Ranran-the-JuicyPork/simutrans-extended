@@ -8,11 +8,11 @@
 #include "loadsave.h"
 #include "../descriptor/vehicle_desc.h"
 
-livery_scheme_t::livery_scheme_t(const char* n, const uint16 date, const waytype_t wt)
+livery_scheme_t::livery_scheme_t(const char* n, const uint16 date, uint16 waytype_flags)
 {
 	scheme_name = n;
 	retire_date = date;
-	scheme_wt = wt;
+	scheme_wt = waytype_flags;
 }
 
 

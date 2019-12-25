@@ -2645,9 +2645,11 @@ void settings_t::parse_simuconf(tabfile_t& simuconf, sint16& disp_width, sint16&
 	if (first_scheme_name[0] != '\0') {
 		// This file has livery schemes.  Replace all previous.
 		livery_schemes.clear();
+		uint16 liv_waytype_flag;
 		for(int i = 0; i < 65336; i ++)
 		{
 			char name[128] ;
+			liv_waytype_flag = 0;
 			sprintf( name, "livery_scheme[%i]", i );
 			const char* scheme_name = ltrim(contents.get(name));
 			if(scheme_name[0] == '\0')
@@ -2661,11 +2663,21 @@ void settings_t::parse_simuconf(tabfile_t& simuconf, sint16& disp_width, sint16&
 			sprintf( name, "retire_month[%i]", i );
 			retire += contents.get_int(name, 1) - 1;
 
-			sprintf(name, "livery_scheme_wt[%i]", i);
-			char const* const waytype_name = ltrim(contents.get(name));
-			waytype_t scheme_waytype = waytype_name == "" ? ignore_wt : get_waytype(ltrim(contents.get(name)));
+			for (int j = 0; j < 256; j++)
+			{
+				sprintf(name, "livery_scheme_wt[%i][%i]", i, j);
+				char const* const waytype_name = ltrim(contents.get(name));
 
-			livery_scheme_t* scheme = new livery_scheme_t(scheme_name, retire, scheme_waytype);
+				if (waytype_name[0] == '\0')
+				{
+					break;
+				}
+				if (waytype_name != ""){
+					liv_waytype_flag |= 1L << (get_waytype(ltrim(contents.get(name)))-1);
+				}
+			}
+
+			livery_scheme_t* scheme = new livery_scheme_t(scheme_name, retire, liv_waytype_flag);
 
 			bool has_liveries = false;
 			for(int j = 0; j < 65536; j ++)

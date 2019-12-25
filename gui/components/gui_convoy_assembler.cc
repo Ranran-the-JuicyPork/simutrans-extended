@@ -275,7 +275,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 		livery_scheme_t* scheme = schemes->get_element(i);
 		if(scheme->is_available(welt->get_timeline_year_month()))
 		{
-			if(scheme->get_waytype() == ignore_wt || scheme->get_waytype() == any_wt || (scheme->get_waytype() && scheme->get_waytype() == wt))
+			if(scheme->get_waytype() == ignore_wt || (scheme->get_waytype() && scheme->get_waytype() & 1L << (wt-1)))
 			{
 				livery_selector.append_element(new gui_scrolled_list_t::const_text_scrollitem_t(translator::translate(scheme->get_name()), SYSCOL_TEXT));
 				livery_scheme_indices.append(i);
