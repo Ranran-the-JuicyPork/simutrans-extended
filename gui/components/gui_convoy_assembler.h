@@ -169,6 +169,7 @@ class gui_convoy_assembler_t :
 
 	vector_tpl<gui_image_list_t::image_data_t*> convoi_pics;
 	gui_image_list_t convoi;
+	gui_scrollpane_t scrolly_convoi;
 
 	vector_tpl<gui_image_list_t::image_data_t*> pas_vec;
 	vector_tpl<gui_image_list_t::image_data_t*> pas2_vec;

@@ -83,6 +83,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	electrics(&electrics_vec),
 	loks(&loks_vec),
 	waggons(&waggons_vec),
+	scrolly_convoi(&convoi),
 	scrolly_pas(&cont_pas),
 	scrolly_pas2(&cont_pas2),
 	scrolly_electrics(&cont_electrics),
@@ -113,7 +114,7 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 	convoi.set_player_nr(player_nr);
 	convoi.add_listener(this);
 
-	add_component(&convoi);
+	//add_component(&convoi);
 	add_component(&lb_convoi_count);
 	add_component(&lb_convoi_speed);
 	add_component(&lb_convoi_cost);
@@ -127,6 +128,10 @@ gui_convoy_assembler_t::gui_convoy_assembler_t(waytype_t wt, signed char player_
 
 	add_component(&lb_traction_types);
 	add_component(&lb_vehicle_count);
+
+	scrolly_convoi.set_scrollbar_mode(scrollbar_t::show_disabled);
+	scrolly_convoi.set_size_corner(false);
+	add_component(&scrolly_convoi);
 
 	/*
 	* [PANEL]
@@ -440,8 +445,14 @@ void gui_convoy_assembler_t::layout()
 	 */
 	convoi.set_grid(scr_coord(grid.x - grid_dx, grid.y));
 	convoi.set_placement(scr_coord(placement.x - placement_dx, placement.y));
-	convoi.set_pos(scr_coord((max(c1_x, size.w-get_convoy_image_width())/2), y));
-	convoi.set_size(scr_size(get_convoy_image_width(), get_convoy_image_height()));
+	convoi.set_pos(scr_coord(0, 0));
+	convoi.set_size(scr_size(get_convoy_image_width(), get_convoy_image_height())); // CLIST_WIDTH
+	scrolly_convoi.set_size(scr_size(size.w, convoi.get_size().h + (3 + D_SCROLLBAR_HEIGHT)));
+	scrolly_convoi.set_show_scroll_x(true);
+	scrolly_convoi.set_show_scroll_y(false);
+	scrolly_convoi.set_scroll_discrete_x(false);
+	scrolly_convoi.set_size_corner(false);
+	scrolly_convoi.set_pos(scr_coord(0, y));
 	y += get_convoy_image_height() + 1;
 
 	lb_convoi_count.set_pos(scr_coord(c1_x, y));
