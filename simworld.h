@@ -1268,6 +1268,8 @@ public:
 	void reset_interaction();
 	void step_year();
 
+	bool show_future_info() const { return settings.get_show_future_vehicle_info(); }
+
 	/**
 	 * Jump one or more months ahead.
 	 * @note Updating history!

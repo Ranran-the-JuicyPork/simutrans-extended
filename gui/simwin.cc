@@ -1617,6 +1617,16 @@ void win_display_flush(double konto)
 		}
 	}
 
+	// shown if future information display is true
+	if (wl->show_future_info() && skinverwaltung_t::alerts->get_image_id(1)) {
+		right_border -= 14;
+		display_color_img(skinverwaltung_t::alerts->get_image_id(1), right_border, disp_height - 15, 1, false, true);
+		if (tooltip_check  &&  tooltip_xpos >= right_border) {
+			tooltip_text = translator::translate("Future information display");
+			tooltip_check = false;
+		}
+	}
+
 	// shown if connected
 	if(  env_t::networkmode  &&  skinverwaltung_t::networksymbol  ) {
 		right_border -= 14;
