@@ -410,14 +410,6 @@ convoihandle_t depot_t::copy_convoi(convoihandle_t old_cnv, bool local_execution
 	if(  old_cnv.is_bound()  &&  !convoihandle_t::is_exhausted()  &&
 		old_cnv->get_vehicle_count() > 0  &&  get_waytype() == old_cnv->front()->get_desc()->get_waytype() )
 	{
-		if( old_cnv->get_schedule() && (!old_cnv->get_schedule()->is_editing_finished()) )
-		{           
-			if(local_execution)
-			{
-				create_win( new news_img("Schedule is incomplete/not finished"), w_time_delete, magic_none);
-			}
-			return convoihandle_t();
-        }
 		convoihandle_t new_cnv = add_convoi( false );
 		new_cnv->set_name(old_cnv->get_internal_name());
 		new_cnv->set_livery_scheme_index(old_cnv->get_livery_scheme_index());
@@ -616,6 +608,10 @@ bool depot_t::start_convoi(convoihandle_t cnv, bool local_execution)
 				buf.printf( translator::translate("Vehicle %s can't find a route!"), cnv->get_name() );
 				create_win( new news_img(buf), w_time_delete, magic_none);
 			}
+		}
+		else if (!(cnv->front()->get_desc()->get_basic_constraint_prev(cnv->front()->is_reversed()) & vehicle_desc_t::can_be_head)) {
+			// Is there a cab at the front end of convoy?
+			create_win(new news_img("Cannot start: no cab at the front of the convoy."), w_time_delete, magic_none);
 		}
 		else {
 			// convoi can start now
@@ -825,7 +821,8 @@ void depot_t::new_month()
 		get_owner()->book_vehicle_maintenance( -fixed_cost_costs, get_waytype() );
 	}
 
-	stadt_t* city = welt->get_city(get_pos().get_2d());
+	const planquadrat_t* tile = welt->access(get_pos().get_2d());
+	stadt_t* city = tile ? tile->get_city() : NULL;
 	if(city && get_stadt() == NULL)
 	{		
 		// The depot has joined a city by dint of growth.
@@ -886,7 +883,8 @@ bool depot_t::is_suitable_for( const vehicle_t * test_vehicle, const uint16 trac
 void depot_t::add_to_world_list(bool lock)
 {
 	welt->add_building_to_world_list(this);
-	stadt_t* city = welt->get_city(get_pos().get_2d());
+	const planquadrat_t* tile = welt->access(get_pos().get_2d()); 
+	stadt_t* city = tile ? tile->get_city() : NULL; 
 	if(city)
 	{		
 		set_stadt(city);

@@ -53,6 +53,7 @@
 #include "../../descriptor/roadsign_desc.h"
 #include "../../descriptor/building_desc.h" // for ::should_city_adopt_this
 #include "../../utils/simstring.h"
+#include "../../simcity.h"
 
 #include "../../bauer/wegbauer.h"
 
@@ -191,6 +192,19 @@ void weg_t::set_desc(const way_desc_t *b, bool from_saved_game)
 		world()->await_convoy_threads();
 	}
 #endif
+
+	// Check degraded unowned tram lines, and remove them
+	// This includes disused railway crossings
+	if (!from_saved_game && get_waytype() == road_wt)
+	{
+		const weg_t* tramway = gr ? gr->get_weg(track_wt) : NULL;
+		if (tramway && tramway->get_remaining_wear_capacity() == 0 && tramway->get_owner() == NULL)
+		{
+			// Fully degraded, unowned tram line: delete
+			gr->remove_everything_from_way(get_owner(), track_wt, ribi_t::none);
+			gr->mark_image_dirty();
+		}
+	}
 
 	if(hang != slope_t::flat)
 	{
@@ -395,12 +409,23 @@ void weg_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	for(  int type=0;  type<MAX_WAY_STATISTICS;  type++  ) {
-		for(  int month=0;  month<MAX_WAY_STAT_MONTHS;  month++  ) {
+	const uint32 max_stat_types = file->get_extended_version() >= 15 || (file->get_extended_version() == 14 && file->get_extended_revision() >= 19) ? MAX_WAY_STATISTICS : 2;
+	for(uint32 type = 0; type < max_stat_types; type++)
+	{
+		for(uint32 month = 0; month < MAX_WAY_STAT_MONTHS; month++)
+		{
 			sint32 w = statistics[month][type];
 			file->rdwr_long(w);
 			statistics[month][type] = (sint16)w;
-			// DBG_DEBUG("weg_t::rdwr()", "statistics[%d][%d]=%d", month, type, statistics[month][type]);
+		}
+	}
+
+	if (file->is_loading() && file->get_extended_version() < 15 && file->get_extended_revision() < 19)
+	{
+		// Older version - initialise the stopped vehicle statistics
+		for (uint32 month = 0; month < MAX_WAY_STAT_MONTHS; month++)
+		{
+			statistics[month][WAY_STAT_WAITING] = 0;
 		}
 	}
 
@@ -449,6 +474,37 @@ void weg_t::rdwr(loadsave_t *file)
 		file->rdwr_bool(deg);
 		degraded = deg;
 #endif
+
+		if (file->get_extended_version() >= 15 || (file->get_extended_version() >= 14 && file->get_extended_revision() >= 19))
+		{
+			if (file->is_saving())
+			{
+				uint32 private_car_routes_count = private_car_routes.get_count();
+				file->rdwr_long(private_car_routes_count); 
+				FOR(private_car_route_map, element, private_car_routes)
+				{
+					koord destination = element.key;
+					koord3d next_tile = element.value;
+
+					destination.rdwr(file);
+					next_tile.rdwr(file);
+				}
+			}
+			else // Loading
+			{
+				uint32 private_car_routes_count = 0;
+				file->rdwr_long(private_car_routes_count);
+				for (uint32 i = 0; i < private_car_routes_count; i++)
+				{
+					koord destination;
+					destination.rdwr(file); 
+					koord3d next_tile;
+					next_tile.rdwr(file);
+					bool put_succeeded = private_car_routes.put(destination, next_tile);
+					assert(put_succeeded); 
+				}
+			}
+		}
 	}
 }
 
@@ -487,6 +543,8 @@ void weg_t::info(cbuffer_t & buf, bool is_bridge) const
 	const sint32 tunnel_topspeed = tunnel ? tunnel->get_desc()->get_topspeed() : UINT32_MAX_VALUE;
 	const sint32 topspeed = desc->get_topspeed();
 
+	const bool impassible = remaining_wear_capacity == 0;
+
 	if (public_right_of_way)
 	{
 		buf.append(translator::translate("Public right of way"));
@@ -503,13 +561,14 @@ void weg_t::info(cbuffer_t & buf, bool is_bridge) const
 	{
 		buf.append(translator::translate("Degraded"));
 		buf.append("\n\n");
-		buf.append(translator::translate("way_cannot_be_used_by_any_vehicle"));
-		buf.append("\n\n");
+		if (impassible)
+		{
+			buf.append(translator::translate("way_cannot_be_used_by_any_vehicle"));
+			buf.append("\n\n");
+		}
 	}
 
-
-
-	if (!degraded)
+	if (!impassible)
 	{
 		buf.append(translator::translate("Max. speed:"));
 		buf.append(" ");
@@ -541,11 +600,15 @@ void weg_t::info(cbuffer_t & buf, bool is_bridge) const
 					buf.append(translator::translate("(speed_restricted_by_wayobj)"));
 				}
 			}
-
+			else if (degraded)
+			{
+				buf.append(translator::translate("(speed_restricted_by_degradation)"));
+			}
 			else
 			{
 				buf.append(translator::translate("(speed_restricted_by_city)"));
 			}
+			buf.append("\n");
 			buf.append("\n");
 		}
 
@@ -569,6 +632,36 @@ void weg_t::info(cbuffer_t & buf, bool is_bridge) const
 			buf.append(translator::translate("tonnen"));
 			buf.append("\n");
 		}
+#ifdef DEBUG
+		// Private car routes from here
+		// This generates a lot of text spam, so this should no be enabled by default.
+		if (!private_car_routes.empty())
+		{
+			buf.append("\n"); 
+			buf.append(translator::translate("Road routes from here:")); // TODO: Add translator entry for this text - if this does not remain debug only.
+			FOR(private_car_route_map, const& route, private_car_routes)
+			{
+				
+				const grund_t* gr = welt->lookup_kartenboden(route.key);
+				const gebaeude_t* building = gr ? gr->get_building() : NULL;
+				if (building)
+				{
+					buf.append("\n");
+					buf.append(translator::translate(building->get_individual_name())); 
+				}
+				else
+				{
+					const stadt_t* city = welt->get_city(route.key);
+					if (city)
+					{
+						buf.append("\n");
+						buf.append(city->get_name()); 
+					}
+				}
+			}
+			buf.append("\n");
+		}
+#endif
 	}
 
 	if (wtyp == air_wt && desc->get_styp() == type_runway)
@@ -628,7 +721,16 @@ void weg_t::info(cbuffer_t & buf, bool is_bridge) const
 	buf.append(translator::translate("Condition"));
 	buf.append(": ");
 	char tmpbuf_cond[40];
-	sprintf(tmpbuf_cond, "%u%%", get_condition_percent());
+	const uint32 condition_percent = get_condition_percent();
+	if (condition_percent == 0 && remaining_wear_capacity > 0)
+	{
+		// Do not show 0% when there is some wear capacity left.
+		sprintf(tmpbuf_cond, "< 1%%");
+	}
+	else
+	{
+		sprintf(tmpbuf_cond, "%u%%", get_condition_percent());
+	}
 	buf.append(tmpbuf_cond);
 	buf.append("\n");
 	buf.append(translator::translate("Built"));
@@ -637,7 +739,7 @@ void weg_t::info(cbuffer_t & buf, bool is_bridge) const
 	sprintf(tmpbuf_built, "%s", translator::get_year_month(creation_month_year));
 	buf.append(tmpbuf_built);
 	buf.append("\n");
-	if (!degraded)
+	if (!impassible)
 	{
 		buf.append(translator::translate("Last renewed"));
 	}
@@ -911,9 +1013,24 @@ if(  get_waytype() == road_wt  ) {
 		}
 }
 
-#if 1
+#ifndef DEBUG_WAY_STATS
 	//buf.append("\n");
 	buf.printf(translator::translate("convoi passed last\nmonth %i\n"), statistics[1][1]);
+#if 0
+	if (desc->get_waytype() == road_wt)
+	{
+		buf.printf("\n");
+		buf.printf(translator::translate("Vehicles stopped here last month: %i"), statistics[1][2]);
+		buf.printf("\n");
+	}
+#else
+	if (desc->get_waytype() == road_wt)
+	{
+		buf.printf("\n");
+		buf.printf(translator::translate("Congestion: %i%%"), get_congestion_percentage()); // TODO: Set up this text for translating
+		buf.printf("\n");
+	}
+#endif
 #else
 	// Debug - output stats
 	buf.append("\n");
@@ -1239,7 +1356,7 @@ void weg_t::calc_image()
 	grund_t *from = welt->lookup(get_pos());
 	grund_t *to;
 	image_id old_image = image;
-
+	bool bridge_has_own_way_graphics = false;
 	if(  from==NULL  ||  desc==NULL  ||  !from->is_visible()  ) {
 		// no ground, in tunnel
 		set_image(IMG_EMPTY);
@@ -1258,6 +1375,7 @@ void weg_t::calc_image()
 		set_image(IMG_EMPTY);
 		set_after_image(IMG_EMPTY);
 	}
+	
 	else {
 		// use snow image if above snowline and above ground
 		bool snow = (from->ist_karten_boden() || !from->ist_tunnel()) && (get_pos().z + from->get_weg_yoff() / TILE_HEIGHT_STEP >= welt->get_snowline() || welt->get_climate(get_pos().get_2d()) == arctic_climate);
@@ -1265,18 +1383,40 @@ void weg_t::calc_image()
 		if(  snow  ) {
 			flags |= IS_SNOW;
 		}
+		if(  from->ist_bruecke() && from->obj_bei(0)==this  ){
+			//This checks whether we should show the way graphics on the bridge
+			//if the bridge has own way graphics, we don't show the way graphics on the bridge
+			const bruecke_t *bridge = from ? from->find<bruecke_t>() : NULL;
+			if(  bridge  ){
+				if(  bridge->get_desc()->get_has_own_way_graphics()  ){
+					bridge_has_own_way_graphics=true;
+				}
+			}
+		}
 
 		slope_t::type hang = from->get_weg_hang();
 		if(hang != slope_t::flat) {
 			// on slope
-			set_images(image_slope, hang, snow);
+			if(bridge_has_own_way_graphics){
+				set_image(IMG_EMPTY);
+				set_after_image(IMG_EMPTY);
+			}else{
+				set_images(image_slope, hang, snow);
+			}
 		}
+		
 		else {
 			static int recursion = 0; /* Communicate among different instances of this method */
 
 			// flat way
-			set_images(image_flat, ribi, snow);
-
+			if( bridge_has_own_way_graphics){
+				set_image(IMG_EMPTY);
+				set_after_image(IMG_EMPTY);
+			}
+			else {
+				set_images(image_flat, ribi, snow);
+			}
+			
 			// recalc image of neighbors also when this changed to non-diagonal
 			if(recursion == 0) {
 				recursion++;
@@ -1615,9 +1755,10 @@ void weg_t::degrade()
 		set_owner(NULL);
 		if(wtyp == road_wt)
 		{
-			const stadt_t* city = welt->get_city(get_pos().get_2d());
 			if (!initially_unowned && welt->get_timeline_year_month())
 			{
+				const planquadrat_t* tile = welt->access(get_pos().get_2d());
+				const stadt_t* city = tile ? tile->get_city() : NULL;
 				const way_desc_t* wb = city ? welt->get_settings().get_city_road_type(welt->get_timeline_year_month()) : welt->get_settings().get_intercity_road_type(welt->get_timeline_year_month());
 				set_desc(wb ? wb : desc);
 			}
@@ -1674,3 +1815,4 @@ signal_t *weg_t::get_signal(ribi_t::ribi direction_of_travel) const
 	}
 	else return NULL;
 }
+

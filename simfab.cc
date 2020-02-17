@@ -762,7 +762,7 @@ fabrik_t::fabrik_t(loadsave_t* file)
 	else
 	{
 		// This will create a new gebaeude_t object if our existing one has not already been saved and re-loaded.
-		build(rotate, false, false);
+		build(rotate, false, false, true);
 
 		// now get rid of construction image
 		for(  sint16 y=0;  y<desc->get_building()->get_y(rotate);  y++  ) {
@@ -1026,7 +1026,7 @@ fabrik_t::~fabrik_t()
 }
 
 
-void fabrik_t::build(sint32 rotate, bool build_fields, bool force_initial_prodbase)
+void fabrik_t::build(sint32 rotate, bool build_fields, bool force_initial_prodbase, bool from_saved)
 {
 	this->rotate = rotate;
 	pos_origin = welt->lookup_kartenboden(pos_origin.get_2d())->get_pos();
@@ -1077,6 +1077,12 @@ void fabrik_t::build(sint32 rotate, bool build_fields, bool force_initial_prodba
 
 	pos = building->get_pos();
 	pos_origin.z = pos.z;
+
+	// Must build roads before fields so that the road is not blocked by the fields.
+	if (!from_saved && welt->get_settings().get_auto_connect_industries_and_attractions_by_road())
+	{
+		building->connect_by_road_to_nearest_city();
+	}
 
 	if(desc->get_field_group()) {
 		// if there are fields
@@ -1679,10 +1685,12 @@ DBG_DEBUG("fabrik_t::rdwr()","loading factory '%s'",s);
 		}
 	}
 
-	has_calculated_intransit_percentages = false;
+	if (file->is_loading())
+	{
+		has_calculated_intransit_percentages = false;
+	}
 	// Cannot calculate intransit percentages here,
 	// as this can only be done when paths are available.
-
 }
 
 
@@ -1708,7 +1716,7 @@ void fabrik_t::smoke() const
 	// maybe sound?
 	if (!world()->is_fast_forward() && desc->get_sound() != NO_SOUND && (welt->get_ticks() > (last_sound_ms + desc->get_sound_interval_ms())))
 	{
-		welt->play_sound_area_clipped(get_pos().get_2d(), desc->get_sound());
+		welt->play_sound_area_clipped(get_pos().get_2d(), desc->get_sound(), noise_barrier_wt);
 		// The below does not work because this is const - but without this, the whole sound interval does not work.
 		//last_sound_ms = welt->get_ticks();
 	}
@@ -2443,8 +2451,9 @@ void fabrik_t::verteile_waren(const uint32 product)
 					}
 
 					const bool needs_max_amount = needed >= ziel_fab->get_input()[w].max;
+					const sint32 storage_base_units = (sint32)(((sint64)ziel_fab->get_input()[w].menge * (sint64)(prod_factor)) >> (DEFAULT_PRODUCTION_FACTOR_BITS + precision_bits));
 
-					if (needs_max_amount && (needed_base_units == 0))
+					if (needed > 0 && ziel_fab->get_input()[w].get_in_transit() == 0 && (needs_max_amount || storage_base_units <= 1) && needed_base_units == 0)
 					{
 						needed_base_units = 1;
 					}

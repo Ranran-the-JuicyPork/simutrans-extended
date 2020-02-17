@@ -1460,7 +1460,7 @@ void haltestelle_t::new_month()
 
 		for (uint8 g_class = 0; g_class < number_of_classes; g_class++)
 		{
-			FOR(waiting_time_map, iter, *waiting_times[category][g_class])
+			FOR(waiting_time_map, &iter, *waiting_times[category][g_class])
 			{
 				// If the waiting time data are stale (more than two months old), gradually flush them.
 				// After a month, values of the estimated waiting time are appended to the list of waiting times.
@@ -2141,9 +2141,27 @@ uint32 haltestelle_t::find_route(const vector_tpl<halthandle_t>& destination_hal
 
  	koord destination_stop_pos = destination_pos;
 
-	const uint8 ware_catg = ware.get_desc()->get_catg_index();
-	const bool is_freight = ware.is_freight();
-	const uint8 g_class = ware.g_class;
+	bool is_freight = false;
+	uint8 g_class;
+	uint8 ware_catg;
+
+	if (ware.is_freight())
+	{
+		is_freight = true;
+		ware_catg = ware.get_desc()->get_catg_index();
+		g_class = 0;
+	}
+	else if (ware.is_mail())
+	{
+		ware_catg = goods_manager_t::INDEX_MAIL;
+		g_class = 0;
+	}
+	else // Passengers
+	{
+		// Class only matters for passengers
+		g_class = ware.g_class;
+		ware_catg = goods_manager_t::INDEX_PAS;
+	}
 
 	bool found_a_halt = false;
 
@@ -2151,15 +2169,15 @@ uint32 haltestelle_t::find_route(const vector_tpl<halthandle_t>& destination_hal
 	halthandle_t test_transfer;
 	koord real_destination_pos;
 
-	for(vector_tpl<halthandle_t>::const_iterator destination_halt = destination_halts_list.begin(); destination_halt != destination_halts_list.end(); destination_halt++)
+	FOR(vector_tpl<halthandle_t>, destination_halt, destination_halts_list)
 	{
-		if (!destination_halt->is_bound() || self == *destination_halt)
+		if (!destination_halt.is_bound() || self == destination_halt)
 		{
 			// Either this halt has been deleted recently, or the origin and destination are the same.
 			continue;
 		}
 		
-		path_explorer_t::get_catg_path_between(ware_catg, self, *destination_halt, test_time, test_transfer, g_class);
+		path_explorer_t::get_catg_path_between(ware_catg, self, destination_halt, test_time, test_transfer, g_class);
 
 		found_a_halt = true;
 		
@@ -2183,7 +2201,7 @@ uint32 haltestelle_t::find_route(const vector_tpl<halthandle_t>& destination_hal
 		destination_stop_pos = (*destination_halt)->get_next_pos(real_destination_pos);
 		*/
 
-		destination_stop_pos = (*destination_halt)->get_init_pos();
+		destination_stop_pos = (destination_halt)->get_init_pos();
 
 		// And find the shortest walking distance to there.
 		const uint32 walk_distance = shortest_distance(destination_stop_pos, real_destination_pos);
@@ -2208,7 +2226,7 @@ uint32 haltestelle_t::find_route(const vector_tpl<halthandle_t>& destination_hal
 		if(test_time < best_journey_time)
 		{
 			// This is quicker than the last halt we tried.
-			best_destination_halt = *destination_halt;
+			best_destination_halt = destination_halt;
 			best_journey_time = test_time;
 			best_transfer = test_transfer;
 		}
@@ -2345,7 +2363,7 @@ bool haltestelle_t::recall_ware( ware_t& w, uint32 menge )
 }
 
 
-bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *good_category, sint32 requested_amount, const schedule_t *schedule, const player_t *player, convoi_t* cnv, bool overcrowded, const uint8 g_class, const bool use_lower_classes, bool& other_classes_available)
+bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *good_category, sint32 requested_amount, const schedule_t *schedule, const player_t *player, convoi_t* cnv, bool overcrowded, const uint8 g_class, const bool use_lower_classes, bool& other_classes_available, const bool mixed_load_prohibition, uint8 goods_restriction)
 {
 	bool skipped = false;
 	const uint8 catg_index = good_category->get_catg_index();
@@ -2361,7 +2379,19 @@ bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *goo
 			if(ware->menge > 0)
 			{
 				i++;
-				if (ware->get_class() >= g_class)
+				if (mixed_load_prohibition) {
+					// this vehicle only load with the same kind of goods initially loaded
+					if (!goods_restriction) {
+						goods_restriction = ware->get_index();
+					}
+					if (ware->get_index() == goods_restriction) {
+						goods_to_check.insert(ware);
+					}
+					else {
+						other_classes_available = true;
+					}
+				}
+				else if (ware->get_class() >= g_class)
 				{
 					// We know at this stage that we cannot load passengers of a *lower* class into higher class accommodation,
 					// but we cannot yet know whether or not to load passengers of a higher class into lower class accommodation.
@@ -4103,7 +4133,7 @@ void haltestelle_t::rdwr(loadsave_t *file)
 					file->rdwr_short(halts_count);
 					halthandle_t halt;
 
-					FOR(waiting_time_map, iter, *waiting_times[i][j])
+					FOR(waiting_time_map, &iter, *waiting_times[i][j])
 					{
 						uint16 id = iter.key;
 

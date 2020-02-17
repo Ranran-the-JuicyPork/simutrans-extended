@@ -1317,7 +1317,7 @@ void grund_t::display_if_visible(sint16 xpos, sint16 ypos, const sint16 raster_t
 {
 	if(  !is_karten_boden_visible()  ) {
 		// only check for forced redraw (of marked ... )
-		if(dirty) {
+		if(get_flag(grund_t::dirty)) {
 			mark_rect_dirty_clip( xpos, ypos + raster_tile_width / 2, xpos + raster_tile_width - 1, ypos + raster_tile_width - 1 CLIP_NUM_PAR );
 		}
 		return;
@@ -2470,7 +2470,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 bool grund_t::get_neighbour(grund_t *&to, waytype_t type, ribi_t::ribi ribi) const
 {
 	// must be a single direction
-	assert( ribi_t::is_single(ribi) );
+	assert( ribi_t::is_single(ribi) ); 
 
 	if(  type != invalid_wt  &&   (get_weg_ribi_unmasked(type) & ribi) == 0  ) {
 		// no way on this tile in the given direction

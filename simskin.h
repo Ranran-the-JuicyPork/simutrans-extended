@@ -131,6 +131,8 @@ public:
 	static const skin_desc_t *travel_time;
 	/// image to indicate that the movement method is walking
 	static const skin_desc_t *on_foot;
+	/// image to indicate that the vehicle has upgrade target
+	static const skin_desc_t *upgradable;
 
 
 	/// @name cursors

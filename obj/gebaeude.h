@@ -241,6 +241,7 @@ public:
 	 * @author Hj. Malthaner
 	 */
 	virtual const char *get_name() const;
+	const char* get_individual_name() const;
 
 	void get_description(cbuffer_t & buf) const;
 
@@ -390,6 +391,8 @@ public:
 	
 	const minivec_tpl<const planquadrat_t*> &get_tiles() { return building_tiles; }
 	void set_building_tiles();
+
+	void connect_by_road_to_nearest_city(); 
 
 private:
 	// Calculate last 2 years(13-24 months) average percentage

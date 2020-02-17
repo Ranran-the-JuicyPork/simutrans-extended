@@ -118,6 +118,7 @@ static const char * state_names[convoi_t::MAX_STATES] =
 	"NO_ROUTE_TOO_COMPLEX"
 };
 
+
 // Reset some values.  Used in init and replacing.
 void convoi_t::reset()
 {
@@ -1173,10 +1174,11 @@ convoi_t::route_infos_t& convoi_t::get_route_infos()
 		start_info.direction = front.get_direction();
 		start_info.steps_from_start = 0;
 		const weg_t *current_weg = get_weg_on_grund(welt->lookup(current_tile), waytype);
-		start_info.speed_limit = front.calc_speed_limit(current_weg, NULL, &corner_data, start_info.direction, start_info.direction);
+		start_info.speed_limit = front.calc_speed_limit(current_weg, NULL, &corner_data, get_tile_length(), start_info.direction, start_info.direction);
 
 		sint32 takeoff_index = front.get_takeoff_route_index();
 		sint32 touchdown_index = front.get_touchdown_route_index();
+		uint32 bridge_tiles = 0;
 		for (i++; i < route_count; i++)
 		{
 			convoi_t::route_info_t &current_info = route_infos.get_element(i - 1);
@@ -1185,12 +1187,37 @@ convoi_t::route_infos_t& convoi_t::get_route_infos()
 			const koord3d next_tile = route.at(min(i + 1, route_count - 1));
 			this_info.speed_limit = welt->lookup_kartenboden(this_tile.get_2d())->is_water() ? vehicle_t::speed_unlimited() : kmh_to_speed(950); // Do not alow supersonic flight over land.
 			this_info.steps_from_start = current_info.steps_from_start + front.get_tile_steps(current_tile.get_2d(), next_tile.get_2d(), this_info.direction);
-			const weg_t *this_weg = get_weg_on_grund(welt->lookup(this_tile), waytype);
+			const grund_t* this_gr = welt->lookup(this_tile);
+			const weg_t *this_weg = get_weg_on_grund(this_gr, waytype);
+			uint32 bridge_tiles_ahead = 0;
+			if (this_gr && this_gr->ist_bruecke())
+			{
+				bridge_tiles++;
+				
+				for (uint32 j = i + 1; j < route_count; j++)
+				{
+					const koord3d tile = route.at(j);
+					const grund_t* gr = welt->lookup(tile); 
+					if (gr && gr->ist_bruecke())
+					{
+						bridge_tiles_ahead++;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				bridge_tiles = 0;
+			}
+
 			if (i >= touchdown_index || i <= takeoff_index)
 			{
 				// not an aircraft (i <= takeoff_index == INVALID_INDEX == 65530u) or
 				// aircraft on ground (not between takeoff_index and touchdown_index): get speed limit
-				current_info.speed_limit = this_weg ? front.calc_speed_limit(this_weg, current_weg, &corner_data, this_info.direction, current_info.direction) : vehicle_t::speed_unlimited();
+				current_info.speed_limit = this_weg ? front.calc_speed_limit(this_weg, current_weg, &corner_data, bridge_tiles + bridge_tiles_ahead, this_info.direction, current_info.direction) : vehicle_t::speed_unlimited();
 			}
 			current_tile = this_tile;
 			current_weg = this_weg;
@@ -2251,7 +2278,7 @@ end_loop:
 				rev = !reverse_schedule;
 				schedule->increment_index(&position, &rev);
 				halthandle_t this_halt = haltestelle_t::get_halt(front()->get_pos(), owner);
-				if (this_halt == haltestelle_t::get_halt(schedule->entries[position].pos, owner))
+				if (this_halt.is_bound() && this_halt == haltestelle_t::get_halt(schedule->entries[position].pos, owner))
 				{
 					// Load any newly arrived passengers/mail bundles/goods while waiting for a signal to clear.
 					laden();
@@ -2442,6 +2469,16 @@ void convoi_t::new_month()
 		return;
 	}
 
+	// everything normal: update history
+	for (int j = 0; j<MAX_CONVOI_COST; j++)
+	{
+		for (int k = MAX_MONTHS-1; k>0; k--)
+		{
+			financial_history[k][j] = financial_history[k-1][j];
+		}
+		financial_history[0][j] = 0;
+	}
+
 	// Deduct monthly fixed maintenance costs.
 	// @author: jamespetts
 	sint64 monthly_cost = 0;
@@ -2451,8 +2488,6 @@ void convoi_t::new_month()
 		monthly_cost -= get_vehicle(j)->get_desc()->get_fixed_cost(welt);
 	}
 	jahresgewinn += monthly_cost;
-	book( monthly_cost, CONVOI_OPERATIONS );
-	book( monthly_cost, CONVOI_PROFIT );
 	// This is way too tedious a way to get my waytype...
 	waytype_t my_waytype;
 	if (get_schedule()) {
@@ -2465,16 +2500,9 @@ void convoi_t::new_month()
 		my_waytype = ignore_wt;
 	}
 	get_owner()->book_vehicle_maintenance(monthly_cost, my_waytype);
-
-	// everything normal: update history
-	for (int j = 0; j<MAX_CONVOI_COST; j++)
-	{
-		for (int k = MAX_MONTHS-1; k>0; k--)
-		{
-			financial_history[k][j] = financial_history[k-1][j];
-		}
-		financial_history[0][j] = 0;
-	}
+	monthly_cost = welt->calc_adjusted_monthly_figure(monthly_cost);
+	book(monthly_cost, CONVOI_OPERATIONS);
+	book(monthly_cost, CONVOI_PROFIT);
 
 	if(financial_history[1][CONVOI_AVERAGE_SPEED] == 0)
 	{
@@ -2563,14 +2591,7 @@ void convoi_t::enter_depot(depot_t *dep)
 	if(reversed)
 	{
 		// Put the convoy back into "forward" position
-		if(reversed)
-		{
-			reversable = front()->get_desc()->get_can_lead_from_rear() || (vehicle_count == 1 && front()->get_desc()->is_bidirectional());
-		}
-		else
-		{
-			reversable = back()->get_desc()->get_can_lead_from_rear() || (vehicle_count == 1 && front()->get_desc()->is_bidirectional());
-		}
+		reversable = get_terminal_shunt_mode() == change_direction ? true : false;
 		reverse_order(reversable);
 	}
 
@@ -2815,7 +2836,7 @@ DBG_MESSAGE("convoi_t::add_vehicle()","extend array_tpl to %i totals.",max_rail_
 		invalidate_vehicle_summary();
 		freight_info_resort = true;
 		// Add good_catg_index:
-		if(v->get_cargo_max() > 0)
+		if(v->get_cargo_max() > 0 || (v->get_cargo_type() == goods_manager_t::passengers && v->get_desc()->get_overcrowded_capacity() > 0))
 		{
 			const goods_desc_t *ware=v->get_cargo_type();
 			if(ware!=goods_manager_t::none  )
@@ -2852,7 +2873,13 @@ void convoi_t::upgrade_vehicle(uint16 i, vehicle_t* v)
 	// Adapted from the add/remove vehicle functions
 	// @author: jamespetts, February 2010
 
-DBG_MESSAGE("convoi_t::upgrade_vehicle()","at pos %i of %i totals.",i,max_vehicle);
+	DBG_MESSAGE("convoi_t::upgrade_vehicle()","at pos %i of %i totals.",i,max_vehicle);
+
+	if (i >= vehicle.get_count())
+	{
+		dbg->error("convoi_t::upgrade_vehicle()", "Attempting to append beyond end of convoy"); 
+		return;
+	}
 
 	// now append
 	v->set_convoi(this);
@@ -2876,7 +2903,7 @@ DBG_MESSAGE("convoi_t::upgrade_vehicle()","at pos %i of %i totals.",i,max_vehicl
 	// Added by		: Knightly
 	// Adapted from : simline_t
 	// Purpose		: Try to update supported goods category of this convoy
-	if (v->get_cargo_max() > 0)
+	if (v->get_cargo_max() > 0 || (v->get_cargo_type() == goods_manager_t::passengers && v->get_desc()->get_overcrowded_capacity() > 0))
 	{
 		const goods_desc_t *ware_type = v->get_cargo_type();
 		if (ware_type != goods_manager_t::none)
@@ -3018,7 +3045,8 @@ void convoi_t::recalc_catg_index()
 		// Only consider vehicles that really transport something
 		// this helps against routing errors through passenger
 		// trains pulling only freight wagons
-		if(get_vehicle(i)->get_cargo_max() == 0) {
+		if(get_vehicle(i)->get_cargo_max() == 0 && (get_vehicle(i)->get_cargo_type() != goods_manager_t::passengers || get_vehicle(i)->get_desc()->get_overcrowded_capacity() == 0)) 
+		{
 			continue;
 		}
 		const goods_desc_t *ware=get_vehicle(i)->get_cargo_type();
@@ -3387,9 +3415,8 @@ void convoi_t::vorfahren()
 
 					default:
 
-						const bool reverse_as_unit = re_ordered ? front()->get_desc()->get_can_lead_from_rear() : back()->get_desc()->get_can_lead_from_rear();
 
-						reversable = reverse_as_unit || (vehicle_count == 1 && front()->get_desc()->is_bidirectional());
+						reversable = get_terminal_shunt_mode() == change_direction ? true : false;
 
 						reverse_delay = calc_reverse_delay();
 
@@ -3671,6 +3698,11 @@ void convoi_t::reverse_order(bool rev)
 	uint8 a = 0;
     vehicle_t* reverse;
 	uint8 b  = vehicle_count;
+	uint8 loco_a = 0;
+	uint8 loco_b = get_front_loco_count();
+	uint8 back_a = check_new_tail(get_front_loco_count());
+	uint8 back_b = vehicle_count;
+	//bool reverse_loco = false; // If true, the locomotive number will be reverced. i.e. not using turntable
 
 	working_method_t wm = drive_by_sight;
 	if(front()->get_waytype() == track_wt || front()->get_waytype() == tram_wt || front()->get_waytype() == maglev_wt || front()->get_waytype() == monorail_wt)
@@ -3679,75 +3711,59 @@ void convoi_t::reverse_order(bool rev)
 		wm = w->get_working_method();
 	}
 
-	if(rev)
-	{
-		front()->set_leading(false);
-	}
-	else
-	{
-		if(!back()->get_desc()->is_bidirectional())
-		{
-			// Do not change the order at all if the last vehicle is not bidirectional
-			return;
-		}
-
-		a++;
-		if(front()->get_desc()->get_power() > 0)
-		{
-			// If this is a locomotive, check for tenders/pair units.
-			if (front()->get_desc()->get_trailer_count() > 0 && vehicle[1]->get_desc()->get_leader_count() > 0)
-			{
-				a ++;
-			}
-
-			// Check for double-headed (and triple headed, etc.) tender locomotives
-			uint8 first = a;
-			uint8 second = a + 1;
-			while(vehicle_count > second && (vehicle[first]->get_desc()->get_power() > 0 || vehicle[second]->get_desc()->get_power() > 0))
-			{
-				if(vehicle[first]->get_desc()->get_trailer_count() > 0 && vehicle[second]->get_desc()->get_leader_count() > 0)
-				{
-					a ++;
-				}
-				first++;
-				second++;
-			}
-			if (vehicle_count > 1 && vehicle[1]->get_desc()->get_power() == 0 && vehicle[1]->get_desc()->get_trailer_count() == 1 && vehicle[1]->get_desc()->get_trailer(0) && vehicle[1]->get_desc()->get_trailer(0)->get_power() == 0 && vehicle[1]->get_desc()->get_trailer(0)->get_value() == 0)
-			{
-				// Multiple tenders or Garretts with powered front units.
-				a ++;
-			}
-		}
-
-		// Check whether this is a Garrett type vehicle (with unpowered front units).
-		if(vehicle[0]->get_desc()->get_power() == 0 && vehicle[0]->get_desc()->get_total_capacity() == 0)
-		{
-			// Possible Garrett
-			const uint8 count = front()->get_desc()->get_trailer_count();
-			if(count > 0 && vehicle[1]->get_desc()->get_power() > 0 && vehicle[1]->get_desc()->get_trailer_count() > 0)
-			{
-				// Garrett detected
-				a ++;
-			}
-		}
-
-		// Check for a goods train with a brake van
-		if((vehicle[vehicle_count - 2]->get_desc()->get_freight_type()->get_catg_index() > 1)
-			&& 	vehicle[vehicle_count - 2]->get_desc()->get_can_be_at_rear() == false)
-		{
-			b--;
-		}
-
-		for(uint8 i = 1; i < vehicle_count; i++)
-		{
-			if(vehicle[i]->get_desc()->get_power() > 0)
-			{
-				a++;
-			}
-		}
-	}
-
+	front()->set_leading(false);
 	back()->set_last(false);
+
+	if (!rev)
+	{
+		//back()->set_last(false);
+		switch (get_terminal_shunt_mode()) {
+			case change_direction:
+				break;
+			case shunting_loco:
+				a = get_front_loco_count();
+				// reverse loco
+				if (!check_need_turntable()) {
+					for (; loco_a < --loco_b; loco_a++)
+					{
+						reverse = vehicle[loco_a];
+						vehicle[loco_a] = vehicle[loco_b];
+						vehicle[loco_b] = reverse;
+					}
+				}
+				break;
+			case rearrange:
+				a = get_front_loco_count();
+				b = back_a;
+				// reverse back end chunk
+				if (back_a < back_b) {
+					for (; back_a < --back_b; back_a++)
+					{
+						reverse = vehicle[back_a];
+						vehicle[back_a] = vehicle[back_b];
+						vehicle[back_b] = reverse;
+					}
+				}
+
+				// reverse loco
+				if (!check_need_turntable()) {
+					for (; loco_a < --loco_b; loco_a++)
+					{
+						reverse = vehicle[loco_a];
+						vehicle[loco_a] = vehicle[loco_b];
+						vehicle[loco_b] = reverse;
+					}
+				}
+				break;
+			case wye:
+			default:
+				// Do not change the order at all if reverse the whole convoy. i.e. consider as using wye
+				front()->set_leading(true);
+				back()->set_last(true);
+				return;
+				break;
+		}
+	}
 
 	for( ; a<--b; a++) //increment a and decrement b until they meet each other
 	{
@@ -3756,11 +3772,7 @@ void convoi_t::reverse_order(bool rev)
 		vehicle[b] = reverse; //put what's in the swap (a) into b
 	}
 
-	if(!rev)
-	{
-		front()->set_leading(true);
-	}
-
+	front()->set_leading(true);
 	back()->set_last(true);
 
 	reversed = !reversed;
@@ -3769,9 +3781,23 @@ void convoi_t::reverse_order(bool rev)
 		re_ordered = !re_ordered;
 	}
 
-	for(const_iterator i = begin(); i != end(); ++i)
-	{
-		(*i)->set_reversed(reversed);
+
+	int start = 0;
+	switch (get_terminal_shunt_mode()) {
+		case shunting_loco:
+		case rearrange:
+			if (check_need_turntable()) {
+				start = get_front_loco_count();
+			}
+			break;
+		case change_direction:
+		case wye:
+		default:
+			break;
+	}
+
+	for (int i=start; i < vehicle_count; i++) {
+		vehicle[i]->set_reversed(reversed);
 	}
 
 	if(front()->get_waytype() == track_wt || front()->get_waytype()  == tram_wt || front()->get_waytype() == maglev_wt || front()->get_waytype() == monorail_wt)
@@ -5191,17 +5217,15 @@ void convoi_t::open_schedule_window( bool show )
 	if (schedule)
 	{
 		old_schedule = schedule->copy();
+	} else {
+		schedule = create_schedule();
 	}
-
 	if(  show  ) {
 		// Open schedule dialog
 		create_win( new schedule_gui_t(schedule,get_owner(),self), w_info, (ptrdiff_t)schedule );
 		// TODO: what happens if no client opens the window??
 	}
-	if(schedule)
-	{
-		schedule->start_editing();
-	}
+	schedule->start_editing();
 }
 
 
@@ -5378,10 +5402,6 @@ void convoi_t::laden() //"load" (Babelfish)
 		if(average_speed <= get_vehicle_summary().max_speed)
 		{
 			book(average_speed, CONVOI_AVERAGE_SPEED);
-			if(average_speed > welt->get_record_speed(vehicle[0]->get_waytype()))
-			{
-				welt->notify_record(self, average_speed, pos);
-			}
 
 			typedef inthashtable_tpl<uint16, sint64> int_map;
 			FOR(int_map, const& iter, best_times_in_schedule)
@@ -6768,7 +6788,7 @@ COLOR_VAL convoi_t::get_status_color() const
 	}
 	else if(has_obsolete)
 	{
-		return COL_DARK_BLUE;
+		return COL_OBSOLETE;
 	}
 	// normal state
 	return SYSCOL_TEXT;
@@ -7677,42 +7697,45 @@ void convoi_t::clear_replace()
 	 }
  }
 
- uint32 convoi_t::calc_reverse_delay() const
- {
+uint32 convoi_t::calc_reverse_delay() const
+{
 	if (front()->get_waytype() == road_wt)
 	{
 		return welt->get_settings().get_road_reverse_time();
 	}
 
-	 uint32 reverse_delay;
+	uint32 reverse_delay;
+	uint8 last_loco = get_front_loco_count() - 1;
 
-	if(reversable)
-	{
-		// Multiple unit or similar: quick reverse
-		reverse_delay = welt->get_settings().get_unit_reverse_time();
-	}
-	else if(front()->get_desc()->is_bidirectional())
-	{
-		// Loco hauled, no turntable.
-		if(vehicle_count > 1 && vehicle[vehicle_count-2]->get_desc()->get_can_be_at_rear() == false
-			&& vehicle[vehicle_count-2]->get_desc()->get_freight_type()->get_catg_index() > 1)
-		{
+	switch (get_terminal_shunt_mode()) {
+		case change_direction:
+			// Multiple unit or similar: quick reverse
+			reverse_delay = welt->get_settings().get_unit_reverse_time();
+			break;
+		case shunting_loco:
+			// Locomotives need turntable.
+			if (!(front()->get_desc()->is_bidirectional()) ||
+				(vehicle[last_loco]->get_desc()->get_basic_constraint_next(vehicle[last_loco]->is_reversed()) & vehicle_desc_t::can_be_head)==0)
+			{
+				reverse_delay = welt->get_settings().get_turntable_reverse_time()*check_need_turntable();
+			}
+			else {
+				// Loco hauled, no turntable.
+				reverse_delay = welt->get_settings().get_hauled_reverse_time();
+			}
+			break;
+		case rearrange:
 			// Goods train with brake van - longer reverse time.
 			reverse_delay = (welt->get_settings().get_hauled_reverse_time() * 14) / 10;
-		}
-		else
-		{
+			break;
+		case wye:
+		default:
 			reverse_delay = welt->get_settings().get_hauled_reverse_time();
-		}
-	}
-	else
-	{
-		// Locomotive needs turntable: slow reverse
-		reverse_delay = welt->get_settings().get_turntable_reverse_time();
+			break;
 	}
 
 	return reverse_delay;
- }
+}
 
  void convoi_t::book_waiting_times()
  {
@@ -8372,6 +8395,200 @@ bool convoi_t::all_vehicles_are_buildable() const
 			return false;
 		}
 		if(!welt->get_settings().get_allow_buying_obsolete_vehicles() && get_vehicle(i)->get_desc()->is_obsolete(welt->get_timeline_year_month(), welt))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+// count the number of the front side powered chunk
+uint8 convoi_t::get_front_loco_count() const
+{
+	uint8 loco_count = 0;
+	bool this_group_has_power = false;
+
+	for (uint32 i = 0; i < vehicle_count; ++i)
+	{
+		if (vehicle[i]->get_desc()->get_power()) {
+			this_group_has_power = true;
+		}
+		// not a locomotive group
+		if (loco_count && (vehicle[i]->get_desc()->get_capacity() || vehicle[i]->get_desc()->get_overcrowded_capacity())) {
+			return loco_count;
+		}
+		if ((vehicle[i]->get_desc()->get_basic_constraint_next(vehicle[i]->is_reversed()) & vehicle_desc_t::can_be_tail) && this_group_has_power) {
+			// seems independent locomotive group. check next group...
+			loco_count = i+1;
+			this_group_has_power = false;
+		}
+	}
+	return loco_count;
+}
+
+
+uint8 convoi_t::get_terminal_shunt_mode() const
+{
+	if (!back()->get_desc()->is_bidirectional()) {
+		return wye;
+	}
+	uint8 mode = wye;
+	const bool need_turn_table = front()->get_desc()->is_bidirectional() ? false : true;
+
+	if (front()->get_waytype() == track_wt || front()->get_waytype() == tram_wt || front()->get_waytype() == narrowgauge_wt || front()->get_waytype() == maglev_wt || front()->get_waytype() == monorail_wt)
+	{
+
+		if (!need_turn_table && back()->get_desc()->get_basic_constraint_next(back()->is_reversed()) & vehicle_desc_t::can_be_head)
+		{
+			return change_direction; // has a cab on both side. = no shunting
+		}
+		if (check_new_tail(get_front_loco_count())==0) {
+			// can not headshunt because convoy does not have a new tail car candidate
+			return wye;
+		}
+		// well, determine the headshunting type...
+
+		// check loco's next side
+		uint8 next_loco = get_front_loco_count();
+		if (vehicle[next_loco]->get_desc()->get_basic_constraint_prev(vehicle[next_loco]->is_reversed()) & vehicle_desc_t::can_be_tail)
+		{
+			// Both sides of remain coaces/wagons are can be at the tail end
+			return shunting_loco;
+		}
+		else {
+			// It is necessary to shunt unpowerd vehicles(wagon/coach) formation
+			return rearrange;
+		}
+	}
+	else {
+		return wye;
+	}
+
+	return wye;
+}
+
+// Find the next "tail" vehicle other than the locomotive, and return that car's current position(number from front).
+// Pass the number of locomotives in the argument.
+// If it returns 0, it indicates that there is no existence. @Ranran
+uint8 convoi_t::check_new_tail(uint8 start = 1) const
+{
+	for (uint32 i = start; i < vehicle_count; ++i)
+	{
+		if (!vehicle[i]->get_desc()->is_bidirectional()) {
+			continue;
+		}
+		if (vehicle[i]->get_desc()->get_basic_constraint_prev(vehicle[i]->is_reversed()) & vehicle_desc_t::can_be_tail) {
+			return i;
+		}
+	}
+	return 0;
+}
+
+// Currently this is used to determine if neighboring vehicles are in intermediate side each other.
+// They are considered identical groups when reversing convoy.
+uint8 convoi_t::check_couple_constraint_level(uint8 car_no, bool rear_side) const
+{
+	uint8 constraint_level = free;
+	if (car_no == 0 && !rear_side) {
+		if (vehicle[0]->get_desc()->get_basic_constraint_prev(vehicle[0]->is_reversed()) & vehicle_desc_t::unconnectable) {
+			return unconnectable;
+		}
+		return free;
+	}
+	if (car_no > vehicle_count - 2 && rear_side) {
+		if (vehicle[vehicle_count-1]->get_desc()->get_basic_constraint_next(vehicle[vehicle_count - 1]->is_reversed()) & vehicle_desc_t::unconnectable) {
+			return unconnectable;
+		}
+		return free;
+	}
+
+	const uint8 a = rear_side ? car_no : car_no - 1;
+	const uint8 b = rear_side ? car_no + 1 : car_no;
+	const uint8 end_a = vehicle[a]->get_desc()->get_basic_constraint_next(vehicle[a]->is_reversed());
+	const uint8 end_b = vehicle[b]->get_desc()->get_basic_constraint_prev(vehicle[b]->is_reversed());
+	if (end_a & vehicle_desc_t::unknown_constraint || end_b & vehicle_desc_t::unknown_constraint) {
+		return free;
+	}
+
+	if (!end_a && !end_b) {
+		constraint_level = both_intermediate;
+	}else if ((end_a & vehicle_desc_t::can_be_head || end_a & vehicle_desc_t::can_be_tail) && (end_b & vehicle_desc_t::can_be_head || end_b & vehicle_desc_t::can_be_tail)) {
+		constraint_level = head_and_tail;
+	}
+	else {
+		constraint_level = half_intermediate;
+	}
+	if (end_a & vehicle_desc_t::intermediate_unique) {
+		constraint_level = one_sided_partner;
+	}
+	if (end_b & vehicle_desc_t::intermediate_unique) {
+		constraint_level = constraint_level == one_sided_partner ? unique_partner : one_sided_partner;
+	}
+	return constraint_level;
+}
+
+// return powered vehicle count if the front side locomotives need a turntable. Also supports double heading.
+// 0 = turtable is not necessary
+uint8 convoi_t::check_need_turntable() const
+{
+	if (get_terminal_shunt_mode() == wye || get_terminal_shunt_mode() == change_direction) { return 0; }
+
+	uint8 one_directional_powered_veh = 0;
+	if (front()->get_waytype() == track_wt || front()->get_waytype() == tram_wt || front()->get_waytype() == narrowgauge_wt || front()->get_waytype() == maglev_wt || front()->get_waytype() == monorail_wt)
+	{
+		for (uint32 i = 0; i < get_front_loco_count(); ++i)
+		{
+			if (!vehicle[i]->get_desc()->is_bidirectional() && vehicle[i]->get_desc()->get_power()) {
+				one_directional_powered_veh++;
+			}
+		}
+	}
+	return one_directional_powered_veh;
+}
+
+sint16 convoi_t::get_car_numbering(uint8 car_no) const
+{
+	// Currently does not distinguish the last (pushing) locomotive or brake van.
+	// memo: If want to mark the brake van, check the rear group if shunt_mode = rearrange. @Ranran
+	car_no++;
+	if (car_no > vehicle_count) {
+		return 0;
+	}
+	uint8 loco_cnt = 0;
+	uint8 normal_car_cnt = 0; // It also serves as a flag that the locomotive counting is over
+
+	for (uint8 veh = 0; veh < car_no; veh++) {
+		if (vehicle[veh]->get_number_of_accommodation_classes()) {
+			normal_car_cnt++;
+		}
+		else {
+			// Check the front side connection..
+			// It is the same group if each other's intermediate side.
+			if (normal_car_cnt || get_front_loco_count() <= veh) {
+				// NOTE: unpowered chunk is not considered locomotive group
+				normal_car_cnt++;
+			}
+			else {
+				loco_cnt++;
+			}
+		}
+	}
+
+	if (loco_cnt == car_no) {
+		if (reversed && !check_need_turntable()) {
+			return -(get_front_loco_count()-car_no+1);
+		}
+		return -loco_cnt;
+	}
+	return reversed ? vehicle_count - car_no + 1 : normal_car_cnt;
+}
+
+
+bool convoi_t::check_way_constraints_of_all_vehicles(const weg_t& way) const
+{
+	for (uint32 i = 0; i < vehicle_count; i++)
+	{
+		if (!get_vehicle(i)->check_way_constraints(way))
 		{
 			return false;
 		}

@@ -34,6 +34,7 @@ class schedule_t;
 class signal_t;
 class ware_t;
 class schiene_t;
+class strasse_t;
 
 // for aircraft:
 // length of the holding pattern.
@@ -320,9 +321,9 @@ private:
 	uint16 diagonal_costs;
 	uint16 base_costs;
 
-public:
-
-	static sint64 sound_ticks;
+	/// This is the last tile on which this vehicle stopped: useful
+	/// for logging traffic congestion
+	koord3d last_stopped_tile;
 
 protected:
 	virtual void hop(grund_t*);
@@ -377,12 +378,15 @@ protected:
 
 	bool check_access(const weg_t* way) const;
 
+	/// Register this vehicle as having stopped on a tile, if it has not already done so.
+	void log_congestion(strasse_t* road);
+
 public:
-	sint32 calc_speed_limit(const weg_t *weg, const weg_t *weg_previous, fixed_list_tpl<sint16, 192>* cornering_data, ribi_t::ribi current_direction, ribi_t::ribi previous_direction);
+	sint32 calc_speed_limit(const weg_t *weg, const weg_t *weg_previous, fixed_list_tpl<sint16, 192>* cornering_data, uint32 bridge_tiles, ribi_t::ribi current_direction, ribi_t::ribi previous_direction);
 
 	virtual bool check_next_tile(const grund_t* ) const {return false;}
 
-	inline bool check_way_constraints(const weg_t &way) const;
+	bool check_way_constraints(const weg_t &way) const;
 
 	uint8 hop_count;
 
@@ -549,6 +553,8 @@ public:
 
 	uint16 get_reassigned_class(uint8 g_class) const;
 
+	uint8 get_number_of_accommodation_classes() const;
+
 	/**
 	* Calculate transported cargo total weight in KG
 	* @author Hj. Malthaner
@@ -674,7 +680,7 @@ public:
 	// vehicles in reverse formation.
 	ribi_t::ribi get_direction_of_travel() const;
 
-	uint16 get_sum_weight() const { return (sum_weight + 499) / 1000; }
+	uint32 get_sum_weight() const { return sum_weight; }
 
 	uint16 get_overcrowded_capacity(uint8 g_class) const;
 	// @author: jamespetts
