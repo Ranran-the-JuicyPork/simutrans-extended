@@ -3891,6 +3891,20 @@ void display_fillbox_wh_clip_rgb(KOORD_VAL xp, KOORD_VAL yp, KOORD_VAL w, KOORD_
 	display_fb_internal(xp, yp, w, h, color, dirty, CR.clip_rect.x, CR.clip_rect.xx, CR.clip_rect.y, CR.clip_rect.yy);
 }
 
+
+void display_convoy_arrow_wh_clip_rgb(KOORD_VAL xp, KOORD_VAL yp, KOORD_VAL w, KOORD_VAL h, PIXVAL color, bool dirty  CLIP_NUM_DEF)
+{
+	for (int x = 0; x < w; x++) {
+		if (x < (w+1)/2) {
+			display_vline_wh_clip_rgb(xp+x, yp + x, h - w / 2, color, dirty  CLIP_NUM_PAR);
+		}
+		else {
+			display_vline_wh_clip_rgb(xp+x, yp + w - x-1, h - w / 2, color, dirty  CLIP_NUM_PAR);
+		}
+	}
+}
+
+
 /**
 * Draw vertical line
 * @author Hj. Malthaner
