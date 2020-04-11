@@ -103,14 +103,7 @@ static const char * line_alert_helptexts[5] =
   "line_missing_scheduled_slots",
   "line_has_obsolete_vehicles",
   "line_overcrowded",
-  "line_has_obsolete_vehicles_with_upgrades"
-};
-
-static const char * cnvlist_mode_button_texts[gui_convoiinfo_t::DISPLAY_MODES] =
-{
-  "sl_btn_general",
-  "sl_btn_payload",
-  "sl_btn_formation"
+  "line_has_upgradeable_vehicles"
 };
 
 
@@ -284,7 +277,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	livery_selector.add_listener(this);
 	add_component(&livery_selector);
 
-	bt_mode_convois.init(button_t::roundbox, cnvlist_mode_button_texts[selected_cnvlist_mode[player->get_player_nr()]], scr_coord(D_MARGIN_LEFT, 2), scr_size(D_BUTTON_WIDTH+15, D_BUTTON_HEIGHT));
+	bt_mode_convois.init(button_t::roundbox, gui_convoiinfo_t::cnvlist_mode_button_texts[selected_cnvlist_mode[player->get_player_nr()]], scr_coord(D_MARGIN_LEFT, 2), scr_size(D_BUTTON_WIDTH+15, D_BUTTON_HEIGHT));
 	bt_mode_convois.add_listener(this);
 	cont_convoys.add_component(&bt_mode_convois);
 	info_tabs.add_tab(&cont_convoys, tab_name);
@@ -436,7 +429,7 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 	}
 	else if (comp == &bt_mode_convois) {
 		selected_cnvlist_mode[player->get_player_nr()] = (selected_cnvlist_mode[player->get_player_nr()] + 1) % gui_convoiinfo_t::DISPLAY_MODES;
-		bt_mode_convois.set_text(cnvlist_mode_button_texts[selected_cnvlist_mode[player->get_player_nr()]]);
+		bt_mode_convois.set_text(gui_convoiinfo_t::cnvlist_mode_button_texts[selected_cnvlist_mode[player->get_player_nr()]]);
 		update_lineinfo(line);
 	}
 	else if(comp == &livery_selector)
@@ -705,6 +698,15 @@ void schedule_list_gui_t::display(scr_coord pos)
 			buf.append(translator::translate(line_alert_helptexts[0]));
 		}
 	}
+	if (line->get_state() & simline_t::line_has_upgradeable_vehicles) {
+		if (skinverwaltung_t::upgradable) {
+			display_color_img_with_tooltip(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y + top, 0, false, false, translator::translate(line_alert_helptexts[4]));
+			left += GOODS_SYMBOL_CELL_WIDTH;
+		}
+		else if (!buf.len() && line->get_state_color() == COL_PURPLE) {
+			buf.append(translator::translate(line_alert_helptexts[4]));
+		}
+	}
 	if (line->get_state() & simline_t::line_has_obsolete_vehicles) {
 		if (skinverwaltung_t::alerts) {
 			display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(1), pos.x + left, pos.y + top, 0, false, false, translator::translate(line_alert_helptexts[2]));
@@ -721,15 +723,6 @@ void schedule_list_gui_t::display(scr_coord pos)
 		}
 		else if (!buf.len() && line->get_state_color() == COL_DARK_PURPLE) {
 			buf.append(translator::translate(line_alert_helptexts[3]));
-		}
-	}
-	if (line->get_state() & simline_t::line_has_obsolete_vehicles_with_upgrades) {
-		if (skinverwaltung_t::upgradable) {
-			display_color_img_with_tooltip(skinverwaltung_t::upgradable->get_image_id(1), pos.x + left, pos.y + top, 0, false, false, translator::translate(line_alert_helptexts[4]));
-			left += GOODS_SYMBOL_CELL_WIDTH;
-		}
-		else if (!buf.len() && line->get_state_color() == COL_PURPLE) {
-			buf.append(translator::translate(line_alert_helptexts[4]));
 		}
 	}
 	if (buf.len() > 0) {
