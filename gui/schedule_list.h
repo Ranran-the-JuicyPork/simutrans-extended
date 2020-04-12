@@ -20,15 +20,53 @@
 #include "halt_list_stats.h"
 #include "../simline.h"
 
+class gui_convoy_location_info_t : public gui_world_component_t
+{
+private:
+	linehandle_t line;
+	inline COLOR_VAL get_convoy_arrow_color(int cnv_state) const {
+		switch (cnv_state)
+		{
+		case convoi_t::WAITING_FOR_CLEARANCE_ONE_MONTH:
+		case convoi_t::CAN_START_ONE_MONTH:
+			return COL_ORANGE;
+		case convoi_t::CAN_START_TWO_MONTHS:
+		case convoi_t::WAITING_FOR_CLEARANCE_TWO_MONTHS:
+			return COL_RED + 1;
+		case convoi_t::OUT_OF_RANGE:
+		case convoi_t::NO_ROUTE:
+		case convoi_t::NO_ROUTE_TOO_COMPLEX:
+			return COL_RED;
+		case convoi_t::EMERGENCY_STOP:
+			return COL_YELLOW;
+		case convoi_t::DRIVING:
+		default:
+			return COL_GREEN;
+		}
+		return COL_BLACK;
+	}
+
+	uint8 mode = 0;
+
+public:
+	gui_convoy_location_info_t(linehandle_t line);
+
+	void set_line(linehandle_t l) { line = l; }
+	void set_mode(uint8 m) { mode = m; }
+
+	void draw(scr_coord offset);
+};
+
+
 class player_t;
 class schedule_list_gui_t : public gui_frame_t, public action_listener_t
 {
 private:
 	player_t *player;
 
-	button_t bt_new_line, bt_change_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_times_history, bt_mode_convois;
-	gui_container_t cont, cont_haltestellen, cont_charts, cont_convoys;
-	gui_scrollpane_t scrolly_convois, scrolly_haltestellen;
+	button_t bt_new_line, bt_change_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_times_history, bt_mode_convois, bt_mode_cnv_location;
+	gui_container_t cont, cont_haltestellen, cont_charts, cont_convoys, cont_cnv_location;
+	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scrolly_cnv_location;
 	gui_scrolled_list_t scl;
 	gui_speedbar_t filled_bar;
 	gui_textinput_t inp_name, inp_filter;
@@ -37,6 +75,7 @@ private:
 	button_t filterButtons[MAX_LINE_COST];
 	gui_tab_panel_t tabs; // line selector
 	gui_tab_panel_t info_tabs;
+	gui_convoy_location_info_t cnv_location;
 
 	// vector of convoy info objects that are being displayed
 	vector_tpl<gui_convoiinfo_t *> convoy_infos;
@@ -80,6 +119,7 @@ private:
 	vector_tpl<uint16> livery_scheme_indices;
 
 	cbuffer_t tab_name;
+	uint8 cnv_location_display_mode = 0;
 
 public:
 	/// last selected line per tab
@@ -141,6 +181,8 @@ public:
 	// following: rdwr stuff
 	void rdwr( loadsave_t *file );
 	uint32 get_rdwr_id();
+
+	enum convoy_location_display_mode_t { cnv_location_name = 0, cnv_location_payload, MAX_CONVOY_LOCATION_MODES };
 };
 
 #endif
