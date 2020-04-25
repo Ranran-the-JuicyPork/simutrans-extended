@@ -1210,7 +1210,7 @@ const char *tool_restoreslope_t::check_pos( player_t *, koord3d pos)
 	return NULL;
 }
 
-const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos, int new_slope, bool old_slope_compatibility )
+const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos, int new_slope, bool old_slope_compatibility, bool just_check )
 {
 	if(  !ground_desc_t::double_grounds  &&  old_slope_compatibility  ) {
 		// translate old single slope parameter to new double slope
@@ -1478,6 +1478,18 @@ const char *tool_setslope_t::tool_set_slope_work( player_t *player, koord3d pos,
 				if(gr1->has_two_ways()  &&  gr1->get_weg_nr(1)-> is_deletable(player)!=NULL) {
 					return NOTICE_TILE_FULL;
 				}
+			}
+
+			// one last check
+			if (  gr1->is_water()  &&  (new_pos.z > water_hgt  ||  new_slope != 0)  ) {
+				// we have to build underwater hill first
+				if(  !welt->can_flatten_tile( player, k, water_hgt, false, true )  ) {
+					return NOTICE_TILE_FULL;
+				}
+			}
+			// all checks passed
+			if (just_check) {
+				return NULL;
 			}
 
 			// ok, it was a success
