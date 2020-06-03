@@ -628,7 +628,7 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 		tab_name.clear();
 		tab_name.append(translator::translate("Convoys"));
 		char temp_buf[5];
-		sprintf(temp_buf, "(%i)", line->count_convoys());
+		sprintf(temp_buf, "(%u)", line->count_convoys());
 		tab_name.printf("%5s", temp_buf);
 
 		if(  (!line->get_schedule()->empty()  &&  !line->get_schedule()->matches( welt, last_schedule ))  ||  last_vehicle_count != line->count_convoys()  ) {
@@ -889,7 +889,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		while (!convoy_infos.empty()) {
 			delete convoy_infos.pop_back();
 		}
-		convoy_infos.resize(icnv);
+		convoy_infos.resize(line_convoys.get_count());
 		int ypos = 0;
 		int cinfo_height;
 		switch (selected_cnvlist_mode[player->get_player_nr()]) {
