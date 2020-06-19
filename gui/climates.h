@@ -31,7 +31,7 @@ private:
 		mountain_height,
 		mountain_roughness,
 		snowline_winter,
-		climate_borders_ui[rocky_climate];
+		climate_borders_ui[MAX_CLIMATES][2];
 
 	gui_label_buf_t
 		summer_snowline;

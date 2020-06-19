@@ -76,8 +76,9 @@ private:
 				b_overlay_networks,
 				b_overlay_networks_load_factor,
 				b_filter_factory_list,
-				b_show_contour,
+				//b_show_contour,
 				b_show_buildings;
+	gui_combobox_t c_show_outlines;
 
 	gui_label_buf_t zoom_value_label;
 	gui_label_buf_t tile_scale_label;
