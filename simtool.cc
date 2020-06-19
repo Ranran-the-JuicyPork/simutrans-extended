@@ -8748,7 +8748,7 @@ bool tool_change_convoi_t::init( player_t *player )
 	{
 		schedule_t *schedule = cnv->create_schedule()->copy();
 		schedule->finish_editing();
-		if (schedule->sscanf_schedule(p) && scenario_check_schedule(welt, player, schedule, is_local_execution())) {
+		if (schedule->sscanf_schedule( p ) && (no_check()  ||  scenario_check_schedule(welt, player, schedule, is_local_execution())) ) {
 			cnv->set_schedule(schedule);
 		}
 		else {
