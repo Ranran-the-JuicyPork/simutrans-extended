@@ -23,7 +23,7 @@ Release of 122.0 (r9274 on 10-Oct-2020):
 	ADD: (Yona-TNT) configurable offsets for player colors for gui elements
 	ADD: caseless matching in depots, lines, halt and convoi list dialogs even with umlaute
 	CHG: a server will puase without clients if '-pause' is set on the command line
-	CHG: speedup of map generation but reorganising and multithreading lake code
+	CHG: speedup of map generation by reorganising and multithreading lake code
 	ADD: defining overlapping climate height limits will generate maps with climate patches at these heights
 	ADD: (ranran) new GUI element routebar
 	FIX: space.w added in container not space.h for vertical distance
