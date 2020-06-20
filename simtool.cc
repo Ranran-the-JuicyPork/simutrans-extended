@@ -9056,7 +9056,7 @@ bool tool_change_line_t::init( player_t *player )
 			{
 				if (line.is_bound()) {
 					schedule_t *schedule = line->get_schedule()->copy();
-					if(schedule->sscanf_schedule( p )  && schedule->get_count() > 1 && scenario_check_schedule(welt, player, schedule, is_local_execution()) ) {
+					if (schedule->sscanf_schedule( p )  && schedule->get_count() > 1 && (no_check()  ||  scenario_check_schedule(welt, player, schedule, is_local_execution())) ) {
 						schedule->finish_editing();
 						line->set_schedule( schedule );
 						simlinemgmt_t::update_line(line);
