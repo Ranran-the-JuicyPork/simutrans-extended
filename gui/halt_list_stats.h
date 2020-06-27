@@ -20,8 +20,9 @@ private:
 	halthandle_t halt;
 
 public:
+	bool show_owner_color;
 	halt_list_stats_t() : halt() {}
-	halt_list_stats_t(halthandle_t halt_) : halt(halt_) { size.h = 28; }
+	halt_list_stats_t(halthandle_t halt_) : halt(halt_) { size.h = 28; show_owner_color = false;	}
 	const halthandle_t get_halt() const { return halt; }
 
 	bool infowin_event(event_t const*) OVERRIDE;

@@ -59,7 +59,7 @@ void halt_list_stats_t::draw(scr_coord offset)
 		display_fillbox_wh_clip(pos.x+offset.x+4, pos.y+offset.y+6, 26, D_INDICATOR_HEIGHT, halt->get_status_farbe(), true);
 
 		// name
-		int left = pos.x + offset.x + 32+2 + display_proportional_clip(pos.x + offset.x + 32+2, pos.y + offset.y + 2, translator::translate(halt->get_name()), ALIGN_LEFT, SYSCOL_TEXT, true);
+		int left = pos.x + offset.x + 32 + 2 + display_proportional_clip(pos.x + offset.x + 32 + 2, pos.y + offset.y + 2, translator::translate(halt->get_name()), ALIGN_LEFT, show_owner_color? halt->get_owner()->get_player_color1()+1 : SYSCOL_TEXT, true);
 
 		// what kind of stop
 		haltestelle_t::stationtyp const halttype = halt->get_station_type();

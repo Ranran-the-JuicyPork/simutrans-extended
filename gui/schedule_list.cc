@@ -1016,11 +1016,12 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		FOR(minivec_tpl<schedule_entry_t>, const& i, new_line->get_schedule()->entries) {
 			halthandle_t const halt = haltestelle_t::get_halt(i.pos, player);
 			if (halt.is_bound()) {
-				halt_list_stats_t* cinfo = new halt_list_stats_t(halt);
-				cinfo->set_pos(scr_coord(0, ypos));
-				cinfo->set_size(scr_size(500, 28));
-				stop_infos.append(cinfo);
-				cont_haltestellen.add_component(cinfo);
+				halt_list_stats_t* hinfo = new halt_list_stats_t(halt);
+				hinfo->set_pos(scr_coord(0, ypos));
+				hinfo->set_size(scr_size(500, 28));
+				hinfo->show_owner_color = true;
+				stop_infos.append(hinfo);
+				cont_haltestellen.add_component(hinfo);
 				ypos += 28;
 			}
 		}
