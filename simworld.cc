@@ -1543,10 +1543,9 @@ DBG_DEBUG("karte_t::init()","built timeline");
 	ls.set_what(translator::translate("Finalising ..."));
 	// Not worth actually constructing a progress bar, very fast
 	dbg->message("karte_t::init()", "Preparing startup ...");
-	if(zeiger == 0) {
+	if(zeiger == NULL) {
 		zeiger = new zeiger_t(koord3d::invalid, NULL );
 	}
-
 	// finishes the line preparation and sets id 0 to invalid ...
 	players[0]->simlinemgmt.finish_rd();
 
@@ -3161,7 +3160,7 @@ karte_t::karte_t() :
 	// standard prices
 	goods_manager_t::set_multiplier( 1000, settings.get_meters_per_tile() );
 
-	zeiger = 0;
+	zeiger = NULL;
 	plan = 0;
 
 	grid_hgts = 0;
@@ -10372,7 +10371,7 @@ void karte_t::calc_climate_map_region( sint16 xtop, sint16 ytop, sint16 xbottom,
 				if( climate_map.at( x, y ) > arctic_climate ) {
 					// not assigned yet => start with a random allowed climate
 					allowed.clear();
-					sint8 hgt = lookup_hgt_nocheck( x, y )-groundwater;
+					sint8 hgt = lookup_hgt_nocheck( x, y );
 					for( int cl=1;  cl<MAX_CLIMATES;  cl++ ) {
 						if(  hgt >= settings.get_climate_borders( cl, 0 )  &&  hgt <= settings.get_climate_borders( cl, 1 )  ) {
 							allowed.append(cl);
