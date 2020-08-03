@@ -36,7 +36,7 @@ void set_zoom_factor(int)
 
 int get_zoom_factor()
 {
-	return zoom_factor;
+	return 1;
 }
 
 int zoom_factor_up()
@@ -231,7 +231,11 @@ void display_blend_wh_rgb(KOORD_VAL, KOORD_VAL, KOORD_VAL, KOORD_VAL, PIXVAL, in
 {
 }
 
-void display_color_img_with_tooltip(const image_id, KOORD_VAL, KOORD_VAL, sint8, const int, const int, const char*, sint8)
+void display_vlinear_gradient_wh_rgb(KOORD_VAL, KOORD_VAL, KOORD_VAL, KOORD_VAL, PIXVAL, int, int)
+{
+}
+
+void display_color_img_with_tooltip(const image_id, KOORD_VAL, KOORD_VAL, sint8, const int, const int, const char* CLIP_NUM_DEF_NOUSE)
 {
 }
 
