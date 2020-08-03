@@ -29,11 +29,12 @@ private:
 
 	sint32 base;
 	bool vertical;
+	bool cylindrical;
 
 public:
 	gui_speedbar_t() { base = 100; vertical = false; }
 
-	void add_color_value(const sint32 *value, uint8 color);
+	void add_color_value(const sint32 *value, uint8 color, bool cylindrical = false);
 
 	void set_base(sint32 base);
 

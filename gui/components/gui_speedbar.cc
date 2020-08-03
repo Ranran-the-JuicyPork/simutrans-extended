@@ -18,9 +18,10 @@ void gui_speedbar_t::set_base(sint32 base)
 }
 
 
-void gui_speedbar_t::add_color_value(const sint32 *value, uint8 color)
+void gui_speedbar_t::add_color_value(const sint32 *value, uint8 color, bool cylindrical)
 {
 	info_t  next =  { color, value, -1 };
+	this->cylindrical = cylindrical;
 	values.insert(next);
 }
 
@@ -34,7 +35,12 @@ void gui_speedbar_t::draw(scr_coord offset)
 		FOR(slist_tpl<info_t>, const& i, values) {
 			sint32 const to = size.h - min(*i.value, base) * size.h / base;
 			if(to < from) {
-				display_fillbox_wh_clip(offset.x, offset.y + to, size.w, from - to, i.color, true);
+				if (cylindrical) {
+					display_cylinderbar_wh_clip_rgb(offset.x, offset.y + to, size.w, from - to, i.color, true, true);
+				}
+				else {
+					display_fillbox_wh_clip(offset.x, offset.y + to, size.w, from - to, i.color, true);
+				}
 				from = to - 1;
 			}
 		}
@@ -47,7 +53,12 @@ void gui_speedbar_t::draw(scr_coord offset)
 		FOR(slist_tpl<info_t>, const& i, values) {
 			sint32 const to = min(*i.value, base) * size.w / base;
 			if(to > from) {
-				display_fillbox_wh_clip(offset.x + from, offset.y, to - from, size.h, i.color, true);
+				if (cylindrical) {
+					display_cylinderbar_wh_clip(offset.x + from, offset.y, to - from, size.h, i.color, true);
+				}
+				else {
+					display_fillbox_wh_clip(offset.x + from, offset.y, to - from, size.h, i.color, true);
+				}
 				from = to + 1;
 			}
 		}
