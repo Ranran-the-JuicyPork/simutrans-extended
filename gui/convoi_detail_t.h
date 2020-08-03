@@ -123,6 +123,8 @@ private:
 
 	button_t display_detail_button;
 
+	bool has_min_sizer() const OVERRIDE { return true; }
+
 public:
 	convoi_detail_t(convoihandle_t cnv);
 
