@@ -37,6 +37,8 @@
 #define LOADING_BAR_WIDTH 150
 #define LOADING_BAR_HEIGHT 5
 
+sint16 convoi_detail_t::tabstate = 0;
+
 convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	gui_frame_t( cnv->get_name(), cnv->get_owner() ),
 	scrolly(&veh_info),
@@ -100,7 +102,7 @@ convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	tabs.add_listener(this);
 
 	set_windowsize(scr_size(D_DEFAULT_WIDTH, D_TITLEBAR_HEIGHT+50+17*(LINESPACE+1)+D_SCROLLBAR_HEIGHT-6));
-	set_min_windowsize(scr_size(D_DEFAULT_WIDTH, D_TITLEBAR_HEIGHT+50+10*(LINESPACE+1)+D_SCROLLBAR_HEIGHT-3));
+	set_min_windowsize(scr_size(D_DEFAULT_WIDTH, tabs.get_pos().y + D_TITLEBAR_HEIGHT + D_TAB_HEADER_HEIGHT));
 
 	set_resizemode(diagonal_resize);
 	resize(scr_coord(0,0));
@@ -226,6 +228,23 @@ bool convoi_detail_t::action_triggered(gui_action_creator_t *comp, value_t)     
 	return false;
 }
 
+
+bool convoi_detail_t::infowin_event(const event_t *ev)
+{
+	if (ev->ev_class == EVENT_KEYBOARD && ev->ev_code == SIM_KEY_UP) {
+		set_windowsize(get_min_windowsize());
+	}
+	if (ev->ev_class == EVENT_KEYBOARD && ev->ev_code == SIM_KEY_LEFT) {
+		tabstate = (tabstate + tabs.get_count() - 1) % tabs.get_count();
+		tabs.set_active_tab_index(tabstate);
+	}
+	if (ev->ev_class == EVENT_KEYBOARD && ev->ev_code == SIM_KEY_RIGHT) {
+		tabstate = (tabstate + 1) % tabs.get_count();
+		tabs.set_active_tab_index(tabstate);
+	}
+
+	return gui_frame_t::infowin_event(ev);
+}
 
 
 /**

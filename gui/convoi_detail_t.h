@@ -114,6 +114,7 @@ private:
 	gui_convoy_payload_info_t payload_info;
 	gui_convoy_maintenance_info_t maintenance;
 	gui_tab_panel_t tabs;
+	static sint16 tabstate;
 	gui_container_t cont_payload;
 
 	button_t sale_button;
@@ -150,6 +151,8 @@ public:
 	virtual void set_windowsize(scr_size size) OVERRIDE;
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+
+	bool infowin_event(const event_t *ev) OVERRIDE;
 
 	/**
 	 * called when convoi was renamed
