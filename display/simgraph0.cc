@@ -17,12 +17,13 @@ KOORD_VAL tile_raster_width = 16; // zoomed
 KOORD_VAL base_tile_raster_width = 16; // original
 
 
-									   /*
-									   * Hajo: mapping table for special-colors (AI player colors)
-									   * to actual output format - all day mode
-									   * 16 sets of 16 colors
-									   */
+/*
+ * Hajo: mapping table for special-colors (AI player colors)
+ * to actual output format - all day mode
+ * 16 sets of 16 colors
+ */
 PIXVAL specialcolormap_all_day[256];
+
 
 KOORD_VAL display_set_base_raster_width(KOORD_VAL)
 {
@@ -243,7 +244,7 @@ void display_fillbox_wh_clip_rgb(KOORD_VAL, KOORD_VAL, KOORD_VAL, KOORD_VAL, PLA
 {
 }
 
-void display_cylinderbar_wh_clip_rgb(KOORD_VAL, KOORD_VAL, KOORD_VAL, KOORD_VAL, PIXVAL, bool  CLIP_NUM_DEF_NOUSE)
+void display_cylinderbar_wh_clip_rgb(KOORD_VAL, KOORD_VAL, KOORD_VAL, KOORD_VAL, PIXVAL, bool, bool  CLIP_NUM_DEF_NOUSE)
 {
 }
 
