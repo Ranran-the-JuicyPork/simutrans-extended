@@ -30,9 +30,14 @@
 // do not define it and there are neither button nor graph.
 #define ACCELERATION_BUTTON convoi_t::MAX_CONVOI_COST
 #ifdef ACCELERATION_BUTTON
-#define BUTTON_COUNT (ACCELERATION_BUTTON + 1)
+#define TRACTIVE_FORCE_BUTTON ACCELERATION_BUTTON+1
+#define MAX_PHYSICS_CURVE 4
+#define ADDITIONAL_CHART 2
+#define BUTTON_COUNT convoi_t::MAX_CONVOI_COST + MAX_PHYSICS_CURVE - ADDITIONAL_CHART
+#define SPEED_RECORDS 25
 #else
-#define BUTTON_COUNT MAX_CONVOI_COST
+#define BUTTON_COUNT convoi_t::MAX_CONVOI_COST
+#define ADDITIONAL_CHART 0
 #endif
 
 /*
@@ -105,8 +110,16 @@ private:
 
 #ifdef ACCELERATION_BUTTON
 	//Bernd Gabriel, Sep, 24 2009: acceleration curve:
-	sint64 physics_curves[MAX_MONTHS][1];
+	sint64 physics_curves[SPEED_RECORDS][MAX_PHYSICS_CURVE];
 #endif
+	enum chart_mode_t {
+		convoy_finance = 0,
+#ifdef ACCELERATION_BUTTON
+		convoy_acceleration = 1,
+		convoy_force = 2
+#endif
+	};
+	void init_chart_mode(enum chart_mode_t mode);
 
 	char cnv_name[256],old_cnv_name[256];
 
