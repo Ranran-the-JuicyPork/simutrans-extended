@@ -22,6 +22,8 @@
 class gui_chart_t : public gui_component_t
 {
 public:
+	enum chart_marker_t { square = 0, diamond, cross, none };
+
 	/**
 	 * Set background color. -1 means no background
 	 * @author Hj. Malthaner
@@ -64,9 +66,9 @@ public:
 	 * @returns curve's id
 	 * @author hsiegeln
 	 */
-	int add_curve(int color, const sint64 *values, int size, int offset, int elements, int type, bool show, bool show_value, int precision, convert_proc proc=NULL);
+	int add_curve(int color, const sint64 *values, int size, int offset, int elements, int type, bool show, bool show_value, int precision, convert_proc proc=NULL, chart_marker_t marker=square);
 
-	uint32 add_line(int color, const sint64 *value, int times, bool show, bool show_value, int precision, convert_proc proc=NULL);
+	uint32 add_line(int color, const sint64 *value, int times, bool show, bool show_value, int precision, convert_proc proc=NULL, chart_marker_t marker = square);
 
 	void remove_curves() { curves.clear(); }
 
@@ -98,6 +100,13 @@ public:
 
 	void set_show_x_axis(bool yesno) { show_x_axis = yesno; }
 
+	// Label display interval
+	void set_x_label_span(uint8 span = 1) { x_label_span = span; }
+	// x-axis number increase factor. dx=2 then 0, 2, 4, 6...
+	void set_x_axis_span(sint32 dx = 1) { x_axis_span = dx; }
+	// X-axis boundary that aborts the curve drawing.
+	void set_abort_display_x(uint8 abort_x = 0) { abort_display_x = abort_x; }
+
 	void set_show_y_axis(bool yesno) { show_y_axis = yesno; }
 
 	void set_ltr(bool yesno) { ltr = yesno; }
@@ -123,6 +132,7 @@ private:
 		int type; // 0 = standard, 1 = money
 		int precision;	// how many numbers ...
 		convert_proc convert;	// Knightly : procedure for converting supplied values before use
+		chart_marker_t marker_type;
 	};
 
 	/**
@@ -137,14 +147,18 @@ private:
 		bool show_value;			// whether to show the value as number on the chart
 		int precision;
 		convert_proc convert;	// Knightly : procedure for converting supplied value before use
+		chart_marker_t marker_type;
 	};
 
 	slist_tpl <curve_t> curves;
 	slist_tpl <line_t> lines;
 
 	int x_elements, y_elements;
+	uint8 abort_display_x = 0;
 
 	int seed;
+	uint8 x_label_span;
+	sint32 x_axis_span;
 
 	scr_coord tooltipcoord;
 

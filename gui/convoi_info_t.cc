@@ -53,10 +53,11 @@ static const char cost_type[BUTTON_COUNT][64] =
 	"Profit"
 #ifdef ACCELERATION_BUTTON
 	, "Acceleration"
+	, "Tractive effort"
 #endif
 };
 
-static const int cost_type_color[BUTTON_COUNT] =
+static const int cost_type_color[BUTTON_COUNT + ADDITIONAL_CHART] =
 {
 	COL_FREE_CAPACITY,
 	COL_TRANSPORTED,
@@ -70,9 +71,16 @@ static const int cost_type_color[BUTTON_COUNT] =
 	COL_TOLL,
 	COL_PROFIT
 #ifdef ACCELERATION_BUTTON
-	, COL_YELLOW
+	, COL_DODGER_BLUE
+	, COL_PURPLE+1
+	, COL_LIGHT_TURQUOISE // +1 for maximum acceleration curve
+	, COL_DARK_GREEN // +1 for resistance curve
 #endif
 };
+
+#ifdef ACCELERATION_BUTTON
+static const gui_chart_t::chart_marker_t marker_type[MAX_PHYSICS_CURVE] = { gui_chart_t::cross, gui_chart_t::diamond, gui_chart_t::diamond, gui_chart_t::cross };
+#endif
 
 static const bool cost_type_money[BUTTON_COUNT] =
 {
@@ -88,6 +96,7 @@ static const bool cost_type_money[BUTTON_COUNT] =
 	true,
 	true
 #ifdef ACCELERATION_BUTTON
+	, false
 	, false
 #endif
 };
@@ -197,6 +206,7 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv)
 	int btn;
 	for (btn = 0; btn < convoi_t::MAX_CONVOI_COST; btn++) {
 		chart.add_curve( cost_type_color[btn], cnv->get_finance_history(), convoi_t::MAX_CONVOI_COST, statistic[btn], MAX_MONTHS, cost_type_money[btn], false, true, cost_type_money[btn]*2 );
+		//chart.add_curve( cost_type_color[btn], cnv->get_finance_history(), convoi_t::MAX_CONVOI_COST, btn, MAX_MONTHS, cost_type_money[btn], false, true, cost_type_money[btn] * 2 );
 		filterButtons[btn].init(button_t::box_state, cost_type[btn],
 			scr_coord(BUTTON1_X+(D_BUTTON_WIDTH+D_H_SPACE)*(btn%4), offset_below_chart+(D_BUTTON_HEIGHT+D_V_SPACE)*(btn/4)),
 			D_BUTTON_SIZE);
@@ -218,26 +228,32 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv)
 #ifdef ACCELERATION_BUTTON
 	//Bernd Gabriel, Sep, 24 2009: acceleration curve:
 
-	for (int i = 0; i < MAX_MONTHS; i++)
+	for (int j = 0; j < MAX_PHYSICS_CURVE; j++)
 	{
-		physics_curves[i][0] = 0;
+		for (int i = 0; i < SPEED_RECORDS; i++)
+		{
+			physics_curves[i][j] = 0;
+		}
+		chart.add_curve(cost_type_color[btn], (sint64*)physics_curves, MAX_PHYSICS_CURVE, j, SPEED_RECORDS, cost_type_money[btn], false, true, cost_type_money[btn] * 2, NULL, marker_type[j]);
+		if (j < 2) {
+			filterButtons[btn].init(button_t::box_state, cost_type[btn],
+				scr_coord(BUTTON1_X + (D_BUTTON_WIDTH + D_H_SPACE)*(btn % 4), offset_below_chart + (D_BUTTON_HEIGHT + D_V_SPACE)*(btn / 4)),
+				//scr_coord(BUTTON1_X + (D_BUTTON_WIDTH + D_H_SPACE)*((btn+1) % 4), offset_below_chart + (D_BUTTON_HEIGHT + D_H_SPACE)*((btn+1) / 4)),
+				D_BUTTON_SIZE);
+			filterButtons[btn].add_listener(this);
+			filterButtons[btn].background_color = cost_type_color[btn];
+			filterButtons[btn].set_visible(false);
+			filterButtons[btn].pressed = false;
+			add_component(filterButtons + btn);
+		}
+		btn++;
 	}
-
-	chart.add_curve(cost_type_color[btn], (sint64*)physics_curves, 1,0, MAX_MONTHS, cost_type_money[btn], false, true, cost_type_money[btn]*2);
-	filterButtons[btn].init(button_t::box_state, cost_type[btn],
-			scr_coord(BUTTON1_X+(D_BUTTON_WIDTH+D_H_SPACE)*(btn%4), view.get_size().h+174+(D_BUTTON_HEIGHT+D_H_SPACE)*(btn/4)),
-			D_BUTTON_SIZE);
-	filterButtons[btn].add_listener(this);
-	filterButtons[btn].background_color = cost_type_color[btn];
-	filterButtons[btn].set_visible(false);
-	filterButtons[btn].pressed = false;
-	add_component(filterButtons + btn);
 #endif
 	statistics_height = 16 + view.get_size().h+174+(D_BUTTON_HEIGHT+D_H_SPACE)*(btn/4 + 1) - chart.get_pos().y;
 
 	add_component(&chart);
 
-	chart_total_size = filterButtons[convoi_t::MAX_CONVOI_COST-1].get_pos().y + D_BUTTON_HEIGHT + D_V_SPACE - (chart.get_pos().y - 11);
+	chart_total_size = filterButtons[BUTTON_COUNT - 1].get_pos().y + D_BUTTON_HEIGHT + D_V_SPACE - (chart.get_pos().y - 11);
 
 	add_component(&sort_label);
 
@@ -335,16 +351,84 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 		//Bernd Gabriel, Sep, 24 2009: acceleration curve:
 		if (filterButtons[ACCELERATION_BUTTON].is_visible() && filterButtons[ACCELERATION_BUTTON].pressed)
 		{
+			// create dummy convoy and calcurate theoretical acceleration curve - Ranran, Jan, 2020
+			vector_tpl<const vehicle_desc_t*> vehicles;
+			for (uint8 i = 0; i < cnv->get_vehicle_count(); i++)
+			{
+				vehicles.append(cnv->get_vehicle(i)->get_desc());
+			}
+			potential_convoy_t dummy_convoy(vehicles);
+			const sint32 min_weight = dummy_convoy.get_vehicle_summary().weight;
+
 			const int akt_speed_soll = kmh_to_speed(convoy.calc_max_speed(convoy.get_weight_summary()));
+			const int akt_speed_soll_ = dummy_convoy.get_vehicle_summary().max_sim_speed;
 			float32e8_t akt_v = 0;
+			float32e8_t akt_v_ = 0;
 			sint32 akt_speed = 0;
+			sint32 akt_speed_ = 0;
 			sint32 sp_soll = 0;
-			int i = MAX_MONTHS;
-			physics_curves[--i][0] = akt_speed;
+			sint32 sp_soll_ = 0;
+			int i = SPEED_RECORDS - 1;
+			long delta_t = 1000;
+			sint32 delta_s = (welt->get_settings().ticks_to_seconds(delta_t)).to_sint32();
+			physics_curves[i][0] = akt_speed;
+			physics_curves[i][2] = akt_speed_;
+
+			if (env_t::left_to_right_graphs) {
+				chart.set_seed(delta_s * (SPEED_RECORDS - 1));
+				chart.set_x_axis_span(delta_s);
+			}
+			else {
+				chart.set_seed(0);
+				chart.set_x_axis_span(0 - delta_s);
+			}
+			chart.set_abort_display_x(0);
+
 			while (i > 0)
 			{
-				convoy.calc_move(welt->get_settings(), 15 * 64, akt_speed_soll, akt_speed_soll, SINT32_MAX_VALUE, SINT32_MAX_VALUE, akt_speed, sp_soll, akt_v);
-				physics_curves[--i][0] = speed_to_kmh(akt_speed);
+				dummy_convoy.calc_move(welt->get_settings(), delta_t, weight_summary_t(min_weight, dummy_convoy.get_current_friction()), akt_speed_soll_, akt_speed_soll_, SINT32_MAX_VALUE, SINT32_MAX_VALUE, akt_speed_, sp_soll_, akt_v_);
+				convoy.calc_move(welt->get_settings(), delta_t, akt_speed_soll, akt_speed_soll, SINT32_MAX_VALUE, SINT32_MAX_VALUE, akt_speed, sp_soll, akt_v);
+				if (env_t::left_to_right_graphs) {
+					physics_curves[--i][0] = speed_to_kmh(akt_speed);
+					physics_curves[i][2] = speed_to_kmh(akt_speed_);
+				}
+				else {
+					physics_curves[SPEED_RECORDS - i][0] = speed_to_kmh(akt_speed);
+					physics_curves[SPEED_RECORDS - i][2] = speed_to_kmh(akt_speed_);
+					i--;
+				}
+			}
+		}
+
+		if (filterButtons[TRACTIVE_FORCE_BUTTON].is_visible() && filterButtons[TRACTIVE_FORCE_BUTTON].pressed)
+		{
+			uint32 empty_weight = convoy.get_vehicle_summary().weight;
+			const sint32 max_speed = convoy.calc_max_speed(weight_summary_t(empty_weight, convoy.get_current_friction()));
+			const uint16 display_interval = (max_speed + SPEED_RECORDS - 1) / SPEED_RECORDS;
+			float32e8_t rolling_resistance = cnv->get_adverse_summary().fr;
+			te_curve_abort_x = (uint8)((max_speed + (display_interval-1)) / display_interval)+1;
+			chart.set_abort_display_x(te_curve_abort_x);
+			chart.set_dimension(te_curve_abort_x, 10000);
+
+			if (env_t::left_to_right_graphs) {
+				chart.set_seed(display_interval * (SPEED_RECORDS - 1));
+				chart.set_x_axis_span(display_interval);
+				for (int i = 0; i < max_speed; i++) {
+					if (i % display_interval == 0) {
+						physics_curves[SPEED_RECORDS - i / display_interval - 1][1] = cnv->get_force_summary(i * kmh2ms);
+						physics_curves[SPEED_RECORDS - i / display_interval - 1][3] = cnv->calc_speed_holding_force(i * kmh2ms, rolling_resistance).to_sint32();
+					}
+				}
+			}
+			else {
+				chart.set_seed(0);
+				chart.set_x_axis_span(0 - display_interval);
+				for (int i = 0; i < max_speed; i++) {
+					if (i % display_interval == 0) {
+						physics_curves[i / display_interval][1] = cnv->get_force_summary(i * kmh2ms);
+						physics_curves[i / display_interval][3] = cnv->calc_speed_holding_force(i * kmh2ms, rolling_resistance).to_sint32();
+					}
+				}
 			}
 		}
 #endif
@@ -954,8 +1038,61 @@ void convoi_info_t::show_hide_statistics( bool show )
 	chart.set_visible(show);
 	set_windowsize(get_windowsize() + offset + scr_size(0,show?LINESPACE:-LINESPACE));
 	resize(scr_coord(0,0));
-	for(  int i = 0;  i < convoi_t::MAX_CONVOI_COST;  i++  ) {
+	for(  int i = 0;  i < BUTTON_COUNT;  i++  ) {
 		filterButtons[i].set_visible(toggler.pressed);
+	}
+}
+
+// Initializes when chart mode switches for different x-axis displays. @ Ranran 2020
+void convoi_info_t::init_chart_mode(enum chart_mode_t mode)
+{
+	switch (mode) {
+#ifdef ACCELERATION_BUTTON
+	case convoy_acceleration:
+		for (int i = 0; i < BUTTON_COUNT; i++) {
+			if (i == ACCELERATION_BUTTON) {
+				chart.show_curve(i);
+				chart.show_curve(i + 2);
+				continue;
+			}
+			chart.hide_curve(i);
+			filterButtons[i].pressed = false;
+		}
+		chart.hide_curve(TRACTIVE_FORCE_BUTTON);
+		chart.hide_curve(TRACTIVE_FORCE_BUTTON + 2);
+		chart.set_dimension(SPEED_RECORDS, 10000);
+		chart.set_x_label_span(4);
+		break;
+	case convoy_force:
+		for (int i = 0; i < BUTTON_COUNT - 1; i++) {
+			chart.hide_curve(i);
+			if (i == ACCELERATION_BUTTON) {
+				chart.hide_curve(i + 2);
+			}
+			filterButtons[i].pressed = false;
+		}
+		chart.show_curve(TRACTIVE_FORCE_BUTTON);
+		chart.show_curve(TRACTIVE_FORCE_BUTTON + 2);
+		chart.set_dimension(te_curve_abort_x, 10000);
+		chart.set_abort_display_x(te_curve_abort_x);
+		chart.set_x_label_span(4);
+		break;
+#endif
+		default:
+#ifdef ACCELERATION_BUTTON
+			chart.hide_curve(ACCELERATION_BUTTON);
+			chart.hide_curve(ACCELERATION_BUTTON + 2);
+			chart.hide_curve(TRACTIVE_FORCE_BUTTON);
+			chart.hide_curve(TRACTIVE_FORCE_BUTTON + 2);
+			filterButtons[ACCELERATION_BUTTON].pressed = false;
+			filterButtons[TRACTIVE_FORCE_BUTTON].pressed = false;
+#endif
+			chart.set_dimension(MAX_MONTHS, 10000);
+			chart.set_seed(0);
+			chart.set_abort_display_x(0);
+			chart.set_x_label_span();
+			chart.set_x_axis_span();
+			break;
 	}
 }
 
@@ -1057,14 +1194,31 @@ bool convoi_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 		return true;
 	}
 
+	// charts
 	for ( int i = 0; i<BUTTON_COUNT; i++) {
 		if (comp == &filterButtons[i]) {
 			filterButtons[i].pressed = !filterButtons[i].pressed;
 			if(filterButtons[i].pressed) {
 				chart.show_curve(i);
+#ifdef ACCELERATION_BUTTON
+				if (i == ACCELERATION_BUTTON) {
+					init_chart_mode(convoy_acceleration);
+				}
+				else if (i == TRACTIVE_FORCE_BUTTON) {
+					init_chart_mode(convoy_force);
+				}
+				else {
+					init_chart_mode(convoy_finance);
+				}
+#endif
 			}
 			else {
 				chart.hide_curve(i);
+#ifdef ACCELERATION_BUTTON
+				if (i == ACCELERATION_BUTTON || i == TRACTIVE_FORCE_BUTTON) {
+					chart.hide_curve(i + 2);
+				}
+#endif
 			}
 
 			return true;
