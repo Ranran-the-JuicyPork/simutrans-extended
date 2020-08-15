@@ -2810,6 +2810,22 @@ uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp) const
 	return sum;
 }
 
+uint32 haltestelle_t::get_ware_summe(const goods_desc_t *wtyp, uint8 g_class) const
+{
+	if (g_class >= wtyp->get_number_of_classes()) {
+		return 0;
+	}
+	int sum = 0;
+	const vector_tpl<ware_t> * warray = cargo[wtyp->get_catg_index()];
+	if (warray != NULL) {
+		FOR(vector_tpl<ware_t>, const& i, *warray) {
+			if (wtyp->get_index() == i.get_index() && g_class == i.get_class()) {
+				sum += i.menge;
+			}
+		}
+	}
+	return sum;
+}
 
 uint32 haltestelle_t::get_transferring_goods_sum(const goods_desc_t *wtyp, uint8 g_class) const
 {
@@ -4962,7 +4978,18 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 			continue; // ignore freight none
 		}
 		if(  gibt_ab( goods_manager_t::get_info(i) )  ) {
-			count++;
+			switch (i)
+			{
+				case goods_manager_t::INDEX_PAS:
+					count += goods_manager_t::passengers->get_number_of_classes();
+					break;
+				case goods_manager_t::INDEX_MAIL:
+					count += goods_manager_t::mail->get_number_of_classes();
+					break;
+				default:
+					count++;
+					break;
+			}
 		}
 	}
 	if(  count != last_bar_count  ) {
@@ -4995,47 +5022,53 @@ void haltestelle_t::display_status(KOORD_VAL xpos, KOORD_VAL ypos)
 		if(  i == 2  ) {
 			continue; // ignore freight none
 		}
+		uint8 g_class = 1;
 		const goods_desc_t *wtyp = goods_manager_t::get_info(i);
 		if(  gibt_ab( wtyp )  ) {
 			if(  i < 2  ) {
 				max_capacity = get_capacity(i);
+				g_class = i == goods_manager_t::INDEX_PAS ? goods_manager_t::passengers->get_number_of_classes() : goods_manager_t::mail->get_number_of_classes();
 			}
 			else {
 				max_capacity = get_capacity(2);
 			}
-			const uint32 sum = get_ware_summe( wtyp );
-			uint32 v = min( sum, max_capacity );
-			if(  max_capacity > 512  ) {
-				v = 2 + (v * 128) / max_capacity;
-			}
-			else {
-				v = (v / 4) + 2;
-			}
-
-			display_fillbox_wh_clip( xpos, ypos - v - 1, 1, v, COL_GREY4, false);
-			display_fillbox_wh_clip( xpos + 1, ypos - v - 1, 2, v, wtyp->get_color(), false);
-			display_fillbox_wh_clip( xpos + 3, ypos - v - 1, 1, v, COL_GREY1, false);
-
-			// Hajo: show up arrow for capped values
-			if(  sum > max_capacity  ) {
-				display_fillbox_wh_clip( xpos + 1, ypos - v - 6, 2, 4, COL_WHITE, false);
-				display_fillbox_wh_clip( xpos, ypos - v - 5, 4, 1, COL_WHITE, false);
-			}
-
-			if(  last_bar_height[bar_height_index] != (KOORD_VAL)v  ) {
-				if(  (KOORD_VAL)v > last_bar_height[bar_height_index]  ) {
-					// bar will be longer, mark new height dirty
-					mark_rect_dirty_wc( xpos, ypos - v - 6, xpos + 4 - 1, ypos + 4 - 1);
+			const uint32 catg_sum = get_ware_summe(wtyp);
+			for(uint j=0; j<g_class; j++)
+			{
+				const uint32 sum = g_class > 1 ? get_ware_summe(wtyp, j) : catg_sum;
+				uint32 v = min(sum, max_capacity);
+				if (max_capacity > 512) {
+					v = 2 + (v * 128) / max_capacity;
 				}
 				else {
-					// bar will be shorter, mark old height dirty
-					mark_rect_dirty_wc( xpos, ypos - last_bar_height[bar_height_index] - 6, xpos + 4 - 1, ypos + 4 - 1);
+					v = (v / 4) + 2;
 				}
-				last_bar_height[bar_height_index] = v;
-			}
 
-			bar_height_index++;
-			xpos += 4;
+				display_fillbox_wh_clip(xpos, ypos - v - 1, 1, v, COL_GREY4, false);
+				display_fillbox_wh_clip(xpos + 1, ypos - v - 1, 2, v, wtyp->get_color(), false);
+				display_fillbox_wh_clip(xpos + 3, ypos - v - 1, 1, v, COL_GREY1, false);
+
+				// Hajo: show up arrow for capped values
+				if (sum > max_capacity) {
+					display_fillbox_wh_clip(xpos + 1, ypos - v - 6, 2, 4, COL_WHITE, false);
+					display_fillbox_wh_clip(xpos, ypos - v - 5, 4, 1, COL_WHITE, false);
+				}
+
+				if (last_bar_height[bar_height_index] != (KOORD_VAL)v) {
+					if ((KOORD_VAL)v > last_bar_height[bar_height_index]) {
+						// bar will be longer, mark new height dirty
+						mark_rect_dirty_wc(xpos, ypos - v - 6, xpos + 4 - 1, ypos + 4 - 1);
+					}
+					else {
+						// bar will be shorter, mark old height dirty
+						mark_rect_dirty_wc(xpos, ypos - last_bar_height[bar_height_index] - 6, xpos + 4 - 1, ypos + 4 - 1);
+					}
+					last_bar_height[bar_height_index] = v;
+				}
+
+				bar_height_index++;
+				xpos += 4;
+			}
 		}
 	}
 
