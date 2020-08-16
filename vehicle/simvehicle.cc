@@ -3754,7 +3754,7 @@ bool road_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, ui
 			return false;
 		}
 
-		if (str->is_height_restricted() && cnv->has_tall_vehicles())
+		if (gr->is_height_restricted() && cnv->has_tall_vehicles())
 		{
 			cnv->suche_neue_route();
 			return false;
@@ -8170,7 +8170,7 @@ bool water_vehicle_t::check_next_tile(const grund_t *bd) const
 	{
 		if (w)
 		{
-			if (w->is_height_restricted())
+			if (bd->is_height_restricted())
 			{
 				cnv->suche_neue_route();
 				return false;
