@@ -29,8 +29,8 @@
 
 #define HALT_CAPACITY_BAR_WIDTH 100
 #define GOODS_SYMBOL_CELL_WIDTH 14
-#define GOODS_WAITING_CELL_WIDTH 60
-#define GOODS_WAITING_BAR_BASE_WIDTH 160
+#define GOODS_WAITING_CELL_WIDTH 64
+#define GOODS_WAITING_BAR_BASE_WIDTH 128
 #define GOODS_LEAVING_BAR_HEIGHT 2
 #define BARCOL_TRANSFER_IN (10)
 #define MAX_CATEGORY_COLS 16
@@ -100,12 +100,13 @@ void halt_detail_t::init(halthandle_t halt_)
 	cont_route.add_component(&lb_routes);
 
 	uint col = 0;
+	uint freight_btn_offset_x = D_MARGIN_LEFT;
+	uint row = 2;
 	for (int i = 0; i < goods_manager_t::get_max_catg_index(); i++) {
 		if (goods_manager_t::get_info_catg_index(i) == goods_manager_t::none) {
 			continue;
 		}
 		button_t *b = new button_t();
-		uint row;
 		switch (i)
 		{
 			case goods_manager_t::INDEX_PAS:
@@ -115,11 +116,26 @@ void halt_detail_t::init(halthandle_t halt_)
 				row = 1;
 				break;
 			default:
-				row = (col/MAX_CATEGORY_COLS)+2;
+				if (row < 2) { row = 2; }
+				if (freight_btn_offset_x > D_DEFAULT_WIDTH - 80){
+					row++;
+					freight_btn_offset_x = D_MARGIN_LEFT;
+				}
 				break;
 		}
-		b->init(button_t::roundbox_state, NULL, scr_coord(D_MARGIN_LEFT+D_BUTTON_HEIGHT*2*(col%MAX_CATEGORY_COLS), D_V_SPACE+D_BUTTON_HEIGHT*(row+1)), scr_size(D_BUTTON_HEIGHT*2, D_BUTTON_HEIGHT));
-		b->set_image(goods_manager_t::get_info_catg_index(i)->get_catg_symbol());
+		if (goods_manager_t::get_info_catg_index(i)->get_catg_symbol() == IMG_EMPTY || goods_manager_t::get_info_catg_index(i)->get_catg_symbol() == skinverwaltung_t::goods->get_image_id(0)) {
+			b->init(button_t::roundbox_state, goods_manager_t::get_info_catg_index(i)->get_catg_name(), scr_coord(freight_btn_offset_x, D_V_SPACE + D_BUTTON_HEIGHT * (row + 1)), scr_size(80, D_BUTTON_HEIGHT));
+			if (row > 1) {
+				freight_btn_offset_x += 80;
+			}
+		}
+		else {
+			b->init(button_t::roundbox_state, NULL, scr_coord(freight_btn_offset_x, D_V_SPACE + D_BUTTON_HEIGHT * (row + 1)), scr_size(D_BUTTON_HEIGHT * 2, D_BUTTON_HEIGHT));
+			b->set_image(goods_manager_t::get_info_catg_index(i)->get_catg_symbol());
+			if (row > 1) {
+				freight_btn_offset_x += D_BUTTON_HEIGHT * 2;
+			}
+		}
 		b->set_tooltip(translator::translate(goods_manager_t::get_info_catg_index(i)->get_catg_name()));
 		b->add_listener(this);
 		catg_buttons.append(b);
@@ -127,7 +143,7 @@ void halt_detail_t::init(halthandle_t halt_)
 		if (row > 1) { col++; }
 	}
 
-	lb_selected_route_catg.set_pos(scr_coord(D_MARGIN_LEFT, D_BUTTON_HEIGHT * 4 + D_V_SPACE * 2));
+	lb_selected_route_catg.set_pos(scr_coord(D_MARGIN_LEFT, D_BUTTON_HEIGHT * (row+2) + D_V_SPACE * 2));
 	lb_selected_route_catg.set_size(D_BUTTON_SIZE);
 	cont_route.add_component(&lb_selected_route_catg);
 	scrolly_route.set_pos(scr_coord(0, lb_selected_route_catg.get_pos().y + D_BUTTON_HEIGHT));
@@ -351,6 +367,7 @@ void halt_detail_t::halt_detail_info()
 	}
 	buf.clear();
 
+	sint16 offset_x = 0;
 	sint16 offset_y = D_MARGIN_TOP;
 
 	// add lines that serve this stop
@@ -359,25 +376,42 @@ void halt_detail_t::halt_detail_info()
 	offset_y += LINESPACE;
 
 	if(  !halt->registered_lines.empty()  ) {
-		for (unsigned int i = 0; i<halt->registered_lines.get_count(); i++) {
-			// Line buttons only if owner ...
-			if (welt->get_active_player()==halt->registered_lines[i]->get_owner()) {
-				button_t *b = new button_t();
-				b->init( button_t::posbutton, NULL, scr_coord(D_MARGIN_LEFT, offset_y) );
-				b->set_targetpos( koord(-1,i) );
-				b->add_listener( this );
-				linebuttons.append( b );
-				cont.add_component( b );
-			}
+		for (uint8 lt = 1; lt < simline_t::MAX_LINE_TYPE; lt++) {
+			uint waytype_line_cnt = 0;
+			for (unsigned int i = 0; i<halt->registered_lines.get_count(); i++) {
+				if (halt->registered_lines[i]->get_linetype() != lt) {
+					continue;
+				}
+				int offset_x = D_MARGIN_LEFT;
+				if (!waytype_line_cnt) {
+					buf.append("\n");
+					offset_y += LINESPACE;
+					buf.append(" · ");
+					buf.append(translator::translate(halt->registered_lines[i]->get_linetype_name()));
+					buf.append("\n");
+					offset_y += LINESPACE;
+				}
 
-			// Line labels with color of player
-			label_names.append( strdup(halt->registered_lines[i]->get_name()) );
-			gui_label_t *l = new gui_label_t( label_names.back(), PLAYER_FLAG|(halt->registered_lines[i]->get_owner()->get_player_color1()+0) );
-			l->set_pos( scr_coord(D_MARGIN_LEFT+D_BUTTON_HEIGHT+D_H_SPACE, offset_y) );
-			linelabels.append( l );
-			cont.add_component( l );
-			buf.append("\n");
-			offset_y += LINESPACE;
+				// Line buttons only if owner ...
+				if (welt->get_active_player() == halt->registered_lines[i]->get_owner()) {
+					button_t *b = new button_t();
+					b->init(button_t::posbutton, NULL, scr_coord(offset_x, offset_y));
+					b->set_targetpos(koord(-1, i));
+					b->add_listener(this);
+					linebuttons.append(b);
+					cont.add_component(b);
+				}
+				offset_x += D_BUTTON_HEIGHT+D_H_SPACE;
+				// Line labels with color of player
+				label_names.append( strdup(halt->registered_lines[i]->get_name()) );
+				gui_label_t *l = new gui_label_t( label_names.back(), PLAYER_FLAG|(halt->registered_lines[i]->get_owner()->get_player_color1()+0) );
+				l->set_pos( scr_coord(offset_x, offset_y) );
+				linelabels.append( l );
+				cont.add_component( l );
+				buf.append("\n");
+				offset_y += LINESPACE;
+				waytype_line_cnt++;
+			}
 		}
 	}
 	else {
@@ -648,9 +682,9 @@ void halt_detail_t::draw(scr_coord pos, scr_size size)
 			welt->sprintf_time_tenths(transfer_time_as_clock, sizeof(transfer_time_as_clock), (halt->get_transfer_time()));
 		}
 		capacity_buf.append(transfer_time_as_clock);
-		left += display_proportional_clip(pos.x + left, pos.y + yoff, capacity_buf, ALIGN_LEFT, SYSCOL_TEXT, true) + D_H_SPACE;
+		left += display_proportional_clip(pos.x + left, pos.y + yoff, capacity_buf, ALIGN_LEFT, is_operating ? SYSCOL_TEXT : MN_GREY0, true) + D_H_SPACE;
 
-		if (!is_operating)
+		if (!is_operating && skinverwaltung_t::alerts)
 		{
 			display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(2), pos.x + left, pos.y + yoff, 0, false, false, translator::translate("No service"));
 		}
@@ -739,12 +773,23 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 		else {
 			served = true;
 		}
+		pas_info.clear();
 		pas_info.append(goods_manager_t::get_translated_wealth_name(good_category->get_catg_index(), i));
 		display_proportional_clip(offset.x + GOODS_SYMBOL_CELL_WIDTH, y, pas_info, ALIGN_LEFT, SYSCOL_TEXT, true);
 		pas_info.clear();
 
-		if (served || halt->get_ware_summe(good_category, i)) {
-			pas_info.append(halt->get_ware_summe(good_category, i));
+		const uint32 waiting_sum_by_class = halt->get_ware_summe(good_category, i);
+		const uint32 waiting_commuter_sum_by_class = (good_category == goods_manager_t::passengers) ? halt->get_ware_summe(good_category, i, true) : 0;
+		if (served || waiting_sum_by_class) {
+			if (good_category == goods_manager_t::passengers) {
+				pas_info.append(waiting_sum_by_class);
+#ifdef DEBUG
+				pas_info.printf("(%u)", waiting_commuter_sum_by_class);
+#endif
+			}
+			else {
+				pas_info.append(waiting_sum_by_class);
+			}
 		}
 		else {
 			pas_info.append("-");
@@ -767,7 +812,7 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 		// color bar
 		COLOR_VAL overlay_color = i < good_category->get_number_of_classes() / 2 ? COL_BLACK : COL_WHITE;
 		uint8 overlay_transparency = abs(good_category->get_number_of_classes() / 2 - i) * 7;
-		int bar_width = (halt->get_ware_summe(good_category, i) * GOODS_WAITING_BAR_BASE_WIDTH) / base_capacity;
+		int bar_width = (waiting_sum_by_class * GOODS_WAITING_BAR_BASE_WIDTH) / base_capacity;
 		// transferring bar
 		display_fillbox_wh_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y + 1, (transfers_in * GOODS_WAITING_BAR_BASE_WIDTH / base_capacity) + bar_width, 6, BARCOL_TRANSFER_IN, true);
 		transferring_sum += halt->get_transferring_goods_sum(good_category, i);
@@ -775,6 +820,11 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 		display_fillbox_wh_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y + 8, transfers_out * GOODS_WAITING_BAR_BASE_WIDTH / base_capacity, GOODS_LEAVING_BAR_HEIGHT, MN_GREY0, true);
 		// waiting bar
 		display_cylinderbar_wh_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y + 1, bar_width, 6, good_category->get_color(), true);
+		if (waiting_commuter_sum_by_class) {
+			// commuter bar
+			bar_width = (waiting_commuter_sum_by_class * GOODS_WAITING_BAR_BASE_WIDTH) / base_capacity;
+			display_cylinderbar_wh_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y + 1, bar_width, 6, COL_COMMUTER, true);
+		}
 
 		y += LINESPACE + GOODS_LEAVING_BAR_HEIGHT + 1;
 
@@ -800,7 +850,6 @@ void halt_detail_pas_t::draw_class_table(scr_coord offset, const uint8 class_nam
 	pas_info.printf("  %u ", halt->get_ware_summe(good_category) + transferring_sum);
 	pas_info.printf(translator::translate("(max: %u)"), halt->get_capacity(good_category->get_catg_index()));
 	left += display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + GOODS_WAITING_CELL_WIDTH * 2 + 10, y, pas_info, ALIGN_LEFT, SYSCOL_TEXT, true);
-	pas_info.clear();
 }
 
 
@@ -847,10 +896,93 @@ void halt_detail_pas_t::draw(scr_coord offset)
 			top += (mail_classes + 1) * (LINESPACE + GOODS_LEAVING_BAR_HEIGHT + 1) + 6;
 		}
 
-		// TODO: change this to "nearby" info and add nearby atraction building info. and more population and jobs info
-		// Passengers can be further separated into commuters and visitors
+		// bar color description
+		top += LINESPACE;
+		left = D_MARGIN_LEFT;
+		display_colorbox_with_tooltip(offset.x + left, offset.y + top + 1, 8, 8, goods_manager_t::passengers->get_color(), true, translator::translate("visitors"));
+		left += 10;
+		pas_info.clear();
+		pas_info.append(translator::translate("visitors"));
+		left += display_proportional_clip(offset.x + left, offset.y + top, pas_info, ALIGN_LEFT, SYSCOL_TEXT, true) + D_H_SPACE*2;
 
-		top += D_MARGIN_TOP;
+		display_colorbox_with_tooltip(offset.x + left, offset.y + top + 1, 8, 8, COL_COMMUTER, true, translator::translate("commuters"));
+		left += 10;
+		pas_info.clear();
+		pas_info.append(translator::translate("commuters"));
+		left += display_proportional_clip(offset.x + left, offset.y + top, pas_info, ALIGN_LEFT, SYSCOL_TEXT, true) + D_H_SPACE * 2;
+
+		display_colorbox_with_tooltip(offset.x + left, offset.y + top + 1, 8, 8, goods_manager_t::mail->get_color(), true, goods_manager_t::mail->get_name());
+		left += 10;
+		pas_info.clear();
+		pas_info.append(goods_manager_t::mail->get_name());
+		left += display_proportional_clip(offset.x + left, offset.y + top, pas_info, ALIGN_LEFT, SYSCOL_TEXT, true) + D_H_SPACE*2;
+
+		top += LINESPACE*2;
+
+		top += LINESPACE;
+		display_proportional_clip(offset.x, offset.y + top, translator::translate("Around passenger demands"), ALIGN_LEFT, SYSCOL_TEXT, true);
+		top += LINESPACE + D_V_SPACE;
+		display_proportional_clip(offset.x + GOODS_SYMBOL_CELL_WIDTH, offset.y + top, translator::translate("hd_wealth"), ALIGN_LEFT, SYSCOL_TEXT, true);
+		display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100, offset.y + top, translator::translate("Population"), ALIGN_RIGHT, SYSCOL_TEXT, true);
+		display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100 * 2 + 5, offset.y + top, translator::translate("Visitor demand"), ALIGN_RIGHT, SYSCOL_TEXT, true);
+		display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100 * 3 + 5 + 4, offset.y + top, translator::translate("Jobs"), ALIGN_RIGHT, SYSCOL_TEXT, true);
+		top += LINESPACE + 2;
+
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width, offset.y + top, MN_GREY1);
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100, offset.y + top, MN_GREY1);
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 * 2 + 5, offset.y + top, MN_GREY1);
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 * 2 + 5 + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 * 2 + 5 + 100, offset.y + top, MN_GREY1);
+		top += 4;
+
+		const uint32 arround_population = halt->get_around_population();
+		const uint32 arround_visitor_demand = halt->get_around_visitor_demand();
+		const uint32 arround_job_demand = halt->get_around_job_demand();
+		for (uint8 i = 0; i < pass_classes; i++) {
+			// wealth name
+			pas_info.clear();
+			pas_info.append(goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_PAS, i));
+			display_proportional_clip(offset.x + GOODS_SYMBOL_CELL_WIDTH, offset.y + top, pas_info, ALIGN_LEFT, SYSCOL_TEXT, true);
+
+			// population
+			const uint32 arround_population_by_class = halt->get_around_population(i);
+			pas_info.clear();
+			pas_info.printf("%u (%4.1f%%)", arround_population_by_class, arround_population ? 100.0 * arround_population_by_class / arround_population : 0.0);
+			display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
+
+			// visitor demand
+			const uint32 arround_visitor_demand_by_class = halt->get_around_visitor_demand(i);
+			pas_info.clear();
+			pas_info.printf("%u (%4.1f%%)", arround_visitor_demand_by_class, arround_visitor_demand ? 100.0 * arround_visitor_demand_by_class / arround_visitor_demand : 0.0);
+			display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100*2 + 5, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
+
+			// job demand
+			const uint32 arround_job_demand_by_class = halt->get_around_job_demand(i);
+			pas_info.clear();
+			pas_info.printf("%u (%4.1f%%)", arround_job_demand_by_class, arround_job_demand ? 100.0 * arround_job_demand_by_class / arround_job_demand : 0.0);
+			display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100*3 + 5 + 4, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
+
+			top += LINESPACE;
+		}
+		top += 2;
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width, offset.y + top, MN_GREY1);
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100, offset.y + top, MN_GREY1);
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 * 2 + 5, offset.y + top, MN_GREY1);
+		display_direct_line(offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 * 2 + 5 + 4, offset.y + top, offset.x + GOODS_SYMBOL_CELL_WIDTH + class_name_cell_width + 100 * 2 + 5 + 100, offset.y + top, MN_GREY1);
+
+		top += 4;
+		pas_info.clear();
+		pas_info.printf("%u         ", arround_population);
+		display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
+		pas_info.clear();
+		pas_info.printf("%u         ", arround_visitor_demand);
+		display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100 * 2 + 5, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
+		pas_info.clear();
+		pas_info.printf("%u         ", arround_job_demand);
+		display_proportional_clip(offset.x + class_name_cell_width + GOODS_SYMBOL_CELL_WIDTH + 100 * 3 + 5 + 4, offset.y + top, pas_info, ALIGN_RIGHT, SYSCOL_TEXT, true);
+
+		top += LINESPACE;
+
+		top += D_MARGIN_BOTTOM;
 
 		scr_size size(max(x_size + pos.x, get_size().w), top);
 		if (size != get_size()) {

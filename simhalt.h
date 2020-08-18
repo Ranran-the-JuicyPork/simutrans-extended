@@ -714,7 +714,7 @@ public:
 	 * @author Hj. Malthaner
 	 */
 	uint32 get_ware_summe(const goods_desc_t *warentyp) const;
-	uint32 get_ware_summe(const goods_desc_t *warentyp, uint8 g_class) const;
+	uint32 get_ware_summe(const goods_desc_t *warentyp, uint8 g_class, bool chk_only_commuter = false) const;
 
 	uint32 get_leaving_goods_sum(const goods_desc_t *warentyp, uint8 g_class = 255) const;
 	uint32 get_transferring_goods_sum(const goods_desc_t *warentyp, uint8 g_class = 255) const;
@@ -924,6 +924,10 @@ public:
 	* @author prissi
 	*/
 	void mark_unmark_coverage(const bool mark, const bool factories = false) const;
+
+	uint32 get_around_population(uint8 g_class = 255) const;
+	uint32 get_around_visitor_demand(uint8 g_class = 255) const;
+	uint32 get_around_job_demand(uint8 g_class = 255) const;
 
 	// @author: jamespetts
 	// Returns the percentage of unhappy people
