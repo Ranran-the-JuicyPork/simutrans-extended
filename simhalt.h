@@ -929,6 +929,17 @@ public:
 	uint32 get_around_visitor_demand(uint8 g_class = 255) const;
 	uint32 get_around_job_demand(uint8 g_class = 255) const;
 
+	uint32 get_around_visitor_generated() const;
+	uint32 get_around_succeeded_visiting() const;
+	uint32 get_around_commuter_generated() const;
+	uint32 get_around_succeeded_commuting() const;
+	// Returns the current number of workers, but overflows are truncated per building.
+	uint32 get_around_employee_factor() const;
+
+	uint32 get_around_mail_demand() const;
+	uint32 get_around_mail_generated() const;
+	uint32 get_around_mail_delivery_succeeded() const;
+
 	// @author: jamespetts
 	// Returns the percentage of unhappy people
 	// out of the total of happy and unhappy people.
