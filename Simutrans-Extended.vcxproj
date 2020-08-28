@@ -2611,6 +2611,7 @@
     <ClInclude Include="revision.h" />
     <ClInclude Include="script\api\api.h" />
     <ClInclude Include="script\api\api_base.h" />
+    <ClInclude Include="script\api\api_command.h" />
     <ClInclude Include="script\api\api_doc.h" />
     <ClInclude Include="script\api\api_obj_desc_base.h" />
     <ClInclude Include="script\api\api_simple.h" />
