@@ -25,6 +25,7 @@ Release of 122.0 (r9274 on 10-Oct-2020):
 	CHG: a server will puase without clients if '-pause' is set on the command line
 	CHG: speedup of map generation by reorganising and multithreading lake code
 	ADD: defining overlapping climate height limits will generate maps with climate patches at these heights
+	ADD: Humidity based climates (originally from kireon green) Attention, winter snowline set temperature at sea level, so important!
 	ADD: (ranran) new GUI element routebar
 	FIX: space.w added in container not space.h for vertical distance
 	CHG: On consequeutive traffic lights, only the first is obeyed to allow turns on four traffic lights crossings
