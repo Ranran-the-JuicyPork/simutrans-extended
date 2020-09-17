@@ -295,13 +295,14 @@ void gui_factory_connection_stat_t::draw(scr_coord offset)
 	char distance_display[10];
 
 	fab_list = is_input_display ? fab->get_suppliers() : fab->get_lieferziele();
+	const uint32 connection_count = is_input_display ? fab->get_suppliers().get_count() : fab->get_lieferziele().get_count();
 
 
 	uint32 sel = line_selected;
 	FORX(const vector_tpl<koord>, k, fab_list, yoff += LINESPACE + 1) {
 		fabrik_t *target_fab = fabrik_t::get_fab(k);
 
-		if (target_fab) {
+		if (target_fab && connection_count) {
 			const bool is_active = is_input_display ?
 				target_fab->is_active_lieferziel(fab->get_pos().get_2d()) :
 				fab->is_active_lieferziel(k);
