@@ -286,7 +286,7 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv)
 	add_component(&speed_bar);
 
 	// we update this ourself!
-	route_bar.add_color_value(&cnv_route_index, color_idx_to_rgb(COL_GREEN));
+	route_bar.set_value(&cnv_route_index, &mean_convoi_speed);
 	add_component(&route_bar);
 
 	// goto line button
@@ -1203,7 +1203,7 @@ void convoi_info_t::set_windowsize(scr_size size)
 
 	// convoi load indicator
 	route_bar.set_pos(scr_coord(BUTTON3_X,pos_y+5*LINESPACE));
-	route_bar.set_size(scr_size(view.get_pos().x - BUTTON3_X - D_INDICATOR_HEIGHT, 4));
+	route_bar.set_size(scr_size(view.get_pos().x - BUTTON3_X - D_INDICATOR_HEIGHT, 10));
 }
 
 
