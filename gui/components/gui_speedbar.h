@@ -96,7 +96,7 @@ private:
 	const sint32 *speed;
 
 public:
-	gui_routebar_t() { base = 100; speed = false; }
+	gui_routebar_t() { base = 100; speed = 0; }
 	void set_base(sint32 base);
 	void set_value(const sint32 *value, const sint32 *speed);
 
