@@ -47,7 +47,7 @@ static image_id tree_id_to_image[256][5*5];
 
 
 // distributes trees on a map
-void baum_t::distribute_trees(int density)
+void baum_t::distribute_trees(int density, sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom )
 {
 	// now we can proceed to tree planting routine itself
 	// best forests results are produced if forest size is tied to map size -
@@ -64,11 +64,11 @@ DBG_MESSAGE("verteile_baeume()","creating %i forest",c_forest_count);
 		// to have same execution order for simrand
 		koord const start = koord::koord_random(x, y);
 		koord const size  = koord(t_forest_size,t_forest_size) + koord::koord_random(t_forest_size, t_forest_size);
-		create_forest( start, size );
+		create_forest( start, size, xtop, ytop, xbottom, ybottom );
 		ls.set_progress( c1+1 );
 	}
 
-	fill_trees(density);
+	fill_trees( density, xtop, ytop, xbottom, ybottom );
 }
 
 
@@ -183,7 +183,7 @@ bool baum_t::plant_tree_on_coordinate(koord pos, const tree_desc_t *desc, const 
 }
 
 
-uint32 baum_t::create_forest(koord new_center, koord size )
+uint32 baum_t::create_forest(koord new_center, koord size, sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom )
 {
 	// none there
 	if(  desc_names.empty()  ) {
@@ -197,6 +197,13 @@ uint32 baum_t::create_forest(koord new_center, koord size )
 
 			const sint32 x_tree_pos = (j-(size.x>>1));
 			const sint32 y_tree_pos = (i-(size.y>>1));
+
+			if( xtop > x_tree_pos  ||  x_tree_pos >= xbottom ) {
+				continue;
+			}
+			if( ytop > y_tree_pos  ||  y_tree_pos >= ybottom ) {
+				continue;
+			}
 
 			const uint64 distance = 1 + sqrt_i64( ((uint64)x_tree_pos*x_tree_pos*(size.y*size.y) + (uint64)y_tree_pos*y_tree_pos*(size.x*size.x)));
 			const uint32 tree_probability = (uint32)( ( 8 * (uint32)((size.x*size.x)+(size.y*size.y)) ) / distance );
@@ -221,7 +228,7 @@ uint32 baum_t::create_forest(koord new_center, koord size )
 }
 
 
-void baum_t::fill_trees(int density)
+void baum_t::fill_trees(int density, sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom )
 {
 	// none there
 	if(  desc_names.empty()  ) {
@@ -229,8 +236,8 @@ void baum_t::fill_trees(int density)
 	}
 DBG_MESSAGE("verteile_baeume()","distributing single trees");
 	koord pos;
-	for(  pos.y=0;  pos.y<welt->get_size().y;  pos.y++  ) {
-		for(  pos.x=0;  pos.x<welt->get_size().x;  pos.x++  ) {
+	for(  pos.y=ytop;  pos.y<ybottom;  pos.y++  ) {
+		for(  pos.x=xtop;  pos.x<xbottom;  pos.x++  ) {
 			grund_t *gr = welt->lookup_kartenboden(pos);
 			if(gr->get_top() == 0  &&  gr->get_typ() == grund_t::boden)  {
 				// plant spare trees, (those with low preffered density) or in an entirely tree climate

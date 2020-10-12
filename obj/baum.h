@@ -124,7 +124,11 @@ public:
 	// static functions to handle trees
 
 	// distributes trees on a map
-	static void distribute_trees(int density);
+	static void distribute_trees(int density,  sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom );
+
+	static void fill_trees(int density, sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom );
+
+	static uint32 create_forest(koord center, koord size, sint16 xtop, sint16 ytop, sint16 xbottom, sint16 ybottom );
 
 	static bool plant_tree_on_coordinate(koord pos, const tree_desc_t *desc, const bool check_climate, const bool random_age );
 
@@ -133,10 +137,7 @@ public:
 	static bool register_desc(tree_desc_t *desc);
 	static bool successfully_loaded();
 
-	static uint32 create_forest(koord center, koord size );
-	static void fill_trees(int density);
-
-	// return list to descs
+	// return list to descriptors
 	static vector_tpl<tree_desc_t const*> const& get_all_desc() { return tree_list; }
 
 	static const tree_desc_t *random_tree_for_climate(climate cl) { uint8 b = random_tree_for_climate_intern(cl);  return b!=invalid_tree_id ? tree_list[b] : NULL; }
