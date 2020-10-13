@@ -1970,6 +1970,8 @@ void settings_t::rdwr(loadsave_t *file)
 		if( (file->get_extended_version() == 14 && file->get_extended_revision() >= 31) || file->get_extended_version() > 14) {
 			file->rdwr_byte(world_maximum_height);
 			file->rdwr_byte(world_minimum_height);
+			// NOTE: Check the version when implementing climate patch on extended
+			file->rdwr_enum(climate_generator);
 		}
 		// otherwise the default values of the last one will be used
 	}
