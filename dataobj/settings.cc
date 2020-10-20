@@ -576,7 +576,7 @@ void settings_t::set_default_climates()
 	moisture_water = 1;
 	winter_snowline = 7;
 
-	//	climate_wind_direction = ribit_t::dir_east;
+	wind_direction = 0;	// west wind
 }
 
 
@@ -1972,6 +1972,11 @@ void settings_t::rdwr(loadsave_t *file)
 			file->rdwr_byte(world_minimum_height);
 			// NOTE: Check the version when implementing climate patch on extended
 			file->rdwr_enum(climate_generator);
+			file->rdwr_byte( wind_direction );
+		}
+		else if( file->is_loading() ) {
+			climate_generator = HEIGHT_BASED;
+			wind_direction = rotation;
 		}
 		// otherwise the default values of the last one will be used
 	}

@@ -8713,13 +8713,9 @@ route_t::route_result_t air_vehicle_t::calc_route_internal(
 
 		// second: find start runway end
 		state = taxiing;
-#ifdef USE_DIFFERENT_WIND
-		approach_dir = get_approach_ribi( ziel, start );	// reverse
-		//DBG_MESSAGE("air_vehicle_t::calc_route()","search runway start near %i,%i,%i with corner in %x",start.x,start.y,start.z, approach_dir);
-#else
-		approach_dir = ribi_t::northeast;	// reverse
+		approach_dir = welt->get_settings().get_approach_dir(); // reverse
 		DBG_MESSAGE("air_vehicle_t::calc_route()","search runway start near (%s)",start.get_str());
-#endif
+
 		if (!route.find_route(welt, start, this, max_speed, ribi_t::all, weight, cnv->get_tile_length(), cnv->get_weight_summary().weight / 1000, welt->get_settings().get_max_route_steps(), cnv->has_tall_vehicles()))
 		{
 			// There might be no route at all, or the runway might be too short. Test this case.
