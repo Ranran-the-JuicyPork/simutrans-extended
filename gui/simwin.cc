@@ -317,7 +317,12 @@ static void win_draw_window_title(const scr_coord pos, const scr_size size,
 	PIXVAL lighter = display_blend_colors(title_color, color_idx_to_rgb(COL_WHITE), 25);
 	PIXVAL darker  = display_blend_colors(title_color, color_idx_to_rgb(COL_BLACK), 25);
 
-	display_fillbox_wh_clip_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, false);
+	if (sticky) {
+		display_blend_wh_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, 25);
+	}
+	else {
+		display_fillbox_wh_clip_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, true);
+	}
 
 	display_fillbox_wh_clip_rgb( pos.x + 1, pos.y,                         size.w - 2, 1, lighter, false );
 	display_fillbox_wh_clip_rgb( pos.x + 1, pos.y + D_TITLEBAR_HEIGHT - 1, size.w - 2, 1, darker,  false );
@@ -328,6 +333,9 @@ static void win_draw_window_title(const scr_coord pos, const scr_size size,
 	// Draw the gadgets and then move left and draw text.
 	flags.gotopos = (welt_pos != koord3d::invalid);
 	int width = display_gadget_boxes( &flags, pos.x+(REVERSE_GADGETS?0:size.w-D_GADGET_WIDTH), pos.y, lighter, darker, gadget_state, sticky, goto_pushed );
+	if (sticky) {
+		display_proportional_clip_rgb(pos.x + (REVERSE_GADGETS?width+4:4)+1, pos.y+(D_TITLEBAR_HEIGHT-LINEASCENT)/2+1, text, ALIGN_LEFT, title_color, false);
+	}
 	int titlewidth = display_proportional_clip_rgb( pos.x + (REVERSE_GADGETS?width+4:4), pos.y+(D_TITLEBAR_HEIGHT-LINEASCENT)/2, text, ALIGN_LEFT, text_color, false );
 	if(  flags.gotopos  ) {
 		display_proportional_clip_rgb( pos.x + (REVERSE_GADGETS?width+4:4)+titlewidth+8, pos.y+(D_TITLEBAR_HEIGHT-LINEASCENT)/2, welt_pos.get_2d().get_fullstr(), ALIGN_LEFT, text_color, false );
@@ -1490,7 +1498,7 @@ bool check_pos_win(event_t *ev)
 				}
 				else {
 					// Somewhere on the titlebar
-					if (IS_LEFTDRAG(ev)) {
+					if (IS_LEFTDRAG(ev) && !wins[i].sticky) {
 						i = top_win(i,false);
 						move_win(i, ev);
 						is_moving = i;
