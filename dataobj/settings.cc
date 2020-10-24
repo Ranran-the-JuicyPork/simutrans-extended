@@ -576,7 +576,7 @@ void settings_t::set_default_climates()
 	moisture_water = 1;
 	winter_snowline = 7;
 
-	wind_direction = 0;	// west wind
+	wind_direction = ribi_t::west; // west wind
 }
 
 
@@ -1976,7 +1976,14 @@ void settings_t::rdwr(loadsave_t *file)
 		}
 		else if( file->is_loading() ) {
 			climate_generator = HEIGHT_BASED;
-			wind_direction = rotation;
+
+			switch (rotation) {
+				default:
+				case 0: wind_direction = ribi_t::west;  break;
+				case 1: wind_direction = ribi_t::north; break;
+				case 2: wind_direction = ribi_t::east;  break;
+				case 3: wind_direction = ribi_t::south; break;
+			}
 		}
 		// otherwise the default values of the last one will be used
 	}
