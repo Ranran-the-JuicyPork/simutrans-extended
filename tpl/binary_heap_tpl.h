@@ -57,10 +57,10 @@ public:
 	}
 
 	/**
-	* Inserts an element into the queue.
-	* in such a way that the lowest is at the top of this tree in an array
-	* parts inspired from OTTD
-	*/
+	 * Inserts an element into the queue.
+	 * in such a way that the lowest is at the top of this tree in an array
+	 * parts inspired from OTTD
+	 */
 	void insert(const T item)
 	{
 		node_count ++;
@@ -86,8 +86,8 @@ public:
 
 
 	/**
-	* unfortunately, the removing is as much effort as the insertion ...
-	*/
+	 * unfortunately, the removing is as much effort as the insertion ...
+	 */
 	T pop() {
 		assert(!empty());
 
@@ -132,9 +132,9 @@ public:
 	}
 
 	/**
-	* Recycles all nodes. Doesn't delete the objects.
-	* Leaves the list empty.
-	*/
+	 * Recycles all nodes. Doesn't delete the objects.
+	 * Leaves the list empty.
+	 */
 	void clear()
 	{
 		node_count = 0;
@@ -155,6 +155,7 @@ public:
 
 		return nodes[1];
 	}
+
 private:
 	binary_heap_tpl(const binary_heap_tpl& other);
 	binary_heap_tpl& operator=( binary_heap_tpl const& other );
