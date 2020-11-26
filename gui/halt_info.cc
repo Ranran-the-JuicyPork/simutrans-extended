@@ -247,39 +247,35 @@ void halt_info_t::init(halthandle_t halt)
 	set_table_layout(1,0);
 
 	// top part
-	add_table(2,2)->set_alignment(ALIGN_CENTER_H);
+	add_table(2,1)->set_alignment(ALIGN_TOP);
 	{
-		// input name
-		tstrncpy(edit_name, halt->get_name(), lengthof(edit_name));
-		input.set_text(edit_name, lengthof(edit_name));
-		input.add_listener(this);
-		add_component(&input);
-
-		button.init(button_t::roundbox, "Details");
-		button.set_tooltip("Open station/stop details");
-		button.add_listener(this);
-		add_component(&button);
-
-		container_top = add_table(1,0);
+		// top left
+		container_top = add_table(1, 0);
 		{
-			// status images
-			add_table(5,1)->set_alignment(ALIGN_CENTER_V);
-			{
-				add_component(&indicator_color);
-				// indicator for enabled freight type
-				img_enable[0].set_image(skinverwaltung_t::passengers->get_image_id(0));
-				img_enable[1].set_image(skinverwaltung_t::mail->get_image_id(0));
-				img_enable[2].set_image(skinverwaltung_t::goods->get_image_id(0));
+			// 1st row: input name
+			tstrncpy(edit_name, halt->get_name(), lengthof(edit_name));
+			input.set_text(edit_name, lengthof(edit_name));
+			input.add_listener(this);
+			add_component(&input);
 
-				for(uint i=0; i<3; i++) {
-					add_component(img_enable + i);
-					img_enable[i].enable_offset_removal(true);
-				}
+			// 2nd row: status images
+			add_table(3, 1);
+			{
+				indicator_color.set_size(scr_size(LINEASCENT*2, D_INDICATOR_BOX_HEIGHT));
+				indicator_color.set_size_fixed(true);
+				add_component(&indicator_color);
+
+				// company name
+				new_component<gui_label_t>(halt->get_owner()->get_name(), color_idx_to_rgb(halt->get_owner()->get_player_color1()), gui_label_t::left)->set_shadow(SYSCOL_TEXT_SHADOW, true);
+
 				img_types = new_component<gui_halt_type_images_t>(halt);
 			}
 			end_table();
+
+			new_component<gui_margin_t>(0, LINESPACE/3);
+
 			// capacities
-			add_table(6,1);
+			add_table(7, 1);
 			{
 				add_component(&lb_capacity[0]);
 				if (welt->get_settings().is_separate_halt_capacities()) {
@@ -288,17 +284,38 @@ void halt_info_t::init(halthandle_t halt)
 					new_component<gui_image_t>(skinverwaltung_t::mail->get_image_id(0), 0, ALIGN_NONE, true);
 					add_component(&lb_capacity[2]);
 					new_component<gui_image_t>(skinverwaltung_t::goods->get_image_id(0), 0, ALIGN_NONE, true);
+					new_component<gui_fill_t>();
 				}
+
 			}
 			end_table();
-			add_component(&lb_happy);
+
+			// evaluations
+			add_table(3, 0);
+			{
+				new_component_span<gui_label_t>("Evaluation:", 3);
+				new_component<gui_margin_t>(LINESPACE / 3);
+				add_component(&lb_happy,2);
+			}
+			end_table();
 		}
 		end_table();
 
-		add_component(&view);
-		view.set_location(halt->get_basis_pos3d());
+		// top right
+		add_table(1, 0);
+		{
+			add_component(&view);
+			view.set_location(halt->get_basis_pos3d());
 
-		new_component<gui_empty_t>();
+			detail_button.init(button_t::roundbox, "Details");
+			detail_button.set_width(view.get_size().w);
+			detail_button.set_tooltip("Open station/stop details");
+			detail_button.add_listener(this);
+			add_component(&detail_button);
+		}
+		end_table();
+
+		//new_component<gui_empty_t>();
 	}
 	end_table();
 
@@ -327,8 +344,9 @@ void halt_info_t::init(halthandle_t halt)
 	freight_sort_selector.set_selection(sortmode);
 	halt->set_sortby(sortmode);
 	freight_sort_selector.set_focusable(true);
+	freight_sort_selector.set_width_fixed(true);
 	freight_sort_selector.set_highlight_color(1);
-	freight_sort_selector.set_max_size(scr_size(D_BUTTON_WIDTH * 2, LINESPACE * 5 + 2 + 16));
+	freight_sort_selector.set_size(scr_size(D_BUTTON_WIDTH * 2, D_EDIT_HEIGHT));
 	freight_sort_selector.add_listener(this);
 	container_freight.add_component(&freight_sort_selector);
 	container_freight.end_table();
@@ -351,7 +369,7 @@ void halt_info_t::init(halthandle_t halt)
 	chart.set_background(SYSCOL_CHART_BACKGROUND);
 	container_chart.add_component(&chart);
 
-	container_chart.add_table(4,2);
+	container_chart.add_table(4, int((MAX_HALT_COST + 3) / 4))->set_force_equal_columns(true);
 	for (int cost = 0; cost<MAX_HALT_COST; cost++) {
 		uint16 curve = chart.add_curve(color_idx_to_rgb(cost_type_color[cost]), halt->get_finance_history(), MAX_HALT_COST, index_of_haltinfo[cost], MAX_MONTHS, 0, false, true, 0);
 
@@ -365,7 +383,7 @@ void halt_info_t::init(halthandle_t halt)
 	container_chart.end_table();
 
 	update_components();
-	set_resizemode(diagonal_resize);     // 31-May-02	markus weber	added
+	set_resizemode(diagonal_resize);
 	reset_min_windowsize();
 	set_windowsize(get_min_windowsize());
 }
@@ -421,9 +439,6 @@ void halt_info_t::update_components()
 	}
 	lb_happy.update();
 
-	img_enable[0].set_visible(halt->get_pax_enabled());
-	img_enable[1].set_visible(halt->get_mail_enabled());
-	img_enable[2].set_visible(halt->get_ware_enabled());
 	container_top->set_size( container_top->get_size());
 
 	// buffer update now only when needed by halt itself => dedicated buffer for this
@@ -896,13 +911,12 @@ void gui_departure_board_t::insert_image(convoihandle_t cnv)
 
 /**
  * This method is called if an action is triggered
- * @author Hj. Malthaner
  */
 bool halt_info_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
 {
-	if (comp == &button) { 			// details button pressed
+	if (comp == &detail_button) {
 		create_win( new halt_detail_t(halt), w_info, magic_halt_detail + halt.get_id() );
-	} else if (comp == &freight_sort_selector) { 	// @author hsiegeln sort button pressed // @author Ves: changed button to combobox
+	} else if (comp == &freight_sort_selector) {
 
 		sint32 sort_mode = freight_sort_selector.get_selection();
 		if (sort_mode < 0)

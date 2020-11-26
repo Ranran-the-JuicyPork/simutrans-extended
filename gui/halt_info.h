@@ -51,11 +51,9 @@ private:
 	gui_aligned_container_t *container_top;
 	gui_label_buf_t lb_capacity[3], lb_happy;
 	gui_colorbox_t indicator_color;
-	gui_image_t img_enable[3];
 	gui_halt_type_images_t *img_types;
 	/**
 	* Buffer for freight info text string.
-	* @author Hj. Malthaner
 	*/
 	cbuffer_t freight_info;
 	cbuffer_t tooltip_buf;
@@ -72,8 +70,8 @@ private:
 	gui_textinput_t input;
 	gui_chart_t chart;
 	location_view_t view;
-	button_t button;
-	// button_t sort_button;     // @author hsiegeln
+	button_t detail_button;
+	// button_t sort_button;
 	gui_combobox_t freight_sort_selector;
 
 	gui_button_to_chart_array_t button_to_chart;
@@ -97,19 +95,8 @@ public:
 
 	virtual ~halt_info_t();
 
-	/**
-	 * Set the window associated helptext
-	 * @return the filename for the helptext, or NULL
-	 * @author Hj. Malthaner
-	 */
 	const char * get_help_filename() const OVERRIDE {return "station.txt";}
 
-	/**
-	 * Draw new component. The values to be passed refer to the window
-	 * i.e. It's the screen coordinates of the window where the
-	 * component is displayed.
-	 * @author Hj. Malthaner
-	 */
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
 	virtual koord3d get_weltpos(bool) OVERRIDE;
