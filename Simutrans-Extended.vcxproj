@@ -2539,6 +2539,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug (SDL 2)|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="descriptor\reader\xref_reader.cc" />
+    <ClCompile Include="vehicle\vehicle_base.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dataobj\environment.h" />
@@ -2983,6 +2984,7 @@
     <ClInclude Include="descriptor\xref_desc.h" />
     <ClInclude Include="descriptor\reader\xref_reader.h" />
     <ClInclude Include="descriptor\writer\xref_writer.h" />
+    <ClInclude Include="vehicle\vehicle_base.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\Simutrans\simu-server.log" />

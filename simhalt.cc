@@ -54,9 +54,11 @@
 #include "utils/simrandom.h"
 #include "utils/simstring.h"
 
+#include "vehicle/simvehicle.h"
 #include "vehicle/simpeople.h"
 
 #include "descriptor/goods_desc.h"
+
 
 karte_ptr_t haltestelle_t::welt;
 

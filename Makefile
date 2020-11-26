@@ -576,6 +576,8 @@ SOURCES += gui/components/gui_convoy_payloadinfo.cc
 SOURCES += gui/replace_frame.cc
 SOURCES += dataobj/livery_scheme.cc
 SOURCES += dataobj/replace_data.cc
+SOURCES += vehicle/vehicle_base.cc
+
 
 
 ifeq ($(BACKEND),posix)

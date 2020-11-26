@@ -17,6 +17,8 @@
 #include "../player/simplay.h"
 
 #include "simroadtraffic.h"
+#include "simvehicle.h"
+
 #include "simpeople.h"
 
 #include "../dataobj/translator.h"
@@ -33,8 +35,8 @@
 #include "../descriptor/citycar_desc.h"
 #include "../descriptor/roadsign_desc.h"
 
-
 #include "../utils/cbuffer_t.h"
+
 
 /**********************************************************************************************************************/
 /* Road users (Verkehrsteilnehmer) basis class from here on */
