@@ -2999,7 +2999,7 @@ void way_builder_t::build_river()
 
 	// now lower all tiles
 	for(  uint32 i=start_n;  i<end_n;  i++  ) {
-		if(  lower_tile[i]  ) { 
+		if(  lower_tile[i]  ) {
 			if(  !welt->flatten_tile( NULL, route[i].get_2d(), lower_tile_h[i] ) ) {
 				// illegal slope encountered, give up ...
 				return;
@@ -3045,7 +3045,7 @@ void way_builder_t::build_river()
 		}
 	}
 	gr_first->calc_image(); // to calculate ribi of water tiles
-	
+
 	// we will make rivers gradually larger by stepping up their width
 	// Since we cannot quickly find out, if a lake has another influx, we just assume all rivers after a lake are navigatable
 	if(  env_t::river_types>1  ) {
