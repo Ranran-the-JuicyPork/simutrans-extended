@@ -846,7 +846,9 @@ void karte_t::create_rivers( sint16 number )
 	vector_tpl<koord> sea_tiles;
 	weighted_vector_tpl<koord> mountain_tiles;
 
+	sint8 last_height = 1;
 	koord last_koord(0,0);
+	const sint16 max_dist = cached_size.y+cached_size.x;
 
 	// trunk of 16 will ensure that rivers are long enough apart ...
 	for(  sint16 y = 8;  y < cached_size.y;  y+=16  ) {
@@ -856,14 +858,21 @@ void karte_t::create_rivers( sint16 number )
 			const sint8 h = gr->get_hoehe() - get_water_hgt_nocheck(k);
 			if(  gr->is_water()  ) {
 				// may be good to start a river here
-				if( gr->get_hoehe() <= get_groundwater() ) {
+				if( gr->get_hoehe() <= get_groundwater() ) { 
 					sea_tiles.append(k);
 				}
 				else {
 					lake_tiles.append(k);
 				}
 			}
-			else {
+			else if(  h>=last_height  ||  koord_distance(last_koord,k)>simrand(max_dist, "koord koord::koord_random")  ) {
+				// something worth to add here
+				if(  h>last_height  ) {
+					last_height = h;
+				}
+				last_koord = k;
+				// using h*h as weight would give mountain sources more preferences
+				// on the other hand most rivers do not string near summits ...
 				mountain_tiles.append( k, h * h );
 			}
 		}
@@ -875,7 +884,6 @@ void karte_t::create_rivers( sint16 number )
 	}
 
 	// now make rivers
-	int river_count = 0;
 	sint16 retrys = number*2;
 	while(  number > 0  &&  !mountain_tiles.empty()  &&  retrys>0  ) {
 
@@ -905,7 +913,6 @@ void karte_t::create_rivers( sint16 number )
 			if(  riverbuilder.get_count() >= (uint32)settings.get_min_river_length()  ) {
 				// do not built too short rivers
 				riverbuilder.build();
-				river_count++;
 				number--;
 				retrys++;
 				break;
@@ -916,7 +923,7 @@ void karte_t::create_rivers( sint16 number )
 	}
 	// we gave up => tell the user
 	if(  number>0  ) {
-		dbg->warning( "karte_t::create_rivers()","Too many rivers requested! (only %i rivers placed)", river_count );
+		dbg->warning( "karte_t::create_rivers()","Too many rivers requested! (only %i rivers placed)", number );
 	}
 }
 
@@ -2969,8 +2976,25 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 		ls.set_progress(4);
 	}
 
+	// update height bounds
+	for(  sint16 iy = 0;  iy < new_size_y;  iy++  ) {
+		for(  sint16 ix = (iy >= old_y) ? 0 : max( old_x, 0 );  ix < new_size_x;  ix++  ) {
+			sint8 hgt = lookup_kartenboden_nocheck(ix, iy)->get_hoehe();
+			if (hgt < min_height) {
+				min_height = hgt;
+			}
+			if (hgt > max_height) {
+				max_height = hgt;
+			}
+		}
+	}
+
+	if (  old_x == 0  &&  old_y == 0  ) {
+		ls.set_progress(12);
+	}
+
 	DBG_DEBUG("karte_t::distribute_groundobjs_cities()","distributing rivers");
-	if(  sets->get_lakeheight()>0  ) {
+	if(  sets->get_lakeheight() > get_groundwater()  ) {
 		create_lakes( old_x, old_y, sets->get_lakeheight() );
 	}
 
@@ -3012,7 +3036,6 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 	else {
 		// new world -> calculate all transitions
 		world_xy_loop(&karte_t::recalc_transitions_loop, 0);
-
 		ls.set_progress(16);
 	}
 
