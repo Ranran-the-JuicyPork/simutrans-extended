@@ -699,7 +699,7 @@ PIXVAL minimap_t::calc_height_color(const sint16 height, const sint16 groundwate
 /**
  * Calculates the minimap color of a ground tile
  */
-PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool show_buildings)
+PIXVAL minimap_t::calc_ground_color(const grund_t *gr, uint8 contour_display, bool show_buildings)
 {
 	PIXVAL color = color_idx_to_rgb(COL_BLACK);
 
@@ -730,7 +730,7 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 					fabrik_t *fab = gb ? gb->get_fabrik() : NULL;
 					if(fab==NULL) {
 						sint16 height = corner_sw(gr->get_grund_hang());
-						if (show_contour) {
+						if (contour_display==1) {
 							color = calc_height_color(world->lookup_hgt(gr->get_pos().get_2d()) + height, world->get_water_hgt(gr->get_pos().get_2d()));
 						}
 						else {
@@ -775,7 +775,7 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 					if(lt!=NULL) {
 						color = COL_POWERLINE;
 					}
-					else if (!show_contour) {
+					else if (contour_display != 1) {
 						color = color_idx_to_rgb(map_type_color[MAX_MAP_TYPE_WATER]);
 					}
 					else {
@@ -783,7 +783,7 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 						if(  gr->get_hoehe() > world->get_groundwater()  ) {
 							color = calc_height_color( gr->get_hoehe() + height, world->get_groundwater() );
 						}
-						else if( mode&MAP_CLIMATES ) {
+						else if( get_instance()->contour_mode==2 ) {
 							static uint8 climate_color[ 8 ] = { 0, COL_YELLOW, COL_LIGHT_GREEN, COL_GREEN, COL_DARK_GREEN, COL_DARK_YELLOW, COL_BROWN, COL_GREY4 };
 							color = color_idx_to_rgb( climate_color[ world->get_climate(gr->get_pos().get_2d()) ] );
 						}
@@ -821,7 +821,7 @@ void minimap_t::calc_map_pixel(const koord k)
 	}
 
 	// first use ground color
-	set_map_color( k, calc_ground_color(gr, show_contour, show_buildings) );
+	set_map_color( k, calc_ground_color(gr, contour_mode, show_buildings) );
 
 	bool any_suitable_stops = false;
 	uint16 min_tiles_to_halt = -1;
@@ -1293,7 +1293,7 @@ minimap_t::minimap_t()
 	zoom_in = 1;
 	zoom_out = 1;
 	isometric = false;
-	show_contour = true;
+	contour_mode = 1;
 	show_network_load_factor = false;
 	mode = MAP_TOWN;
 	selected_city = NULL;
@@ -1338,6 +1338,12 @@ void minimap_t::init()
 void minimap_t::set_display_mode(MAP_DISPLAY_MODE new_mode)
 {
 	mode = new_mode;
+	needs_redraw = true;
+}
+
+void minimap_t::set_contour_mode(uint8 new_mode)
+{
+	contour_mode = new_mode;
 	needs_redraw = true;
 }
 

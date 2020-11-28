@@ -244,20 +244,12 @@ map_frame_t::map_frame_t() :
 
 		// show contour
 		////b_show_contour.pressed = karte->show_contour;
-		c_show_outlines.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate( "Show contour" ), SYSCOL_TEXT );
-		c_show_outlines.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate( "Show climates" ), SYSCOL_TEXT );
-		c_show_outlines.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate( "Show outline" ), SYSCOL_TEXT );
-		c_show_outlines.add_listener( this );
-		if( (env_t::default_mapmode & minimap_t::MAP_CLIMATES) != 0 ) {
-			c_show_outlines.set_selection( 1 );
-		}
-		else if( (minimap_t::get_instance()->show_contour) ) { // FIXME
-			c_show_outlines.set_selection( 2 );
-		}
-		else {
-			c_show_outlines.set_selection( 0 );
-		}
-		add_component(&c_show_outlines);
+		contour_mode_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate( "Show outline" ), SYSCOL_TEXT );
+		contour_mode_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate( "Show contour" ), SYSCOL_TEXT );
+		contour_mode_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>( translator::translate( "Show climates" ), SYSCOL_TEXT );
+		contour_mode_c.add_listener( this );
+		contour_mode_c.set_selection(minimap_t::get_instance()->contour_mode);
+		add_component(&contour_mode_c);
 
 		// show the building layer
 		b_show_buildings.init(button_t::square_state, "Show buildings");
@@ -476,20 +468,8 @@ bool map_frame_t::action_triggered( gui_action_creator_t *comp, value_t v )
 	else if(comp==&b_show_directory) {
 		show_hide_directory( !b_show_directory.pressed );
 	}
-	else if(  comp == &c_show_outlines  ) {
-		if( v.i == 2 ) {
-			minimap_t::get_instance()->show_contour = true;
-			env_t::default_mapmode &= ~minimap_t::MAP_CLIMATES;
-		}
-		else if( v.i == 1 ) {
-			env_t::default_mapmode |= minimap_t::MAP_CLIMATES;
-			minimap_t::get_instance()->show_contour = false;
-		}
-		else {
-			env_t::default_mapmode &= ~minimap_t::MAP_CLIMATES;
-			minimap_t::get_instance()->show_contour = false;
-		}
-		minimap_t::get_instance()->set_display_mode(  ( minimap_t::MAP_DISPLAY_MODE)env_t::default_mapmode  );
+	else if(  comp == &contour_mode_c  ) {
+		minimap_t::get_instance()->set_contour_mode(contour_mode_c.get_selection());
 	}
 	else if (  comp == &b_filter_factory_list  ) {
 		filter_factory_list = !filter_factory_list;
@@ -767,6 +747,7 @@ void map_frame_t::rdwr( loadsave_t *file )
 	viewed_player_c.rdwr(file);
 	transport_type_c.rdwr(file);
 	freight_type_c.rdwr(file);
+	contour_mode_c.rdwr(file);
 
 	if(  file->is_loading()  ) {
 		set_windowsize( window_size );
@@ -788,5 +769,6 @@ void map_frame_t::rdwr( loadsave_t *file )
 		minimap_t::get_instance()->freight_type_group_index_showed_on_map = viewable_freight_types[freight_type_c.get_selection()];
 		minimap_t::get_instance()->show_network_load_factor = b_overlay_networks_load_factor.pressed;
 		minimap_t::get_instance()->invalidate_map_lines_cache();
+		minimap_t::get_instance()->contour_mode = contour_mode_c.get_selection();
 	}
 }

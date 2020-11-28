@@ -67,7 +67,6 @@ public:
 		MAP_STAFF_FULFILLMENT  = 1<<27,
 		MAP_MAIL_DELIVERY      = 1<<28,
 		MAP_CONGESTION         = 1<<29,
-		MAP_CLIMATES           = 1<<30,
 
 		MAP_MODE_HALT_FLAGS = (MAP_STATUS|MAP_SERVICE|MAP_ORIGIN|MAP_TRANSFER|MAP_WAITING|MAP_WAITCHANGE),
 		MAP_MODE_FLAGS = (MAP_TOWN|MAP_CITYLIMIT|MAP_STATUS|MAP_SERVICE|MAP_WAITING|MAP_WAITCHANGE|MAP_TRANSFER|MAP_LINES|MAP_FACTORIES|MAP_ORIGIN|MAP_DEPOT|MAP_TOURIST|MAP_CONVOYS)
@@ -198,7 +197,7 @@ public:
 	static bool is_visible;
 
 	bool show_network_load_factor;
-	bool show_contour;
+	uint8 contour_mode; // 0: outline, 1:elevation, 2: climate
 	bool show_buildings;
 
 	int player_showed_on_map;
@@ -222,7 +221,7 @@ public:
 	static PIXVAL calc_height_color(const sint16 height, const sint16 groundwater);
 
 	/// needed for town passenger map
-	static PIXVAL calc_ground_color (const grund_t *gr, bool show_contour = true, bool show_buildings = true);
+	static PIXVAL calc_ground_color (const grund_t *gr, uint8 contour_display = 1, bool show_buildings = true);
 
 	/// we are single instance ...
 	static minimap_t *get_instance();
@@ -246,6 +245,7 @@ public:
 	void init();
 
 	void set_display_mode(MAP_DISPLAY_MODE new_mode);
+	void set_contour_mode(uint8 new_mode);
 
 	MAP_DISPLAY_MODE get_display_mode() const { return mode; }
 
