@@ -94,10 +94,12 @@ climate_gui_t::climate_gui_t(settings_t* const sets_par) :
 	cities_ignore_height.pressed = env_t::cities_ignore_height;
 	cities_like_water.set_value((int)(env_t::cities_like_water));
 
+	/*
 	lake.init( button_t::square_state, "lake");
 	lake.pressed = sets->get_lake();
 	lake.add_listener( this );
 	add_component( &lake );
+	*/
 
 	humidity_climate.set_table_layout(3,0);
 	{
@@ -198,10 +200,6 @@ bool climate_gui_t::action_triggered( gui_action_creator_t *comp, value_t v)
 		if(  welt_gui  ) {
 			welt_gui->update_preview();
 		}
-		for(  int i=desert_climate-1;  i<=rocky_climate-1;  i++  ) {
-			climate_borders_ui[i].set_limits( -25, 32 - sets->get_groundwater() );
-			climate_borders_ui[i].set_value( climate_borders_ui[i].get_value() );
-		}
 	}
 	else if(comp==&mountain_height) {
 		sets->max_mountain_height = v.i;
@@ -297,14 +295,6 @@ bool climate_gui_t::action_triggered( gui_action_creator_t *comp, value_t v)
 	{
 		env_t::cities_ignore_height ^= 1;
 		cities_ignore_height.pressed ^= 1;
-	}
-	else {
-		// all climate borders from here on
-
-		// correct summer snowline too
-		if (arctic < sets->get_winter_snowline()) {
-			sets->winter_snowline = arctic;
-		}
 	}
 	else if(comp==&snowline_summer) {
 		// set artic borders
