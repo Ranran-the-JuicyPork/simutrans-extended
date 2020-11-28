@@ -2772,7 +2772,7 @@ void karte_t::distribute_trees_region( sint16 xtop, sint16 ytop, sint16 xbottom,
 							uint8 number_to_plant = 0;
 							uint8 const max_trees_here = min(get_settings().get_max_no_of_trees_on_square(), (tree_probability - 38 + 1) / 2);
 							for (uint8 c2 = 0 ; c2<max_trees_here; c2++) {
-								const uint32 rating = simrand(10) + 38 + c2*2;
+								const uint32 rating = simrand(10, "baum_t::plant_tree_on_coordinate") + 38 + c2*2;
 								if (rating < tree_probability ) {
 									number_to_plant++;
 								}
@@ -2783,7 +2783,7 @@ void karte_t::distribute_trees_region( sint16 xtop, sint16 ytop, sint16 xbottom,
 							// plant spare trees, (those with low preffered density) or in an entirely tree climate
 							uint16 cl = 1 << get_climate(pos);
 							settings_t const& s = get_settings();
-							if ((cl & s.get_no_tree_climates()) == 0 && ((cl & s.get_tree_climates()) != 0 || simrand(s.get_forest_inverse_spare_tree_density() * /*dichte*/3) < 100)) {
+							if ((cl & s.get_no_tree_climates()) == 0 && ((cl & s.get_tree_climates()) != 0 || simrand(s.get_forest_inverse_spare_tree_density() * /*dichte*/3, "baum_t::plant_tree()") < 100)) {
 								baum_t::plant_tree_on_coordinate(pos, 1, 1);
 							}
 						}
@@ -10515,8 +10515,8 @@ void karte_t::calc_climate_map_region( sint16 xtop, sint16 ytop, sint16 xbottom,
 						climate this_climate = arctic_climate; // fallthrough option
 
 						sint8 hgt = lookup_hgt_nocheck(x,y) - groundwater;
-						sint8 temperature = groundwater_temperature - (hgt-groundwater) - simrand(2);
-						sint8 this_humidity = humidity_map.at(x,y) + simrand(5);
+						sint8 temperature = groundwater_temperature - (hgt-groundwater) - simrand(2, "planquadrat_t::climate_data");
+						sint8 this_humidity = humidity_map.at(x,y) + simrand(5, "koord koord::koord_random");
 
 						if(  temperature >= settings.get_climate_temperature_borders(0)  ) {
 							if(  this_humidity > settings.get_tropic_humidity() ) {
@@ -10657,8 +10657,8 @@ void karte_t::calc_climate_map_region( sint16 xtop, sint16 ytop, sint16 xbottom,
 							climate cl = !allowed.empty() ? (climate)pick_any(allowed) : temperate_climate;
 
 							// now we do an ellipse with size wx and wy around the starting point
-							const sint32 wx = 2+simrand( max_patchsize_x );
-							const sint32 wy = 2+simrand( max_patchsize_y );
+							const sint32 wx = 2+simrand( max_patchsize_x, "koord koord::koord_random" );
+							const sint32 wy = 2+simrand( max_patchsize_y, "koord koord::koord_random" );
 							for( sint16 j = 0; j < wx; j++) {
 								for( sint16 i = 0; i < wy; i++) {
 
@@ -10674,8 +10674,6 @@ void karte_t::calc_climate_map_region( sint16 xtop, sint16 ytop, sint16 xbottom,
 											// find out if the climate is still allowed here
 											if(  hgt >= settings.get_climate_borders( cl, 0 )  &&  hgt <= settings.get_climate_borders( cl, 1 )  ) 	{
 												climate_map.at( x+x_off, y+y_off ) = cl;
-												pl->set_climate_transition_flag(false);
-												pl->set_climate_corners(0);
 											}
 										}
 									}
