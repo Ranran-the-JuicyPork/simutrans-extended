@@ -858,7 +858,7 @@ void karte_t::create_rivers( sint16 number )
 			const sint8 h = gr->get_hoehe() - get_water_hgt_nocheck(k);
 			if(  gr->is_water()  ) {
 				// may be good to start a river here
-				if( gr->get_hoehe() <= get_groundwater() ) { 
+				if( gr->get_hoehe() <= get_groundwater() ) {
 					sea_tiles.append(k);
 				}
 				else {

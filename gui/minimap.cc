@@ -775,17 +775,17 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, uint8 contour_display, bo
 					if(lt!=NULL) {
 						color = COL_POWERLINE;
 					}
-					else if (contour_display != 1) {
+					else if ( contour_display == 0 ) {
 						color = color_idx_to_rgb(map_type_color[MAX_MAP_TYPE_WATER]);
+					}
+					else if ( contour_display == 2 ) {
+						static uint8 climate_color[8] = { 0, COL_YELLOW, COL_LIGHT_GREEN, COL_GREEN, COL_DARK_GREEN, COL_DARK_YELLOW, COL_BROWN, COL_GREY4 };
+						color = color_idx_to_rgb(climate_color[world->get_climate(gr->get_pos().get_2d())]);
 					}
 					else {
 						sint16 height = corner_sw(gr->get_grund_hang());
 						if(  gr->get_hoehe() > world->get_groundwater()  ) {
 							color = calc_height_color( gr->get_hoehe() + height, world->get_groundwater() );
-						}
-						else if( get_instance()->contour_mode==2 ) {
-							static uint8 climate_color[ 8 ] = { 0, COL_YELLOW, COL_LIGHT_GREEN, COL_GREEN, COL_DARK_GREEN, COL_DARK_YELLOW, COL_BROWN, COL_GREY4 };
-							color = color_idx_to_rgb( climate_color[ world->get_climate(gr->get_pos().get_2d()) ] );
 						}
 						else {
 							color = calc_height_color( gr->get_hoehe() + height, gr->get_hoehe() + height - 1);
