@@ -8616,7 +8616,7 @@ DBG_MESSAGE("karte_t::save(loadsave_t *file)", "saved tiles");
 	}
 
 	// save default climate amp
-	if(  file->is_version_atleast( 121, 1 )  ) {
+	if(  file->get_version_int()>=121001  ) {
 		for(  sint16 y = 0;  y < get_size().y;  y++  ) {
 			for(  sint16 x = 0;  x < get_size().x;  x++  ) {
 				file->rdwr_byte( climate_map.at(x,y) );
@@ -9691,14 +9691,14 @@ DBG_MESSAGE("karte_t::load()", "init player");
 	// init climates and default climate map
 	DBG_MESSAGE("karte_t::load()", "init climates");
 	climate_map.resize( get_size().x, get_size().y );
-	if(  file->get_version_int>=121100  ) {
+	if(  file->get_version_int()>=121100  ) {
 		for(  sint16 y = 0;  y < get_size().y;  y++  ) {
 			for(  sint16 x = 0;  x < get_size().x;  x++  ) {
 				file->rdwr_byte( climate_map.at(x,y) );
 			}
 		}
 	}
-	else if(  file->get_version_int<112700  ) {
+	else if(  file->get_version_int()<112700  ) {
 		// distribute climates
 		calc_climate_map_region(0,0,get_size().x,get_size().y);
 	}

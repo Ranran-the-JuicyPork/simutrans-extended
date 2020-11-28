@@ -251,7 +251,7 @@ map_frame_t::map_frame_t() :
 		if( (env_t::default_mapmode & minimap_t::MAP_CLIMATES) != 0 ) {
 			c_show_outlines.set_selection( 1 );
 		}
-		else if( (env_t::default_mapmode & minimap_t::MAP_HIDE_CONTOUR) != 0 ) {
+		else if( (minimap_t::get_instance()->show_contour) ) { // FIXME
 			c_show_outlines.set_selection( 2 );
 		}
 		else {
@@ -478,16 +478,16 @@ bool map_frame_t::action_triggered( gui_action_creator_t *comp, value_t v )
 	}
 	else if(  comp == &c_show_outlines  ) {
 		if( v.i == 2 ) {
-			env_t::default_mapmode |= minimap_t::MAP_HIDE_CONTOUR;
+			minimap_t::get_instance()->show_contour = true;
 			env_t::default_mapmode &= ~minimap_t::MAP_CLIMATES;
 		}
 		else if( v.i == 1 ) {
 			env_t::default_mapmode |= minimap_t::MAP_CLIMATES;
-			env_t::default_mapmode &= ~minimap_t::MAP_HIDE_CONTOUR;
+			minimap_t::get_instance()->show_contour = false;
 		}
 		else {
 			env_t::default_mapmode &= ~minimap_t::MAP_CLIMATES;
-			env_t::default_mapmode &= ~minimap_t::MAP_HIDE_CONTOUR;
+			minimap_t::get_instance()->show_contour = false;
 		}
 		minimap_t::get_instance()->set_display_mode(  ( minimap_t::MAP_DISPLAY_MODE)env_t::default_mapmode  );
 	}
@@ -512,12 +512,13 @@ bool map_frame_t::action_triggered( gui_action_creator_t *comp, value_t v )
 		zoomed = true;
 		old_ij = koord::invalid;
 	}
+	/*
 	else if (comp == &b_show_contour) {
 		// terrain heights color scale
 		minimap_t::get_instance()->show_contour ^= 1;
 		b_show_contour.pressed = minimap_t::get_instance()->show_contour;
 		minimap_t::get_instance()->invalidate_map_lines_cache();
-	}
+	}*/
 	else if (comp == &b_show_buildings) {
 		// terrain heights color scale
 		minimap_t::get_instance()->show_buildings ^= 1;

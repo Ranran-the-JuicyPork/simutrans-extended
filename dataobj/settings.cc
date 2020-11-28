@@ -742,17 +742,17 @@ void settings_t::rdwr(loadsave_t *file)
 				for( int cl = 0; cl < MAX_CLIMATES; cl++ ) {
 					old_climate_borders[cl] = climate_borders[cl][0];
 				}
-				if(  file->is_version_less(120, 6)  ) {
+				if(  file->get_version_int()<120006  ) {
 					old_climate_borders[arctic_climate] -= groundwater;
 				}
 				for(  int i=0;  i<8;  i++ ) {
 					file->rdwr_short(old_climate_borders[i] );
 				}
-				if(  file->is_version_less(120, 6)  ) {
+				if(  file->get_version_int()<120006  ) {
 					old_climate_borders[arctic_climate] += groundwater;
 				}
 
-				if(  file->is_loading()  &&  file->is_version_less(112, 7)  ) {
+				if(  file->is_loading()  &&  file->get_version_int()<112007  ) {
 					groundwater *= env_t::pak_height_conversion_factor;
 					for(  int i = 0;  i < MAX_CLIMATES;  i++  ) {
 						old_climate_borders[i] *= env_t::pak_height_conversion_factor;
