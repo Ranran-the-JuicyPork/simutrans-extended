@@ -46,13 +46,13 @@ public:
 			for( uint32 i = 0; i < count; i++ ) {
 				data[i] = copy_from.data[i];
 			}
-			
-			vector_tpl& operator=( vector_tpl const& other ) {
-				vector_tpl tmp(other);
-				swap(tmp, *this);
-				return *this;
-			}
 		}
+
+	vector_tpl& operator=(vector_tpl const& other) {
+		vector_tpl tmp(other);
+		swap(tmp, *this);
+		return *this;
+	}
 
 	~vector_tpl() { delete [] data; }
 
@@ -232,21 +232,38 @@ public:
 	{
 		for (uint32 i = 0; i < count; i++) {
 			if (data[i] == elem) {
-				return remove_at(i);
+				remove_at(i);
+				return true;
 			}
 		}
 		return false;
 	}
 
 	/** removes element at position */
-	bool remove_at(const uint32 pos)
+	void remove_at(const uint32 pos, const bool preserve_order = true)
 	{
-		assert(pos<count);
-		for (uint i = pos; i < count - 1; i++) {
-			data[i] = data[i + 1];
-		}
+		assert(pos < count);
 		count--;
-		return true;
+		if (preserve_order)
+		{
+			for (uint i = pos; i < count; i++) {
+				data[i] = data[i + 1];
+			}
+		}
+		else if (pos != (count))
+		{
+			data[pos] = data[count];
+		}
+	}
+
+	T& get_element(uint32 e)
+	{
+		return (*this)[e];
+	}
+
+	T const& get_element(uint e) const
+	{
+		return (*this)[e];
 	}
 
 	T& pop_back()
@@ -316,14 +333,6 @@ private:
 		sim::swap(a.count, b.count);
 	}
 
-	vector_tpl& operator=( vector_tpl const& other ) {
-		vector_tpl tmp(other);
-		swap(tmp, *this);
-		return *this;
-	}
-
-//private:
-//	friend void swap<>(vector_tpl<T>& a, vector_tpl<T>& b);
 };
 
 
