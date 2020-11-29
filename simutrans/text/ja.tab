@@ -3704,7 +3704,7 @@ Stop coverage
 Show the distance to the nearest station
 最寄りの駅までの距離をカラースケールで表示します。対象駅はフィルターで絞り込めます
 Show contour
-等高線を表示
+等高線図
 Show buildings
 建物を表示
 Color-coded terrain according to altitude.
@@ -3963,6 +3963,28 @@ Trailers
 被牽引車
 <p>Continue by ESC, SPACE, or BACKSPACE.<br>
 <p>[ESC] [SPACE] [BACKSPACE]、いずれかのキーでゲームを開始します。<br>
+Wind direction
+風向き
+height based
+基準標高
+Generate climate from height
+標高を基準として気候を設定します
+temperature-humidity based
+気温と湿度
+Generate climate from humidity
+湿潤度を基準として気候を設定します
+climate area percentage
+気候設定タイルの割合
+humidities
+湿潤度
+temperature borders
+気温の境界
+Trees
+植生
+Show climates
+気候分布
+Show outline
+陸地／水面
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 Passengers %d %c, %d %c, %d no route\n\nCapacity: %i\n

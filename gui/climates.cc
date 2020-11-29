@@ -18,7 +18,7 @@
 
 #include "../display/simgraph.h"
 
-static const char *wind_dir_text[4] = { "West", "North", "East", "South" };
+static const char *wind_dir_text[4] = { "west", "north", "east", "south" };
 
 /**
  * set the climate borders

@@ -2961,7 +2961,7 @@ void way_builder_t::build_river()
 	vector_tpl<sint8> lower_tile_h( end_n ); // to this value
 
 	// first: find possible valley
-	for( int  i=0;  i < end_n;  i++  ) {
+	for( uint32  i=0;  i < end_n;  i++  ) {
 
 		bool can_lower = true;
 
