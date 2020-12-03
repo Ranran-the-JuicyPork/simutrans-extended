@@ -225,15 +225,17 @@ bool skinverwaltung_t::register_desc(skintyp_t type, const skin_desc_t* desc)
 		default:      return false;
 	}
 	if(  !::register_desc(sd, desc)  ) {
-		// currently no misc objects allowed ...
-		if(  !(type==cursor  ||  type==symbol)  ) {
-			if(  type==menu  ) {
-				extra_obj.insert( desc );
-				dbg->message( "skinverwaltung_t::register_desc()","Extra object %s added.", desc->get_name() );
-			}
-			else {
-				dbg->warning("skinverwaltung_t::register_desc()","Spurious object '%s' loaded (will not be referenced anyway)!", desc->get_name() );
-			}
+		return true;
+	}
+	else if(  type==cursor  ||  type==symbol  ) {
+		if(  ::register_desc( fakultative_objekte,  desc )  ) {
+			return true;
+		}
+	}
+	// currently no misc objects allowed ...
+	if(  type==cursor  ||  type==menu  ) {
+		if(  type==cursor  ) {
+			extra_cursor_obj.insert( desc );
 		}
 		else {
 			extra_menu_obj.insert( desc );
