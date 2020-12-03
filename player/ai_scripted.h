@@ -73,7 +73,7 @@ public:
 	/**
 	 * Called after game is fully loaded;
 	 */
-	void finish_rd() OVERRIDE;
+	void finish_rd();
 };
 
 
