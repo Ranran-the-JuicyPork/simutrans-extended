@@ -73,7 +73,7 @@ sint64 get_scaled_maintenance_vehicle(const vehicle_desc_t* desc)
 
 sint64 get_scaled_maintenance_building(const building_desc_t* desc)
 {
-	return desc ? welt->scale_with_month_length(desc->get_maintenance(welt)) : 0;
+	return desc ? welt->scale_with_month_length(desc->get_maintenance()) : 0;
 }
 
 
@@ -163,7 +163,7 @@ const vector_tpl<const building_desc_t*>& get_available_stations(building_desc_t
 
 sint64 building_get_cost(const building_desc_t* desc)
 {
-	return desc->get_price(welt) * desc->get_x() * desc->get_y();
+	return desc->get_price() * desc->get_x() * desc->get_y();
 }
 
 bool building_is_terminus(const building_desc_t *desc)
@@ -218,9 +218,9 @@ const vector_tpl<const vehicle_desc_t*>& get_available_vehicles(waytype_t wt)
 	uint16 time = welt->get_timeline_year_month();
 
 	dummy.clear();
-	slist_tpl<vehicle_desc_t const*> const& list = vehicle_builder_t::get_info(wt);
+	slist_tpl<vehicle_desc_t*> const& list = vehicle_builder_t::get_info(wt);
 
-	FOR(slist_tpl<vehicle_desc_t const*> const, i, list) {
+	FOR(slist_tpl<vehicle_desc_t*> const, i, list) {
 		if (!i->is_retired(time)  ||  use_obsolete) {
 			if (!i->is_future(time)) {
 				dummy.append(i);
@@ -316,7 +316,7 @@ void export_goods_desc(HSQUIRRELVM vm)
 	/**
 	 * @returns cost [in 1/100 credits] to buy or build on piece or tile of this thing.
 	 */
-	register_method(vm, &obj_desc_transport_related_t::get_price, "get_cost");
+	register_method(vm, &obj_desc_transport_related_t::get_value, "get_cost");
 	/**
 	 * @returns way type, can be @ref wt_invalid.
 	 */
@@ -487,7 +487,7 @@ void export_goods_desc(HSQUIRRELVM vm)
 	/**
 	 * @returns headquarter level (or -1 if building is not headquarter)
 	 */
-	register_method(vm, &building_desc_t::get_headquarters_level, "get_headquarter_level");
+	register_method(vm, &building_desc_t::get_headquarter_level, "get_headquarter_level");
 
 	/**
 	 * Returns an array with all buildings of the given type.
@@ -665,15 +665,11 @@ void export_goods_desc(HSQUIRRELVM vm)
 	/**
 	 * @returns true if sign is signal
 	 */
-	register_method(vm, &roadsign_desc_t::is_simple_signal, "is_signal");
+	//register_method(vm, &roadsign_desc_t::is_simple_signal, "is_signal");
 	/**
 	 * @returns true if sign is pre signal (distant signal)
 	 */
 	register_method(vm, &roadsign_desc_t::is_pre_signal, "is_pre_signal");
-	/**
-	 * @returns true if sign is priority signal
-	 */
-	register_method(vm, &roadsign_desc_t::is_priority_signal, "is_priority_signal");
 	/**
 	 * @returns true if sign is long-block signal
 	 */

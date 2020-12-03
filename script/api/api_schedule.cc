@@ -42,7 +42,7 @@ SQInteger schedule_constructor(HSQUIRRELVM vm) // instance, wt, entries
 			case road_wt:        sched = new truck_schedule_t(); break;
 			case track_wt:       sched = new train_schedule_t(); break;
 			case water_wt:       sched = new ship_schedule_t(); break;
-			case air_wt:         sched = new airplane_schedule_t(); break;
+			case air_wt:         sched = new airplane_schedule_(); break;
 			case monorail_wt:    sched = new monorail_schedule_t(); break;
 			case tram_wt:        sched = new tram_schedule_t(); break;
 			case maglev_wt:      sched = new maglev_schedule_t(); break;

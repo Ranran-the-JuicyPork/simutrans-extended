@@ -74,7 +74,7 @@ void export_settings(HSQUIRRELVM vm)
 	/// @returns station coverage
 	register_method(vm, &settings_t::get_station_coverage, "get_station_coverage");
 	/// @returns passenger factors influences passenger generation in cities
-	register_method(vm, &settings_t::get_passenger_factor, "get_passenger_factor");
+	//register_method(vm, &settings_t::get_passenger_factor, "get_passenger_factor");
 	/// @returns maximum distance of city to factory for supplying workers
 	//register_method(vm, &settings_t::get_factory_worker_radius, "get_factory_worker_radius");
 	/// @returns minimum number of cities to supply workers for a factory
@@ -84,7 +84,7 @@ void export_settings(HSQUIRRELVM vm)
 	/// @returns freight will not enter convoy if next transfer halt is overcrowded
 	register_method(vm, &settings_t::is_avoid_overcrowding, "avoid_overcrowding");
 	/// @returns freight will not start when best route goes through overcrowded halt
-	register_method(vm, &settings_t::is_no_routing_over_overcrowding, "no_routing_over_overcrowding");
+	//register_method(vm, &settings_t::is_no_routing_over_overcrowding, "no_routing_over_overcrowding");
 	/// @returns true if halt capacity is separated between passengers, mail, freight
 	register_method(vm, &settings_t::is_separate_halt_capacities, "separate_halt_capacities");
 	/// @returns true if it is allowed to buy obsolete vehicles
@@ -105,7 +105,7 @@ void export_settings(HSQUIRRELVM vm)
 	 * 1 = pay for distance difference to next transfer stop
 	 * 2 = pay for distance to destination
 	 */
-	register_method(vm, &settings_t::get_pay_for_total_distance_mode, "get_pay_for_total_distance_mode");
+	//register_method(vm, &settings_t::get_pay_for_total_distance_mode, "get_pay_for_total_distance_mode");
 
 	end_class(vm);
 }
