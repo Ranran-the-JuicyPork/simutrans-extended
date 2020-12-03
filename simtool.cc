@@ -7349,7 +7349,7 @@ const char *tool_build_factory_t::work( player_t *player, koord3d pos )
 
 /**	link tool: links products of factory one with factory two (if possible)
  */
-image_id tool_link_factory_t::get_marker_image()
+image_id tool_link_factory_t::get_marker_image() const
 {
 	return cursor;
 }
@@ -7665,7 +7665,7 @@ const char *tool_forest_t::do_work( player_t *player, const koord3d &start, cons
 }
 
 
-image_id tool_stop_mover_t::get_marker_image()
+image_id tool_stop_mover_t::get_marker_image() const
 {
 	return cursor;
 }
@@ -7880,7 +7880,7 @@ const char *tool_stop_mover_t::do_work( player_t *player, const koord3d &last_po
 	return NULL;
 }
 
-image_id tool_reassign_signal_t::get_marker_image()
+image_id tool_reassign_signal_t::get_marker_image() const
 {
 	return cursor;
 }
@@ -8344,7 +8344,6 @@ const char *tool_make_stop_public_t::work( player_t *player, koord3d p )
 	}
 	return NULL;
 }
-
 
 
 bool tool_show_trees_t::init( player_t * )

@@ -38,7 +38,7 @@
 #include "simunits.h"
 #include "simversion.h"
 #include "display/simview.h"
-#include "simtool.h"
+#include "simtool-scripted.h"
 #include "gui/simwin.h"
 #include "simworld.h"
 
@@ -6042,6 +6042,12 @@ void karte_t::step()
 	if(  get_scenario()->is_scripted() ) {
 		get_scenario()->step();
 	} // Loss of synchronisation suspected to be in a block of code ending here.
+
+	if (selected_tool[active_player_nr]) {
+		if (exec_script_base_t* esb = dynamic_cast<exec_script_base_t*>(selected_tool[active_player_nr])) {
+			esb->step(get_active_player());
+		}
+	}
 
 	DBG_DEBUG4("karte_t::step", "end");
 	rands[26] = get_random_seed();

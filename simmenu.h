@@ -73,7 +73,8 @@ enum {
 	TOOL_CHANGE_WATER_HEIGHT,
 	TOOL_SET_CLIMATE,
 	TOOL_ROTATE_BUILDING,
-	TOOL_REASSIGN_SIGNAL_DEPRECATED,
+	TOOL_EXEC_SCRIPT,
+	TOOL_EXEC_TWO_CLICK_SCRIPT,
 	GENERAL_TOOL_STANDARD_COUNT,
 	// Extended entries from here:
 	TOOL_BUILD_SIGNALBOX=0x0080,
@@ -173,7 +174,7 @@ enum {
 	DIALOG_SCENARIO_INFO,
 	DIALOG_LIST_DEPOT,
 	DIALOG_LIST_VEHICLE,
-	//DIALOG_SCRIPT_TOOL,
+	DIALOG_SCRIPT_TOOL,
 	DIALOG_TOOL_STANDARD_COUNT,
 	// Extended entries from here:
 	DIALOG_LIST_SIGNALBOX =0x0080,
@@ -430,7 +431,7 @@ private:
 	 */
 	virtual uint8 is_valid_pos( player_t *, const koord3d &pos, const char *&error, const koord3d &start ) = 0;
 
-	virtual image_id get_marker_image();
+	virtual image_id get_marker_image() const;
 
 	bool first_click_var;
 	koord3d start;
