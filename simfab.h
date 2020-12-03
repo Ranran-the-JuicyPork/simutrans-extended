@@ -521,6 +521,8 @@ public:
 	uint32 step_power_demand() { uint32 p=power_demand; power_demand=0; return p; }
 	uint32 get_power_demand() const { return power_demand; }
 
+	leitung_t* get_transformer() { return transformer; }
+
 	/**
 	*give power to the factory to consume ...
 	*/
