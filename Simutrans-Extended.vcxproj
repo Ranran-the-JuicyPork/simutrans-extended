@@ -2058,6 +2058,7 @@
     <ClCompile Include="script\api\api_map_objects.cc" />
     <ClCompile Include="script\api\api_obj_desc.cc" />
     <ClCompile Include="script\api\api_obj_desc_base.cc" />
+    <ClCompile Include="script\api\api_pathfinding.cc" />
     <ClCompile Include="script\api\api_player.cc" />
     <ClCompile Include="script\api\api_scenario.cc" />
     <ClCompile Include="script\api\api_schedule.cc" />
@@ -2636,6 +2637,7 @@
     <ClInclude Include="script\api\api_doc.h" />
     <ClInclude Include="script\api\api_obj_desc_base.h" />
     <ClInclude Include="script\api\api_simple.h" />
+    <ClInclude Include="script\api\api_skeleton.h" />
     <ClInclude Include="script\api\export_desc.h" />
     <ClInclude Include="script\api\get_next.h" />
     <ClInclude Include="script\api_class.h" />
@@ -2645,7 +2647,6 @@
     <ClInclude Include="script\export_objs.h" />
     <ClInclude Include="script\script.h" />
     <ClInclude Include="script\script_loader.h" />
-    <ClInclude Include="script\script_tool_manager.h" />
     <ClInclude Include="siminteraction.h" />
     <ClInclude Include="simloadingscreen.h" />
     <ClInclude Include="simobj.h" />
@@ -2654,12 +2655,12 @@
     <ClInclude Include="squirrel\sqstdaux.h" />
     <ClInclude Include="squirrel\sqstdblob.h" />
     <ClInclude Include="squirrel\sqstdio.h" />
-    <ClInclude Include="squirrel\sqstdlib\sqstdblobimpl.h" />
-    <ClInclude Include="squirrel\sqstdlib\sqstdstream.h" />
     <ClInclude Include="squirrel\sqstdmath.h" />
     <ClInclude Include="squirrel\sqstdstring.h" />
     <ClInclude Include="squirrel\sqstdsystem.h" />
     <ClInclude Include="squirrel\squirrel.h" />
+    <ClInclude Include="squirrel\sqstdlib\sqstdblobimpl.h" />
+    <ClInclude Include="squirrel\sqstdlib\sqstdstream.h" />
     <ClInclude Include="squirrel\squirrel\sqarray.h" />
     <ClInclude Include="squirrel\squirrel\sqclass.h" />
     <ClInclude Include="squirrel\squirrel\sqclosure.h" />
@@ -2677,8 +2678,8 @@
     <ClInclude Include="squirrel\squirrel\squtils.h" />
     <ClInclude Include="squirrel\squirrel\sqvm.h" />
     <ClInclude Include="squirrel\sq_extensions.h" />
-    <ClInclude Include="tpl\array2d_tpl.h" />
     <ClInclude Include="tpl\array_tpl.h" />
+    <ClInclude Include="tpl\array2d_tpl.h" />
     <ClInclude Include="gui\banner.h" />
     <ClInclude Include="gui\base_info.h" />
     <ClInclude Include="descriptor\tree_desc.h" />
