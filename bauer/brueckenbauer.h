@@ -160,7 +160,7 @@ public:
 	/**
 	 * Returns a list with available bridge types.
 	 */
-	static const vector_tpl<const bruecke_besch_t *>& get_available_bridges(const waytype_t wtyp);
+	static const vector_tpl<const bridge_desc_t *>& get_available_bridges(const waytype_t wtyp);
 };
 
 #endif

@@ -169,13 +169,13 @@ void bridge_builder_t::fill_menu(tool_selector_t *tool_selector, const waytype_t
 }
 
 
-const vector_tpl<const bruecke_besch_t *>&  brueckenbauer_t::get_available_bridges(const waytype_t wtyp)
+const vector_tpl<const bridge_desc_t *>&  bridge_builder_t::get_available_bridges(const waytype_t wtyp)
 {
-	static vector_tpl<const bruecke_besch_t *> dummy;
+	static vector_tpl<const bridge_desc_t *> dummy;
 	dummy.clear();
 	const uint16 time = welt->get_timeline_year_month();
-	FOR(stringhashtable_tpl<bruecke_besch_t const*>, const& i, bruecken_by_name) {
-		bruecke_besch_t const* const b = i.value;
+	FOR(stringhashtable_tpl<bridge_desc_t*>, const& i, desc_table) {
+		bridge_desc_t const* const b = i.value;
 		if (  b->get_waytype()==wtyp  &&  b->is_available(time)  ) {
 			dummy.append(b);
 		}

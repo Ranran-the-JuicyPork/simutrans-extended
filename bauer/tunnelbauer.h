@@ -48,7 +48,7 @@ public:
 	/**
 	 * Returns a list with available tunnel types.
 	 */
-	static const vector_tpl<const tunnel_besch_t *>& get_available_tunnels(const waytype_t wtyp);
+	static const vector_tpl<const tunnel_desc_t *>& get_available_tunnels(const waytype_t wtyp);
 
 	static const char *build( player_t *player, koord pos, const tunnel_desc_t *desc, bool full_tunnel, overtaking_mode_t overtaking_mode, const way_desc_t *way_desc = NULL  );
 
