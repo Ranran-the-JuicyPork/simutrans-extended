@@ -1994,6 +1994,7 @@
     <ClCompile Include="gui\privatesign_info.cc" />
     <ClCompile Include="gui\scenario_info.cc" />
     <ClCompile Include="gui\schiene_info.cc" />
+    <ClCompile Include="gui\script_tool_frame.cc" />
     <ClCompile Include="gui\server_frame.cc" />
     <ClCompile Include="gui\signal_info.cc" />
     <ClCompile Include="gui\simwin.cc" />
@@ -2072,6 +2073,8 @@
     <ClCompile Include="script\dynamic_string.cc" />
     <ClCompile Include="script\export_objs.cc" />
     <ClCompile Include="script\script.cc" />
+    <ClCompile Include="script\script_loader.cc" />
+    <ClCompile Include="script\script_tool_manager.cc" />
     <ClCompile Include="siminteraction.cc" />
     <ClCompile Include="simloadingscreen.cc" />
     <ClCompile Include="simobj.cc">
@@ -2498,6 +2501,7 @@
     <ClCompile Include="vehicle\simroadtraffic.cc" />
     <ClCompile Include="simware.cc" />
     <ClCompile Include="simtool.cc" />
+    <ClCompile Include="simtool-scripted.cc" />
     <ClCompile Include="simworld.cc" />
     <ClCompile Include="descriptor\reader\skin_reader.cc" />
     <ClCompile Include="descriptor\sound_desc.cc" />
@@ -2582,6 +2586,7 @@
     <ClInclude Include="gui\privatesign_info.h" />
     <ClInclude Include="gui\scenario_info.h" />
     <ClInclude Include="gui\schiene_info.h" />
+    <ClInclude Include="gui\script_tool_frame.h" />
     <ClInclude Include="gui\server_frame.h" />
     <ClInclude Include="gui\signal_info.h" />
     <ClInclude Include="gui\simwin.h" />
@@ -2639,6 +2644,8 @@
     <ClInclude Include="script\dynamic_string.h" />
     <ClInclude Include="script\export_objs.h" />
     <ClInclude Include="script\script.h" />
+    <ClInclude Include="script\script_loader.h" />
+    <ClInclude Include="script\script_tool_manager.h" />
     <ClInclude Include="siminteraction.h" />
     <ClInclude Include="simloadingscreen.h" />
     <ClInclude Include="simobj.h" />
@@ -2912,6 +2919,7 @@
     <ClInclude Include="simversion.h" />
     <ClInclude Include="simware.h" />
     <ClInclude Include="simtool.h" />
+    <ClInclude Include="simtool-scripted.h" />
     <ClInclude Include="simworld.h" />
     <ClInclude Include="descriptor\skin_desc.h" />
     <ClInclude Include="descriptor\reader\skin_reader.h" />
