@@ -29,8 +29,10 @@
 
 // scripting
 #include "../script/script.h"
-#include "../script/export_objs.h"
+#include "../script/script_loader.h"
 #include "../script/api/api.h"
+#include "../script/api_param.h"
+#include "../script/api_class.h"
 
 #include "../tpl/plainstringhashtable_tpl.h"
 
@@ -55,7 +57,6 @@ scenario_t::scenario_t(karte_t *w) :
 	what_scenario = 0;
 
 	script = NULL;
-	rotation = 0;
 	won = false;
 	lost = false;
 	rdwr_error = false;
@@ -112,16 +113,17 @@ const char* scenario_t::init( const char *scenario_base, const char *scenario_na
 		buf.clear();
 		buf.printf("%s.sve", scenario_name.c_str());
 		welt->get_settings().set_filename( strdup(buf) );
+		// re-initialize coordinate and rotation handling
+		script_api::coordinate_transform_t::initialize();
 	}
 
-	load_compatibility_script();
+	script_loader_t::load_compatibility_script(script);
 
 	// load translations
 	translator::load_files_from_folder( scenario_path.c_str(), "scenario" );
 	cached_text_files.clear();
 
 	what_scenario = SCRIPTED;
-	rotation = 0;
 
 	// callback
 	script->register_callback(&scenario_t::set_completion, "scenario_t_set_completed");
@@ -135,6 +137,9 @@ const char* scenario_t::init( const char *scenario_base, const char *scenario_na
 	welt->get_settings().set_starting_year( time / 12);
 	welt->get_settings().set_starting_month( time % 12);
 
+	// set my player number to PLAYER_UNOWNED
+	script->set_my_player(PLAYER_UNOWNED);
+
 	// now call startup function
 	if ((err = script->call_function(script_vm_t::QUEUE, "start"))) {
 		dbg->warning("scenario_t::init", "error [%s] calling start", err);
@@ -146,24 +151,9 @@ const char* scenario_t::init( const char *scenario_base, const char *scenario_na
 
 bool scenario_t::load_script(const char* filename)
 {
-	script = new script_vm_t(scenario_path.c_str());
-	// load global stuff
-	// constants must be known compile time
-	export_global_constants(script->get_vm());
-	// load scenario base definitions
-	char basefile[1024 + 24 + 1];
-	sprintf( basefile, "%sscript/scenario_base.nut", env_t::program_dir );
-	const char* err = script->call_script(basefile);
-	if (err) { // should not happen ...
-		dbg->error("scenario_t::load_script", "error [%s] calling %s", err, basefile);
-		return false;
-	}
-
-	// register api functions
-	register_export_function(script->get_vm());
-	err = script->get_error();
-	if (err) {
-		dbg->error("scenario_t::load_script", "error [%s] calling register_export_function", err);
+	// start vm
+	script = script_loader_t::start_vm("scenario_base.nut", "script-scenario.log", scenario_path.c_str(), true);
+	if (script == NULL) {
 		return false;
 	}
 
@@ -175,8 +165,7 @@ bool scenario_t::load_script(const char* filename)
 	}
 
 	// load scenario definition
-	err = script->call_script(filename);
-	if (err) {
+	if (const char* err = script->call_script(filename)) {
 		dbg->error("scenario_t::load_script", "error [%s] calling %s", err, filename);
 		return false;
 	}
@@ -184,67 +173,9 @@ bool scenario_t::load_script(const char* filename)
 }
 
 
-void scenario_t::load_compatibility_script()
+void scenario_t::koord_sq2w(koord &k) const
 {
-	// check api version
-	plainstring api_version;
-	if (const char* err = script->call_function(script_vm_t::FORCE, "get_api_version", api_version)) {
-		dbg->warning("scenario_t::init", "error [%s] calling get_api_version", err);
-		api_version = "120.1";
-	}
-	if (api_version != "*") {
-		// load scenario compatibility script
-		cbuffer_t buf;
-		buf.printf("%sscript/scenario_compat.nut", env_t::program_dir );
-		if (const char* err = script->call_script((const char*)buf) ) {
-			dbg->warning("scenario_t::init", "error [%s] calling scenario_compat.nut", err);
-		}
-		else {
-			plainstring dummy;
-			// call compatibility function
-			if ((err = script->call_function(script_vm_t::FORCE, "compat", dummy, api_version) )) {
-				dbg->warning("scenario_t::init", "error [%s] calling compat", err);
-			}
-		}
-	}
-}
-
-
-void scenario_t::koord_w2sq(koord &k) const
-{
-	switch( rotation ) {
-		// 0: do nothing
-		case 1: k = koord(k.y, welt->get_size().y-1 - k.x); break;
-		case 2: k = koord(welt->get_size().x-1 - k.x, welt->get_size().y-1 - k.y); break;
-		case 3: k = koord(welt->get_size().x-1 - k.y, k.x); break;
-		default: break;
-	}
-}
-
-
-void scenario_t::koord_sq2w(koord &k)
-{
-	// just rotate back
-	rotation = 4 - rotation;
-	koord_w2sq(k);
-	// restore original rotation
-	rotation = 4 - rotation;
-}
-
-
-void scenario_t::ribi_w2sq(ribi_t::ribi &r) const
-{
-	if (rotation) {
-		r = ( ( (r << 4) | r) >> rotation) & 15;
-	}
-}
-
-
-void scenario_t::ribi_sq2w(ribi_t::ribi &r) const
-{
-	if (rotation) {
-		r = ( ( (r << 4) | r) << rotation) >> 4 & 15;
-	}
+	script_api::coordinate_transform_t::koord_sq2w(k);
 }
 
 
@@ -574,8 +505,8 @@ const char* scenario_t::is_schedule_allowed(const player_t* player, const schedu
 	if (schedule == NULL) {
 		return "";
 	}
-	if (schedule->empty()  ||  env_t::server) {
-		// empty schedule, networkgame: all allowed
+	if (env_t::server) {
+		// networkgame: allowed
 		return NULL;
 	}
 	// call script
@@ -586,6 +517,28 @@ const char* scenario_t::is_schedule_allowed(const player_t* player, const schedu
 		return err == NULL ? msg.c_str() : NULL;
 	}
 	return NULL;
+}
+
+
+const char* scenario_t::is_convoy_allowed(const player_t* player, convoihandle_t cnv, depot_t* depot)
+{
+	// sanity checks
+	if (!cnv.is_bound()  ||  depot == NULL) {
+		return "";
+	}
+	if (env_t::server) {
+		// networkgame: allowed
+		return NULL;
+	}
+	// call script
+	if (what_scenario == SCRIPTED) {
+		static plainstring msg;
+		const char *err = script->call_function(script_vm_t::FORCE, "is_convoy_allowed", msg, (uint8)(player  ?  player->get_player_nr() : PLAYER_UNOWNED), cnv, (obj_t*)depot);
+
+		return err == NULL ? msg.c_str() : NULL;
+	}
+	return NULL;
+
 }
 
 
@@ -657,6 +610,18 @@ void scenario_t::step()
 	if (need_toolbar_update) {
 		tool_t::update_toolbars();
 		need_toolbar_update = false;
+
+		// reset active tool if now forbidden
+		// check scenario conditions for all players
+		for(uint8 player_nr = 0; player_nr < PLAYER_UNOWNED; player_nr++) {
+			if (player_t *player = welt->get_player(player_nr)) {
+				tool_t *tool = welt->get_tool(player_nr);
+
+				if (!is_tool_allowed(player, tool->get_id(), tool->get_waytype())) {
+					welt->local_set_tool(tool_t::general_tool[TOOL_QUERY], player);
+				}
+			}
+		}
 	}
 }
 
@@ -738,7 +703,7 @@ plainstring scenario_t::load_language_file(const char* filename)
 	FILE* file = dr_fopen(wanted_file.c_str(), "rb");
 	if (file == NULL) {
 		// try English
-		file = fopen((path + "en" + PATH_SEPARATOR + filename).c_str(), "rb");
+		file = dr_fopen((path + "en" + PATH_SEPARATOR + filename).c_str(), "rb");
 	}
 	if (file == NULL) {
 		// try scenario directory
@@ -765,7 +730,7 @@ plainstring scenario_t::load_language_file(const char* filename)
 	return text;
 }
 
-bool scenario_t::open_info_win() const
+bool scenario_t::open_info_win(const char* tab) const
 {
 	// pop up for the win
 	scenario_info_t *si = (scenario_info_t*)win_get_magic(magic_scenario_info);
@@ -776,7 +741,7 @@ bool scenario_t::open_info_win() const
 			return false;
 		}
 	}
-	si->open_result_tab();
+	si->open_tab(tab);
 	return true; // dummy return value
 }
 
@@ -784,7 +749,7 @@ bool scenario_t::open_info_win() const
 void scenario_t::rdwr(loadsave_t *file)
 {
 	file->rdwr_short(what_scenario);
-	if (file->get_version_int() <= 111004) {
+	if (file->get_version_int()<111005) {
 		uint32 city_nr = 0;
 		file->rdwr_long(city_nr);
 		sint64 factor = 0;
@@ -800,7 +765,7 @@ void scenario_t::rdwr(loadsave_t *file)
 		return;
 	}
 
-	file->rdwr_byte(rotation);
+	script_api::coordinate_transform_t::rdwr(file);
 	file->rdwr_short(won);
 	file->rdwr_short(lost);
 	file->rdwr_str(scenario_name);
@@ -821,10 +786,9 @@ void scenario_t::rdwr(loadsave_t *file)
 			else {
 				// load script
 				cbuffer_t script_filename;
-
 				// assume error
 				rdwr_error = true;
- 				// try addon directory first
+				// try addon directory first
 				if (env_t::default_settings.get_with_private_paks()) {
 					scenario_path = ( std::string("addons/") + env_t::objfilename + "scenario/" + scenario_name.c_str() + "/").c_str();
 					script_filename.printf("%sscenario.nut", scenario_path.c_str());
@@ -840,7 +804,7 @@ void scenario_t::rdwr(loadsave_t *file)
 				}
 
 				if (!rdwr_error) {
-					load_compatibility_script();
+					script_loader_t::load_compatibility_script(script);
 					// restore persistent data
 					const char* err = script->eval_string(str);
 					if (err) {
@@ -859,7 +823,7 @@ void scenario_t::rdwr(loadsave_t *file)
 		}
 		else {
 			plainstring str;
-			script->call_function(script_vm_t::FORCE, "save", str);
+			script->call_function(script_vm_t::FORCEX, "save", str);
 			dbg->warning("scenario_t::rdwr", "write persistent scenario data: %s", str.c_str());
 			file->rdwr_str(str);
 		}
@@ -880,12 +844,12 @@ void scenario_t::rdwr(loadsave_t *file)
 	}
 
 	// cached strings
-	if (file->get_version_int() >= 120003) {
+	if (file->get_version_int()>=120003) {
 		dynamic_string::rdwr_cache(file);
 	}
 
 	if (what_scenario == SCRIPTED  &&  file->is_loading()  &&  !rdwr_error) {
-		const char* err = script->call_function(script_vm_t::FORCE, "resume_game");
+		const char* err = script->call_function(script_vm_t::FORCEX, "resume_game");
 		if (err) {
 			dbg->warning("scenario_t::rdwr", "error [%s] calling resume_game", err);
 			rdwr_error = true;
@@ -900,9 +864,6 @@ void scenario_t::rdwr(loadsave_t *file)
 
 void scenario_t::rotate90(const sint16 y_size)
 {
-	rotation ++;
-	rotation %= 4;
-
 	for(uint32 i=0; i<forbidden_tools.get_count(); i++) {
 		forbidden_tools[i]->rotate90(y_size);
 	}

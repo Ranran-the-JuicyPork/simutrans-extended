@@ -1,5 +1,5 @@
 #
-# This file is part of the Simutrans-Extended project under the Artistic License.
+# This file is part of the Simutrans project under the Artistic License.
 # (see LICENSE.txt)
 #
 
@@ -22,9 +22,14 @@ BEGIN {
 }
 
 # match end of SQAPI_DOC block
-/^#endif/ {
+/^#(endif|else)/ {
 	if (within_sqapi_doc == 1) {
 		within_sqapi_doc = 0
+		param_count = 0
+		delete params
+		delete ptypes
+		mask = ""
+		returns = "void"
 	}
 }
 
@@ -57,10 +62,10 @@ function split_params(string)
 # and everything in a SQAPI_DOC block
 {
 	if (within_doxygen_comment==1) {
-		print gensub( /^[[:space:]]*([ \\/])\\*/, indent "\\1", $0)
+		print gensub( /^[[:space:]]*([ \\/])\\*/, indent "\\1", 1)
 	}
 	else if (within_sqapi_doc == 1) {
-		print gensub( /^[[:space:]]*(.*)/, indent "\\1", $0)
+		print gensub( /^[[:space:]]*(.*)/, indent "\\1", 1)
 	}
 }
 
@@ -69,10 +74,10 @@ function split_params(string)
 	within_doxygen_comment = 0
 }
 
-# print doxygen brief commands
-/\/\/\// {
+# print doxygen brief commands, also //@
+/\/\/[\/@]/ {
 	if (within_doxygen_comment!=1  &&  within_sqapi_doc != 1) {
-		print gensub( /^[[:space:]]*(\\.*)/, indent "\\1", $0)
+		print gensub( /^[[:space:]]*(\\.*)/, indent "\\1", 1)
 	}
 }
 
@@ -168,6 +173,7 @@ function split_params(string)
 		for (t in ptypes) {
 			if (!(t in params)) {
 				params[t]=""
+				param_count++
 			}
 		}
 	}
@@ -194,18 +200,15 @@ function split_params(string)
 			fname = fname returns " " method "("
 		}
 	}
-	for (param = 1; param <= 100; param++) {
-		if (!(param in params)  && !(param in ptypes) ) {
-			break
-		}
+	for (param = 1; param <= param_count; param++) {
 		if (mode != "sq") {
 			if (!(param in ptypes)) ptypes[param] = "any_x"
-			fname = fname ptypes[param] " "
+			fname = fname ptypes[param]
 		}
-
-		fname = fname params[param]
-		param_count--
-		if (param_count > 0) fname = fname ", "
+		if (params[param] != "") {
+			fname = fname " " params[param]
+		}
+		if (param < param_count) fname = fname ", "
 	}
 	fname = fname  ");"
 	print indent fname

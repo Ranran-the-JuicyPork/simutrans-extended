@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -20,7 +20,7 @@ using namespace script_api;
 
 mytime_ticks_t world_get_time(karte_t*)
 {
-	return mytime_ticks_t(welt->get_current_month(), welt->get_ticks(), welt->calc_adjusted_monthly_figure(1<<18), welt->get_next_month_ticks());
+	return mytime_ticks_t(welt->get_current_month(), welt->get_ticks(), welt->scale_with_month_length(1<<18), welt->get_next_month_ticks());
 }
 
 
@@ -94,6 +94,10 @@ SQInteger world_get_attraction_list(HSQUIRRELVM vm)
 	return push_instance(vm, "attraction_list_x");
 }
 
+SQInteger world_get_attraction_count(HSQUIRRELVM vm)
+{
+	return param<uint32>::push(vm, welt->get_attractions().get_count());
+}
 
 SQInteger world_get_convoy_list(HSQUIRRELVM vm)
 {
@@ -102,8 +106,18 @@ SQInteger world_get_convoy_list(HSQUIRRELVM vm)
 	return 1;
 }
 
+SQInteger world_get_size(HSQUIRRELVM vm)
+{
+	koord k = welt->get_size();
+	if (coordinate_transform_t::get_rotation() & 1) {
+		return push_instance(vm, "coord", k.y, k.x);
+	}
+	else {
+		return push_instance(vm, "coord", k.x, k.y);
+	}
+}
 
-void export_world(HSQUIRRELVM vm)
+void export_world(HSQUIRRELVM vm, bool scenario)
 {
 	/**
 	 * Table with methods to access the world, the universe, and everything.
@@ -130,18 +144,21 @@ void export_world(HSQUIRRELVM vm)
 	 */
 	STATIC register_method(vm, &karte_t::get_season, "get_season");
 
-	/**
-	 * Removes player company: removes all assets. Use with care.
-	 *
-	 * If pl is the first player (nr == 0) it is restarted immediately.
-	 * Public player (nr == 1) cannot be removed.
-	 *
-	 * In network games, there will be a delay between the call to this function and the removal of the player.
-	 *
-	 * @param pl player to be removed
-	 * @returns whether operation was successfull
-	 */
-	STATIC register_method(vm, &world_remove_player, "remove_player", true);
+	if (scenario) {
+		/**
+		* Removes player company: removes all assets. Use with care.
+		*
+		* If pl is the first player (nr == 0) it is restarted immediately.
+		* Public player (nr == 1) cannot be removed.
+		*
+		* In network games, there will be a delay between the call to this function and the removal of the player.
+		*
+		* @param pl player to be removed
+		* @ingroup scen_only
+		* @returns whether operation was successful
+		*/
+		STATIC register_method(vm, &world_remove_player, "remove_player", true);
+	}
 	/**
 	 * Returns player number @p pl. If player does not exist, returns null.
 	 * @param pl player number
@@ -156,7 +173,7 @@ void export_world(HSQUIRRELVM vm)
 	 * Get monthly statistics of total number of citizens.
 	 * @returns array, index [0] corresponds to current month
 	 */
-	STATIC register_method_fv(vm, &get_world_stat, "get_citizens",          freevariable2<bool,sint32>(true, karte_t::WORLD_CITICENS), true );
+	STATIC register_method_fv(vm, &get_world_stat, "get_citizens",          freevariable2<bool,sint32>(true, karte_t::WORLD_CITIZENS), true );
 	/**
 	 * Get monthly statistics of total city growth.
 	 * @returns array, index [0] corresponds to current month
@@ -218,17 +235,10 @@ void export_world(HSQUIRRELVM vm)
 	STATIC register_method_fv(vm, &get_world_stat, "get_transported_goods", freevariable2<bool,sint32>(true, karte_t::WORLD_TRANSPORTED_GOODS), true );
 
 	/**
-	 * Get monthly statistics of proportion of people with access to a private car.
-	 * @returns array, index [0] corresponds to current month
-	 * @see city_x::get_generated_mail city_x::get_transported_mail
-	 */
-	STATIC register_method_fv(vm, &get_world_stat, "get_car_ownership", freevariable2<bool,sint32>(true, karte_t::WORLD_CAR_OWNERSHIP), true );
-
-	/**
 	 * Get per year statistics of total number of citizens.
 	 * @returns array, index [0] corresponds to current year
 	 */
-	STATIC register_method_fv(vm, &get_world_stat, "get_year_citizens",          freevariable2<bool,sint32>(false, karte_t::WORLD_CITICENS), true );
+	STATIC register_method_fv(vm, &get_world_stat, "get_year_citizens",          freevariable2<bool,sint32>(false, karte_t::WORLD_CITIZENS), true );
 	/**
 	 * Get per year statistics of total city growth.
 	 * @returns array, index [0] corresponds to current year
@@ -282,19 +292,17 @@ void export_world(HSQUIRRELVM vm)
 	 * @see city_x::get_generated_mail city_x::get_transported_mail
 	 */
 	STATIC register_method_fv(vm, &get_world_stat, "get_year_ratio_goods",       freevariable2<bool,sint32>(false, karte_t::WORLD_GOODS_RATIO), true );
-
-	/**
-	 * Get per year statistics of the proportion of people with access to a private car.
-	 * @returns array, index [0] corresponds to current year
-	 * @see city_x::get_generated_mail city_x::get_transported_mail
-	 */
-	STATIC register_method_fv(vm, &get_world_stat, "get_year_car_ownership",       freevariable2<bool,sint32>(false, karte_t::WORLD_CAR_OWNERSHIP), true );
 	/**
 	 * Get per year statistics of total number of transported goods.
 	 * @returns array, index [0] corresponds to current year
 	 * @see city_x::get_generated_mail city_x::get_transported_mail
 	 */
 	STATIC register_method_fv(vm, &get_world_stat, "get_year_transported_goods", freevariable2<bool,sint32>(false, karte_t::WORLD_TRANSPORTED_GOODS), true );
+
+	/**
+	 * @returns true if timeline play is active
+	 */
+	STATIC register_method(vm, &karte_t::use_timeline, "use_timeline");
 
 	/**
 	 * Returns iterator through the list of attractions on the map.
@@ -308,6 +316,11 @@ void export_world(HSQUIRRELVM vm)
 	 * @typemask convoy_list_x()
 	 */
 	STATIC register_function(vm, world_get_convoy_list, "get_convoy_list", 1, ".");
+	/**
+	 * Returns size of the map.
+	 * @typemask coord()
+	 */
+	STATIC register_function(vm, world_get_size, "get_size", 1, ".");
 
 	end_class(vm);
 
@@ -332,6 +345,11 @@ void export_world(HSQUIRRELVM vm)
 	 * Meta-method to be used in foreach loops to loop over all attractions on the map. Do not call it directly.
 	 */
 	register_method(vm,   world_attraction_list_get,   "_get", true);
+	/**
+	 * Returns number of attractions in the list.
+	 * @typemask integer()
+	 */
+	register_function(vm, world_get_attraction_count, "get_count",  1, "x");
 
 	end_class(vm);
 }

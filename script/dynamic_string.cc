@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -72,6 +72,7 @@ void dynamic_string::init(script_vm_t *script)
 	script->register_callback(&dynamic_string::record_result, "dynamicstring_record_result");
 }
 
+
 void dynamic_string::rdwr_cache(loadsave_t *file)
 {
 	uint32 count = cached_results.get_count();
@@ -79,10 +80,10 @@ void dynamic_string::rdwr_cache(loadsave_t *file)
 
 	if (file->is_loading()) {
 		// clear list
-		while (!cached_results.empty()) {
+		while(!cached_results.empty()) {
 			delete cached_results.remove_first();
 		}
-		for (uint32 i = 0; i<count; i++) {
+		for(uint32 i=0; i<count; i++) {
 			plainstring key;
 			file->rdwr_str(key);
 			cached_results.set(key, new cached_string_t(file));
@@ -143,7 +144,7 @@ void dynamic_string::update(script_vm_t *script, player_t *player, bool force_up
 	}
 	else {
 		if (env_t::networkmode  &&  !env_t::server) {
-			s = dynamic_string::fetch_result( function, script, this, force_update);
+			s = dynamic_string::fetch_result( function, NULL, this, force_update);
 			if ( s == NULL) {
 				s = "Waiting for server response...";
 			}
@@ -175,6 +176,7 @@ const char* dynamic_string::fetch_result(const char* function, script_vm_t *scri
 			if (entry == NULL) {
 				cached_string_t *old = cached_results.set(function, new cached_string_t(NULL, dr_time(), listener));
 				assert(old == NULL);
+				(void)old;
 			}
 			// send request
 			nwc_scenario_t *nwc = new nwc_scenario_t();

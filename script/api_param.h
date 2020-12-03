@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -18,6 +18,9 @@
 class baum_t;
 class convoi_t;
 class fabrik_t;
+class factory_supplier_desc_t;
+class factory_product_desc_t;
+class field_t;
 class gebaeude_t;
 class grund_t;
 class haltestelle_t;
@@ -25,8 +28,12 @@ class karte_t;
 class karte_ptr_t;
 class koord;
 class koord3d;
-struct schedule_entry_t;
 class label_t;
+class leitung_t;
+class loadsave_t;
+struct schedule_entry_t;
+struct my_ribi_t;
+struct my_slope_t;
 class planquadrat_t;
 class plainstring;
 class scenario_t;
@@ -35,8 +42,10 @@ class settings_t;
 class simline_t;
 class player_t;
 class stadt_t;
+class tool_t;
 class ware_production_t;
 class weg_t;
+class way_builder_t;
 
 /**
  * @namespace script_api The namespace contains all functions necessary to communicate
@@ -301,18 +310,26 @@ namespace script_api {
 	template<> struct param<T> { \
 		declare_types(mask, sqtype) \
 	};
-	/// macro to declare fake types, inherited from script_api::void_t,
+	/// macro to declare fake types, inherited from void_t,
 	/// for documentation purposes
 #define declare_fake_param(T, sqtype) \
-	class T { public: T(script_api::void_t) {};  operator script_api::void_t() const { return script_api::void_t();} };  \
+	class T { public: T(void_t) {};  operator void_t() const { return void_t();} };  \
 	template<> struct param<T> { \
-		static T get(HSQUIRRELVM vm, SQInteger index) { return param<script_api::void_t>::get(vm, index); } \
-		static SQInteger push(HSQUIRRELVM vm, T const& v) { return param<script_api::void_t>::push(vm, v); } \
+		static T get(HSQUIRRELVM vm, SQInteger index) { return param<void_t>::get(vm, index); } \
+		static SQInteger push(HSQUIRRELVM vm, T const& v) { return param<void_t>::push(vm, v); } \
 		declare_types(".", sqtype); \
+	};
+	// macro to declare enums
+#define declare_enum_param(T, inttype, sqtype) \
+	template<> struct param<T> { \
+		static T get(HSQUIRRELVM vm, SQInteger index) { return (T)param<inttype>::get(vm, index); } \
+		static SQInteger push(HSQUIRRELVM vm, T const& v) { return param<inttype>::push(vm, v); } \
+		declare_types("i", sqtype); \
 	};
 
 
-	declare_specialized_param(script_api::void_t, ".", "void");
+
+	declare_specialized_param(void_t, ".", "void");
 	// no typemask, as we call to_bool
 	declare_specialized_param(bool, ".", "bool");
 
@@ -324,8 +341,12 @@ namespace script_api {
 	declare_specialized_param(sint32, "i", "integer");
 	declare_specialized_param(uint64, "i", "integer");
 	declare_specialized_param(sint64, "i", "integer");
-	declare_specialized_param(waytype_t, "i", "way_types");
-	declare_specialized_param(obj_t::typ, "i", "map_objects");
+	declare_enum_param(waytype_t, sint16, "way_types");
+	declare_enum_param(systemtype_t, uint8, "way_system_types");
+	declare_enum_param(obj_t::typ, uint8, "map_objects");
+	declare_enum_param(climate, uint8, "climates");
+	declare_specialized_param(my_ribi_t, "i", "dir");
+	declare_specialized_param(my_slope_t, "i", "slope");
 
 	declare_specialized_param(double, "i|f", "float");
 
@@ -338,6 +359,7 @@ namespace script_api {
 
 	declare_specialized_param(convoi_t*, "t|x|y", "convoy_x");
 	declare_specialized_param(fabrik_t*, "t|x|y", "factory_x");
+	declare_specialized_param(const fabrik_t*, "t|x|y", "factory_x");
 	declare_specialized_param(grund_t*, "t|x|y", "tile_x");
 	declare_specialized_param(const haltestelle_t*, "t|x|y", "halt_x");
 	declare_param_mask(haltestelle_t*, "t|x|y", "halt_x");
@@ -354,14 +376,26 @@ namespace script_api {
 	declare_specialized_param(player_t*, "t|x|y", "player_x");
 	declare_specialized_param(stadt_t*, "t|x|y", "city_x");
 	declare_specialized_param(const ware_production_t*, "t|x|y", "factory_production_x");
+	declare_specialized_param(const factory_supplier_desc_t*, "t|x|y", "factory_production_x");
+	declare_specialized_param(const factory_product_desc_t*, "t|x|y", "factory_production_x");
 	declare_param_mask(ware_production_t*, "t|x|y", "factory_production_x");
+	declare_specialized_param(tool_t*, "x", "command_x");
+	declare_specialized_param(way_builder_t*, "t|x|y", "way_planner_x");
 
 	// export of obj_t derived classes in api/map_objects.cc
 	declare_specialized_param(obj_t*, "t|x|y", "map_object_x");
 	declare_specialized_param(baum_t*, "t|x|y", "tree_x");
 	declare_specialized_param(gebaeude_t*, "t|x|y", "building_x");
 	declare_specialized_param(label_t*, "t|x|y", "label_x");
+	declare_specialized_param(leitung_t*, "t|x|y", "powerline_x");
 	declare_specialized_param(weg_t*, "t|x|y", "way_x");
+	declare_specialized_param(field_t*, "t|x|y", "field_x");
+
+	/**
+	 * Returns the player associated to the script
+	 * (or NULL for scenarios)
+	 */
+	player_t* get_my_player(HSQUIRRELVM vm);
 
 	/**
 	 * Templated interface to declare free variables for
@@ -419,6 +453,69 @@ namespace script_api {
 	};
 
 
+	/**
+	 * Static class to handle the translation of world coordinates (which are sensible to rotation)
+	 * to script coordinates (that are independent of rotation).
+	 */
+	class coordinate_transform_t {
+	private:
+		/// Stores how many times initial map was rotated.
+		/// Scripts do not take care of rotated maps.
+		/// Coordinates will be translated between in-game coordinates and script coordinates.
+		/// First v.m. to be started sets this value
+		static uint8 rotation;
+	public:
+		/// called if a new world is initialized
+		static void new_world() { rotation=4; /*invalid*/ }
+
+		/// inits rotation from karte_t::settings
+		static void initialize();
+
+		/// keep track of rotation
+		static void rotate90()  { if (rotation<4) rotation = (rotation+1)&3; }
+
+		/// read/save rotation to stay consistent after saving & loading
+		static void rdwr(loadsave_t*);
+
+		/**
+		 * rotate actual world coordinates back,
+		 * coordinates after transform are like in the
+		 * scenario's original savegame
+		 */
+		static void koord_w2sq(koord &);
+
+		/**
+		 * rotate original coordinates to actual world coordinates
+		 */
+		static void koord_sq2w(koord &);
+
+		/**
+		 * rotate actual world coordinates direction to original direction
+		 */
+		static void ribi_w2sq(ribi_t::ribi &r);
+
+		/**
+		 * rotate original direction to actual world coordinates direction
+		 */
+		static void ribi_sq2w(ribi_t::ribi &r);
+
+		/**
+		 * rotate actual slope to original slope
+		 */
+		static void slope_w2sq(slope_t::type &s);
+
+		/**
+		 * rotate original slope to actual slope
+		 */
+		static void slope_sq2w(slope_t::type &s);
+
+		static uint8 get_rotation() { return rotation; }
+	};
+
+	/// called by karte_t directly
+	void rotate90();
+	/// called by karte_t directly
+	void new_world();
 
 }; // end of namespace
 #endif

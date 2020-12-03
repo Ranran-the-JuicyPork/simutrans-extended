@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -19,13 +19,13 @@ class dynamic_string;
 class scenario_info_t : public gui_frame_t, private action_listener_t
 {
 private:
-	gui_tab_panel_t	tabs;
+	gui_tab_panel_t tabs;
 
 	gui_flowtext_t info, goal, rule, result, about, error, debug_msg;
 
 	void update_dynamic_texts(gui_flowtext_t &flow, dynamic_string &text, scr_size size, bool init);
 
-
+	uint16 get_tab_index(const char* which);
 public:
 	scenario_info_t();
 
@@ -41,8 +41,7 @@ public:
 
 	void update_scenario_texts(bool init);
 
-	void open_result_tab();
-	//void open_tab(const char* which);
+	void open_tab(const char* which);
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_scenario_info; }
 	void rdwr( loadsave_t *file ) OVERRIDE;

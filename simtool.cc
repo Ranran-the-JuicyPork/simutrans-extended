@@ -7394,14 +7394,14 @@ const char *tool_link_factory_t::do_work( player_t *, const koord3d &start, cons
 
 const building_desc_t *tool_headquarter_t::next_level( const player_t *player ) const
 {
-	return hausbauer_t::get_headquarter(player->get_headquarters_level(), welt->get_timeline_year_month());
+	return hausbauer_t::get_headquarter(player->get_headquarter_level(), welt->get_timeline_year_month());
 }
 
 const char* tool_headquarter_t::get_tooltip(const player_t *player) const
 {
 	if (building_desc_t const* const desc = next_level(player)) {
 		settings_t  const& s      = welt->get_settings();
-		char const* const  tip    = player->get_headquarters_level() == 0 ? "build HQ" : "upgrade HQ";
+		char const* const  tip    = player->get_headquarter_level() == 0 ? "build HQ" : "upgrade HQ";
 		sint64      const  factor = (sint64)desc->get_level() * desc->get_x() * desc->get_y();
 		return tooltip_with_price_maintenance(welt, tip, factor * s.cst_multiply_headquarter, factor * s.maint_building);
 	}

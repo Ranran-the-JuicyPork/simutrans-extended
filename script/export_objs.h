@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -11,7 +11,8 @@
 
 /**
  * Registers the complete export interface.
+ * @param scenario true if exporting is for scenario scripting
  */
-void register_export_function(HSQUIRRELVM vm);
+void register_export_function(HSQUIRRELVM vm, bool scenario);
 
 #endif

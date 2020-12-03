@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -48,8 +48,7 @@ static plainstring koord3d_to_string_intern(koord3d k)
 	return k.get_str();
 }
 
-
-void export_scenario(HSQUIRRELVM vm)
+void export_string_methods(HSQUIRRELVM vm)
 {
 	/**
 	 * Helper method to translate strings.
@@ -58,21 +57,6 @@ void export_scenario(HSQUIRRELVM vm)
 	 */
 	// need to identify the correct overloaded function
 	register_method<const char* (*)(const char*)>(vm, &translator::translate, "translate");
-
-	/**
-	 * Helper method to load scenario-related translation files.
-	 * Tries to load files in the following order relative to pakxx/scenario:
-	 * -# scenario-name/iso/filename
-	 * -# scenario-name/en/filename
-	 * -# scenario-name/filename
-	 *
-	 * Here, iso refers to iso-abbreviation of currently active language.
-	 *
-	 * The content of the files is cached. The cache is cleared upon reloading of savegame.
-	 * @param file name of txt-file
-	 * @return content of loaded file
-	 */
-	register_method(vm, &scenario_t::load_language_file, "load_language_file");
 
 	/**
 	 * Pretty-print floating point numbers, use language specific separator for powers of thousands.
@@ -116,13 +100,36 @@ void export_scenario(HSQUIRRELVM vm)
 	 * @returns month name in language of server
 	 */
 	register_method(vm, &translator::get_month_name, "get_month_name");
+}
 
+
+void export_scenario(HSQUIRRELVM vm)
+{
+	/**
+	 * Helper method to load scenario-related translation files.
+	 * Tries to load files in the following order relative to pakxx/scenario:
+	 * -# scenario-name/iso/filename
+	 * -# scenario-name/en/filename
+	 * -# scenario-name/filename
+	 *
+	 * Here, iso refers to iso-abbreviation of currently active language.
+	 *
+	 * The content of the files is cached. The cache is cleared upon reloading of savegame.
+	 * @param file name of txt-file
+	 * @return content of loaded file
+	 * @note Only available in scenario mode.
+	 * @ingroup scen_only
+	 */
+	register_method(vm, &scenario_t::load_language_file, "load_language_file");
 
 	/**
 	 * Table with methods to forbid and allow tools.
 	 *
 	 * Tools that are set to forbidden using the forbid_* methods can be allowed
 	 * again by calls to the respective allow_* method with exact the same parameters.
+	 *
+	 * @note Only available in scenario mode.
+	 * @ingroup scen_only
 	 */
 	begin_class(vm, "rules", 0);
 
@@ -177,7 +184,7 @@ void export_scenario(HSQUIRRELVM vm)
 	 * @param wt waytype
 	 * @param pos_nw coordinate of north-western corner of rectangle
 	 * @param pos_se coordinate of south-eastern corner of rectangle
-	 * @param err error message presented to user when trying to apply this tool
+	 * @param err error message presented to user when trying to apply this tool, see also @ref is_work_allowed_here
 	 * @see tool_ids way_types player_all
 	 */
 	STATIC register_method(vm, &scenario_t::forbid_way_tool_rect, "forbid_way_tool_rect");
@@ -204,7 +211,7 @@ void export_scenario(HSQUIRRELVM vm)
 	 * @param wt waytype
 	 * @param pos_nw 3d-coordinate of north-western corner of cube
 	 * @param pos_se 3d-coordinate of south-eastern corner of cube
-	 * @param err error message presented to user when trying to apply this tool
+	 * @param err error message presented to user when trying to apply this tool, see also @ref is_work_allowed_here
 	 * @see tool_ids way_types player_all
 	 */
 	STATIC register_method(vm, &scenario_t::forbid_way_tool_cube, "forbid_way_tool_cube");
@@ -230,16 +237,23 @@ void export_scenario(HSQUIRRELVM vm)
 	 */
 	STATIC register_method(vm, &scenario_t::clear_rules,  "clear");
 
+	/**
+	 * Signals that toolbars and active tools need to be checked against scenario rules again.
+	 */
+	STATIC register_method(vm, &scenario_t::gui_needs_update,  "gui_needs_update");
+
 	end_class(vm);
 
 
 	/**
 	 * Table with methods help debugging.
+	 * @note Only available in scenario mode.
 	 */
 	begin_class(vm, "debug", 0);
 
 	/**
 	 * @returns text containing all active rules, can be used in @ref get_debug_text
+	 * @note Only available in scenario mode.
 	 */
 	STATIC register_method(vm, &scenario_t::get_forbidden_text,  "get_forbidden_text");
 

@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -18,6 +18,18 @@ void scenario_info_t::update_dynamic_texts(gui_flowtext_t &flow, dynamic_string 
 		flow.set_size( size );
 		set_dirty();
 	}
+}
+
+
+uint16 scenario_info_t::get_tab_index(const char* which)
+{
+	const char *shorts[] = { "info", "goal", "rules", "result", "about", "debug" };
+	for (uint i = 0; i<lengthof(shorts); i++) {
+		if (strcmp(which, shorts[i]) == 0) {
+			return i+1 < lengthof(shorts) ? i : tabs.get_count() - 1;
+		}
+	}
+	return 0;
 }
 
 
@@ -85,7 +97,7 @@ void scenario_info_t::draw(scr_coord pos, scr_size size)
 
 bool scenario_info_t::action_triggered( gui_action_creator_t *comp, value_t v)
 {
-	if (comp == &tabs) {
+	if (  comp == &tabs  ) {
 		set_dirty();
 	}
 	if (  comp == &info  ||  comp == &goal  ||  comp ==  &rule  ||  comp ==  &result  ||  comp == &about  ||  comp == &debug_msg  ) {
@@ -120,15 +132,7 @@ bool scenario_info_t::action_triggered( gui_action_creator_t *comp, value_t v)
 				}
 			}
 			else {
-				const char *shorts[] = { "info", "goal", "rules", "result", "about" };
-				for (uint i = 0; i<lengthof(shorts); i++) {
-					if (strcmp(link, shorts[i]) == 0) {
-						tabs.set_active_tab_index(i);
-						resize(scr_coord(0,0));
-						set_dirty();
-						return true;
-					}
-				}
+				open_tab(link);
 			}
 		}
 	}
@@ -136,9 +140,9 @@ bool scenario_info_t::action_triggered( gui_action_creator_t *comp, value_t v)
 }
 
 
-void scenario_info_t::open_result_tab()
+void scenario_info_t::open_tab(const char* which)
 {
-	tabs.set_active_tab_index(3);
+	tabs.set_active_tab_index(get_tab_index(which));
 	resize(scr_coord(0,0));
 	set_dirty();
 }

@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -22,6 +22,6 @@
 void begin_desc_class(HSQUIRRELVM vm, const char* name, const char* parent, const void* (*func)(const char*));
 
 /// Function signature to retrieve desc-pointer from name
-typedef const void* (*GETBESCHFUNC)(const char*);
+typedef const void* (*GETDESCFUNC)(const char*);
 
 #endif

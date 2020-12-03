@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -14,13 +14,24 @@
 
 #include "../../simobj.h"
 #include "../../simdepot.h"
-#include "../../simtool.h"
 #include "../../simworld.h"
 #include "../../boden/grund.h"
 #include "../../dataobj/scenario.h"
+#include "../../descriptor/ground_desc.h"
 #include "../../obj/baum.h"
 #include "../../obj/gebaeude.h"
+#include "../../obj/field.h"
 #include "../../obj/label.h"
+#include "../../obj/leitung2.h"
+#include "../../obj/roadsign.h"
+#include "../../obj/signal.h"
+#include "../../player/simplay.h"
+
+// for depot tools
+#include "../../simconvoi.h"
+#include "../../simmenu.h"
+#include "../../descriptor/vehicle_desc.h"
+
 
 using namespace script_api;
 
@@ -55,6 +66,10 @@ template<class D> struct access_objs {
 				// object or tile disappeared: clear userpointer
 				sq_setinstanceup(vm, index, NULL);
 			}
+			sq_raise_error(vm, "Object of type %s vanished from (%s).", param<D>::squirrel_type, pos.get_str());
+		}
+		else {
+			sq_raise_error(vm, "Object is not of type %s.", param<D>::squirrel_type);
 		}
 		return NULL;
 	}
@@ -69,7 +84,7 @@ template<class D> struct access_objs {
 			return 1;
 		}
 		koord pos = obj->get_pos().get_2d();
-		welt->get_scenario()->koord_w2sq(pos);
+		coordinate_transform_t::koord_w2sq(pos);
 		sint16 x = pos.x;
 		sint16 y = pos.y;
 		sint8  z = obj->get_pos().z;
@@ -79,8 +94,11 @@ template<class D> struct access_objs {
 				return SQ_ERROR;
 			}
 		}
-		else{
-			assert(bind_code<D>::objtype == obj->get_typ());
+		else if (bind_code<D>::objtype != obj->get_typ()) {
+			// obj is instance of derived class
+			return script_api::param<obj_t*>::push(vm, obj);
+		}
+		else {
 			// specific object with its own constructor, type already preset as default parameter
 			if (!SQ_SUCCEEDED(push_instance(vm, script_api::param<D*>::squirrel_type(), x, y, z))) {
 				return SQ_ERROR;
@@ -102,14 +120,34 @@ SQInteger exp_obj_pos_constructor(HSQUIRRELVM vm) // parameters: sint16 x, sint1
 	// set coordinates
 	set_slot(vm, "x", x, 1);
 	set_slot(vm, "y", y, 1);
-	set_slot(vm, "z", z, 1);
 	koord pos(x,y);
-	welt->get_scenario()->koord_sq2w(pos);
+	coordinate_transform_t::koord_sq2w(pos);
+	// find tile - some objects have larger z-coordinate (e.g., on foundations)
+	grund_t *gr = welt->lookup(koord3d(pos, z));
+	for(uint8 i=1, end = ground_desc_t::double_grounds ? 2 : 1; gr == NULL  &&  i<=end; i++) {
+		gr = welt->lookup(koord3d(pos, z-i));
+	}
 	// find object and set instance up
-	if (grund_t *gr = welt->lookup(koord3d(pos, z))) {
+	if (gr) {
+		// correct z-coordinate
+		set_slot(vm, "z", gr->get_pos().z, 1);
+		// search for object
 		obj_t::typ type = (obj_t::typ)param<uint8>::get(vm, 5);
 		obj_t *obj = NULL;
-		if (type != obj_t::old_airdepot) { // special treatment of depots
+		if (type == obj_t::roadsign  ||  type == obj_t::signal) {
+			// special treatment of signals/roadsigns
+			obj = gr->suche_obj(obj_t::roadsign);
+			if (obj == NULL) {
+				obj = gr->suche_obj(obj_t::signal);
+			}
+		}
+		else if (type == obj_t::pumpe  ||  type == obj_t::senke) {
+			obj = gr->suche_obj(obj_t::pumpe);
+			if (obj == NULL) {
+				obj = gr->suche_obj(obj_t::senke);
+			}
+		}
+		else if (type != obj_t::old_airdepot) { // special treatment of depots
 			obj = gr->suche_obj(type);
 		}
 		else {
@@ -142,9 +180,11 @@ getpush_obj_pos(baum_t, obj_t::baum);
 getpush_obj_pos(gebaeude_t, obj_t::gebaeude);
 getpush_obj_pos(label_t, obj_t::label);
 getpush_obj_pos(weg_t, obj_t::way);
+getpush_obj_pos(leitung_t, obj_t::leitung);
+getpush_obj_pos(field_t, obj_t::field);
 
-// each depot has its own class
 namespace script_api {
+	// each depot has its own class
 	declare_specialized_param(depot_t*, "t|x|y", "depot_x");
 	declare_specialized_param(airdepot_t*, "t|x|y", "depot_x");
 	declare_specialized_param(narrowgaugedepot_t*, "t|x|y", "depot_x");
@@ -154,7 +194,16 @@ namespace script_api {
 	declare_specialized_param(monoraildepot_t*, "t|x|y", "depot_x");
 	declare_specialized_param(tramdepot_t*, "t|x|y", "depot_x");
 	declare_specialized_param(maglevdepot_t*, "t|x|y", "depot_x");
+
+	// map roadsign_t and signal_t to the same class
+	declare_specialized_param(roadsign_t*, "t|x|y", "sign_x");
+	declare_specialized_param(signal_t*, "t|x|y", "sign_x");
+
+	//  map all to one transformer class
+	declare_specialized_param(pumpe_t*,  "t|x|y", "transformer_x");
+	declare_specialized_param(senke_t*,  "t|x|y", "transformer_x");
 };
+
 // base depot class, use old_airdepot as identifier here
 getpush_obj_pos(depot_t, obj_t::old_airdepot);
 // now all the derived classes
@@ -166,6 +215,13 @@ getpush_obj_pos(schiffdepot_t, obj_t::schiffdepot);
 getpush_obj_pos(monoraildepot_t, obj_t::monoraildepot);
 getpush_obj_pos(tramdepot_t, obj_t::tramdepot);
 getpush_obj_pos(maglevdepot_t, obj_t::maglevdepot);
+// roadsigns/signals
+getpush_obj_pos(roadsign_t, obj_t::roadsign);
+getpush_obj_pos(signal_t, obj_t::signal);
+//  powerlines
+getpush_obj_pos(pumpe_t, obj_t::pumpe);
+getpush_obj_pos(senke_t, obj_t::senke);
+
 
 #define case_resolve_obj(D) \
 	case bind_code<D>::objtype: \
@@ -184,6 +240,9 @@ SQInteger script_api::param<obj_t*>::push(HSQUIRRELVM vm, obj_t* const& obj)
 		case_resolve_obj(gebaeude_t);
 		case_resolve_obj(label_t);
 		case_resolve_obj(weg_t);
+		case_resolve_obj(roadsign_t);
+		case_resolve_obj(signal_t);
+		case_resolve_obj(field_t);
 
 		case_resolve_obj(airdepot_t);
 		case_resolve_obj(narrowgaugedepot_t);
@@ -193,6 +252,10 @@ SQInteger script_api::param<obj_t*>::push(HSQUIRRELVM vm, obj_t* const& obj)
 		case_resolve_obj(monoraildepot_t);
 		case_resolve_obj(tramdepot_t);
 		case_resolve_obj(maglevdepot_t);
+
+		case_resolve_obj(leitung_t);
+		case_resolve_obj(pumpe_t);
+		case_resolve_obj(senke_t);
 
 		default:
 			return access_objs<obj_t>::push_with_pos(vm, obj);
@@ -212,7 +275,7 @@ static SQInteger get_way_ribi(HSQUIRRELVM vm)
 
 	ribi_t::ribi ribi = w ? (masked ? w->get_ribi() : w->get_ribi_unmasked() ) : 0;
 
-	return push_ribi(vm, ribi);
+	return param<my_ribi_t>::push(vm, ribi);
 }
 
 // create class
@@ -221,9 +284,9 @@ void begin_obj_class(HSQUIRRELVM vm, const char* name, const char* base = NULL)
 {
 	SQInteger res = create_class(vm, name, base);
 	if(  !SQ_SUCCEEDED(res)  ) {
-		// base class not found: maybe scenario_base.nut is not up-to-date
-		dbg->error( "begin_obj_class()", "Create class failed for %s. Base class %s missing. Please update simutrans (or just script/scenario_base.nut)!", name, base );
-		sq_raise_error(vm, "Create class failed for %s. Base class %s missing. Please update simutrans (or just script/scenario_base.nut)!", name, base);
+		// base class not found: maybe script_base.nut is not up-to-date
+		dbg->error( "begin_obj_class()", "Create class failed for %s. Base class %s missing. Please update simutrans (or just script/script_base.nut)!", name, base );
+		sq_raise_error(vm, "Create class failed for %s. Base class %s missing. Please update simutrans (or just script/script_base.nut)!", name, base);
 	}
 	uint8 objtype = bind_code<D>::objtype;
 	// store typetag to identify pointers
@@ -233,41 +296,37 @@ void begin_obj_class(HSQUIRRELVM vm, const char* name, const char* base = NULL)
 	// now functions can be registered
 }
 
-// markers / labels
-label_t* create_marker(koord pos, player_t* player, const char* text)
+// mark objects
+void_t mark_object(obj_t* obj)
 {
-	if (player == NULL  ||  text == NULL) {
-		return NULL;
-	}
-	tool_marker_t w;
-	w.flags = 0;
-	const char* err = w.work(player, koord3d(pos,0));
-	if (err) {
-		return NULL;
-	}
-	grund_t *gr = welt->lookup_kartenboden(pos);
-	gr->set_text(text);
-	return gr->find<label_t>();
+	obj->set_flag(obj_t::highlight);
+	obj->set_flag(obj_t::dirty);
+	return void_t();
+}
+void_t unmark_object(obj_t* obj)
+{
+	obj->clear_flag(obj_t::highlight);
+	obj->set_flag(obj_t::dirty);
+	return void_t();
+}
+bool object_is_marked(obj_t* obj)
+{
+	return obj->get_flag(obj_t::highlight);
 }
 
-/* This fails to compile in Visual Studio citing an "ambiguous symbol" error (C2872)
- * "return void_t();" also throws error C2955
- */
-/*
-void_ label_set_text(label_t* l, const char* text)
+// markers / labels
+call_tool_work create_marker(koord pos, player_t* player, const char* text)
 {
-	if (l == NULL  ||  text == NULL) {
-		return void_t();
+	if (text == NULL) {
+		return "Cannot create label with text == null";
 	}
-	koord3d pos = l->get_pos();
-	tool_rename_t w;
-	cbuffer_t buf;
-	buf.printf("m%hi,%hi,%hi,%s", pos.x, pos.y, pos.z, text);
-	w.set_default_param(buf);
-	w.init(l->get_owner());
+	return call_tool_work(TOOL_MARKER | GENERAL_TOOL, text, 0, player, koord3d(pos, 0));
+}
 
-	return void_t();
-} */
+call_tool_init label_set_text(label_t *l, const char* text)
+{
+	return command_rename(l->get_owner(), 'm', l->get_pos(), text);
+}
 
 const char* label_get_text(label_t* l)
 {
@@ -279,6 +338,40 @@ const char* label_get_text(label_t* l)
 	return NULL;
 }
 
+// roadsign
+bool roadsign_can_pass(const roadsign_t* rs, player_t* player)
+{
+	return player  &&  rs->get_desc()->is_private_way()  ?  (rs->get_player_mask() & (1<<player->get_player_nr()))!=0 : true;
+}
+
+// depot
+call_tool_init depot_append_vehicle(depot_t *depot, player_t *player, convoihandle_t cnv, const vehicle_desc_t *desc)
+{
+	if (desc == NULL) {
+		return "Invalid vehicle_desc_x provided";
+	}
+	// see depot_frame_t::image_from_storage_list: tool = 'a'
+	// see depot_t::call_depot_tool for command string composition
+	cbuffer_t buf;
+	buf.printf( "%c,%s,%hu,%s", 'a', depot->get_pos().get_str(), cnv.get_id(), desc->get_name());
+
+	return call_tool_init(TOOL_CHANGE_DEPOT | SIMPLE_TOOL, buf, 0, player);
+}
+
+call_tool_init depot_start_convoy(depot_t *depot, player_t *player, convoihandle_t cnv)
+{
+	// see depot_frame_t::action_triggered: tool = 'b'
+	// see depot_t::call_depot_tool for command string composition
+	cbuffer_t buf;
+	if (cnv.is_bound()) {
+		buf.printf( "%c,%s,%hu", 'b', depot->get_pos().get_str(), cnv->self.get_id());
+	}
+	else {
+		buf.printf( "%c,%s,%hu", 'B', depot->get_pos().get_str(), 0);
+	}
+
+	return call_tool_init(TOOL_CHANGE_DEPOT | SIMPLE_TOOL, buf, 0, player);
+}
 
 vector_tpl<convoihandle_t> const& depot_get_convoy_list(depot_t *depot)
 {
@@ -296,6 +389,47 @@ vector_tpl<convoihandle_t> const& depot_get_convoy_list(depot_t *depot)
 	return list;
 }
 
+vector_tpl<depot_t*> const& get_depot_list(player_t *player, waytype_t wt)
+{
+	static vector_tpl<depot_t*> list;
+	list.clear();
+	// do the conversion of waytype_t to depot-type by linetype
+	simline_t::linetype line_type = simline_t::waytype_to_linetype(wt);
+	if (player == NULL  ||  line_type == simline_t::MAX_LINE_TYPE) {
+		return list;
+	}
+	// fill list
+	const slist_tpl<depot_t*> &depot_list = depot_t::get_depot_list();
+
+	FOR(slist_tpl<depot_t*>, d, depot_list) {
+		if(d->get_line_type()==line_type  &&  d->get_owner()==player) {
+			list.append(d);
+		}
+	}
+	return list;
+}
+
+
+const fabrik_t* transformer_get_factory(leitung_t *lt)
+{
+	if (pumpe_t *p = dynamic_cast<pumpe_t*>(lt)) {
+		return p->get_factory();
+	}
+	if (senke_t *s = dynamic_cast<senke_t*>(lt)) {
+		return s->get_factory();
+	}
+	return NULL;
+}
+
+bool leitung_is_connected(leitung_t* lt1, leitung_t* lt2)
+{
+	return lt2 != NULL  &&  lt1->get_net() == lt2->get_net();
+}
+
+bool field_is_deleteable(field_t* f)
+{
+	return f->is_deletable( welt->get_player(1) ) == NULL;
+}
 
 void export_map_objects(HSQUIRRELVM vm)
 {
@@ -303,7 +437,7 @@ void export_map_objects(HSQUIRRELVM vm)
 	 * Class to access objects on the map
 	 * These classes cannot modify anything.
 	 */
-	begin_class(vm, "map_object_x", "extend_get,coord3d");
+	begin_class(vm, "map_object_x", "extend_get,coord3d,ingame_object");
 	uint8 objtype = bind_code<obj_t>::objtype;
 	sq_settypetag(vm, -1, obj_t_tag + objtype);
 	/**
@@ -316,6 +450,10 @@ void export_map_objects(HSQUIRRELVM vm)
 	 * @typemask void(integer,integer,integer,map_objects)
 	 */
 	register_function(vm, exp_obj_pos_constructor, "constructor", 5, "xiiii");
+	/**
+	 * @returns if object is still valid.
+	 */
+	export_is_valid<obj_t*>(vm); //register_function("is_valid")
 	/**
 	 * @returns owner of the object.
 	 */
@@ -336,11 +474,23 @@ void export_map_objects(HSQUIRRELVM vm)
 	 * Checks whether player can remove this object.
 	 * @returns error message or null if object can be removed.
 	 */
-	register_method(vm, &obj_t:: is_deletable, "is_removable");
+	register_method(vm, &obj_t::is_deletable, "is_removable");
 	/**
 	 * @returns type of object.
 	 */
 	register_method(vm, &obj_t::get_typ, "get_type");
+	/**
+	 * Marks the object for highlighting. Use with care.
+	 */
+	register_method(vm, &mark_object, "mark", true);
+	/**
+	 * Unmarks the object for highlighting.
+	 */
+	register_method(vm, &unmark_object, "unmark", true);
+	/**
+	 * @returns whether object is highlighted.
+	 */
+	register_method(vm, &object_is_marked, "is_marked", true);
 	end_class(vm);
 
 
@@ -383,21 +533,16 @@ void export_map_objects(HSQUIRRELVM vm)
 	 * @returns whether building is a monument
 	 */
 	register_method(vm, &gebaeude_t::is_monument, "is_monument");
-
-	register_method(vm, &gebaeude_t::get_adjusted_visitor_demand, "get_adjusted_visitor_demand");
-	register_method(vm, &gebaeude_t::get_adjusted_mail_demand, "get_adjusted_mail_demand");
-	register_method(vm, &gebaeude_t::get_adjusted_jobs, "get_adjusted_jobs");
-
-//	/**
-//	 * Passenger level controls how many passengers will be generated by this building.
-//	 * @returns passenger level
-//	 */
-//	register_method(vm, &gebaeude_t::get_passagier_level, "get_passenger_level");
-//	/**
-//	 * Mail level controls how many mail will be generated by this building.
-//	 * @returns mail level
-//	 */
-//	register_method(vm, &gebaeude_t::get_mail_level, "get_mail_level");
+	/**
+	 * Passenger level controls how many passengers will be generated by this building.
+	 * @returns passenger level
+	 */
+	register_method(vm, &gebaeude_t::get_passagier_level, "get_passenger_level");
+	/**
+	 * Mail level controls how many mail will be generated by this building.
+	 * @returns mail level
+	 */
+	register_method(vm, &gebaeude_t::get_mail_level, "get_mail_level");
 	/**
 	 * @returns object descriptor.
 	 */
@@ -411,12 +556,38 @@ void export_map_objects(HSQUIRRELVM vm)
 
 	/**
 	 * Class to access depots.
+	 * Main purpose is the manipulation of convoys in depots.
 	 */
 	begin_obj_class<depot_t>(vm, "depot_x", "building_x");
+	/**
+	 * Append a car to the convoy in this depot. If the convoy does not exist, a new one is created first.
+	 * @param pl player owns the convoy
+	 * @param cnv the convoy
+	 * @param desc decriptor of the vehicle
+	 * @ingroup game_cmd
+	 */
+	register_method(vm, depot_append_vehicle, "append_vehicle", true);
+	/**
+	 * Start the convoy in this depot.
+	 * @ingroup game_cmd
+	 */
+	register_method(vm, depot_start_convoy, "start_convoy", true);
+	/**
+	 * Start all convoys in this depot.
+	 * @ingroup game_cmd
+	 */
+	register_method_fv(vm, depot_start_convoy, "start_all_convoys", freevariable<convoihandle_t>(convoihandle_t()), true);
 	/**
 	 * @returns list of convoys sitting in this depot
 	 */
 	register_method(vm, &depot_get_convoy_list, "get_convoy_list", true);
+	/**
+	 * List of all depots of player @p pl of way-type @p wt
+	 * @param pl
+	 * @param wt
+	 * @returns depot list of player
+	 */
+	STATIC register_method(vm, &get_depot_list, "get_depot_list", false, true);
 	end_class(vm);
 
 	/**
@@ -475,24 +646,79 @@ void export_map_objects(HSQUIRRELVM vm)
 	 * @param pos  position
 	 * @param pl   owner
 	 * @param text text
-	 * @returns label_x instance or null if creation failed
-	 * @warning cannot be used in network games.
+	 * @ingroup game_cmd
 	 */
 	STATIC register_method(vm, &create_marker, "create", false, true);
 	/**
 	 * Set text of marker.
 	 * @param text text
-	 * @warning cannot be used in network games.
+	 * @ingroup rename_func
 	 */
-
-	// Must comment this out as this fails to compile in Visual Studio
-	// FIXME
-	//register_method(vm, &label_set_text, "set_text", true);
+	register_method(vm, &label_set_text, "set_text", true);
 	/**
 	 * Get text of marker.
 	 * @see tile_x::get_text
 	 */
 	register_method(vm, &label_get_text, "get_text", true);
 
+	end_class(vm);
+
+	/**
+	 * Roadsigns and railway signals.
+	 */
+	begin_obj_class<roadsign_t>(vm, "sign_x", "map_object_x");
+	/**
+	 * @returns object descriptor.
+	 */
+	register_method(vm, &roadsign_t::get_desc, "get_desc");
+
+	/**
+	 * Test whether @p player 's vehicles can pass private-way sign.
+	 * Returns true if this is not a private-way sign.
+	 * @param player
+	 */
+	register_method(vm, &roadsign_can_pass, "can_pass", true);
+	end_class(vm);
+
+	/**
+	 * Powerlines.
+	 * (Including transformers. Can be differentiated by @ref obj_x::get_type.
+	 */
+	begin_obj_class<leitung_t>(vm, "powerline_x", "map_object_x");
+
+	/**
+	 * Checkes whether powerline (or transformer) is connected to @p pl are connected.
+	 * @param pl other powerline/transformer
+	 */
+	register_method(vm, &leitung_is_connected, "is_connected", true);
+	end_class(vm);
+
+	/**
+	 * Transformers.
+	 * Sink and source can be differentiated by @ref obj_x::get_type.
+	 */
+	begin_obj_class<pumpe_t>(vm, "transformer_x", "powerline_x");
+
+	/**
+	 * Get factory connected to this transformer.
+	 */
+	register_method(vm, &transformer_get_factory, "get_factory", true);
+	end_class(vm);
+
+	/**
+	 * Fields
+	 */
+	begin_obj_class<field_t>(vm, "field_x", "map_object_x");
+	/**
+	 * Fields can only be deleted if enough are present.
+	 * @see factory_x::get_field_count, factory_x::get_min_field_count
+	 * @return whether this one can be deleted
+	 */
+	register_method(vm, &field_is_deleteable, "is_deletable", true);
+	/**
+	 * @returns factory this field belongs to
+	 * @see factory_x::get_field_count, factory_x::get_min_field_count
+	 */
+	register_method(vm, &field_t::get_factory, "get_factory");
 	end_class(vm);
 }

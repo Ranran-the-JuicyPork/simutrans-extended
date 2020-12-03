@@ -28,9 +28,6 @@ struct SQExceptionTrap{
 
 #define _INLINE
 
-#define STK(a) _stack._vals[_stackbase+(a)]
-#define TARGET _stack._vals[_stackbase+arg0]
-
 typedef sqvector<SQExceptionTrap> ExceptionsTraps;
 
 struct SQVM : public CHAINABLE_OBJ
@@ -183,6 +180,7 @@ public:
 
 	SQInteger _ops_remaining;    /// number of ops the vm can do till break
 	SQInteger _ops_grace_amount; /// raise error if _ops_remaining is less than  -_ops_grace_amount for pure native calls
+	SQInteger _ops_total;        /// total number of ops performed
 	bool _throw_if_no_ops;       /// is no-ops an error or can call suspended? default: true
 };
 

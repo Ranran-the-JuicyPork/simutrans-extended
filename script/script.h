@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -16,6 +16,10 @@
 #include "../utils/plainstring.h"
 #include <string>
 
+class log_t;
+template<class key_t, class value_t> class inthashtable_tpl;
+void sq_setwakeupretvalue(HSQUIRRELVM v); //sq_extensions
+
 /**
  * Class providing interface to squirrel's virtual machine.
  *
@@ -24,7 +28,7 @@
  */
 class script_vm_t {
 public:
-	script_vm_t(const char* include_path_);
+	script_vm_t(const char* include_path, const char* log_name);
 	~script_vm_t();
 
 	/**
@@ -45,11 +49,18 @@ public:
 
 	const char* get_error() const { return error_msg.c_str(); }
 
+	/**
+	 * The script can only act as a certain player.
+	 * @param player_nr the number of the player (PLAYER_UNOWNED for scenarios)
+	 */
+	void set_my_player(uint8 player_nr);
+
 	/// priority of function call
 	enum call_type_t {
-		FORCE = 1, ///< function has to return, raise error if not
-		QUEUE = 2, ///< function call can be queued, return value can be propagated by call back
-		TRY   = 3  ///< function call will not be queued, if virtual machine is suspended just return
+		FORCE,   ///< function has to return, raise error if not
+		FORCEX,  ///< function has to return, raise error if not, give more opcodes
+		QUEUE,   ///< function call can be queued, return value can be propagated by call back
+		TRY      ///< function call will not be queued, if virtual machine is suspended just return
 	};
 
 	/**
@@ -181,9 +192,18 @@ private:
 	/// thread in the virtual machine, used to run functions that can be suspended
 	HSQUIRRELVM thread;
 
+	/// our log file
+	log_t* log;
 
 	plainstring error_msg;
 
+	/// path to files to #include
+	plainstring include_path;
+
+public:
+	bool pause_on_error;
+
+private:
 	/// @{
 	/// @name Helper functions to call, suspend, queue calls to scripted functions
 
@@ -229,8 +249,43 @@ private:
 	/// set error message, used in errorhandlers
 	void set_error(const char* error) { error_msg = error; }
 
-	/// path to files to #include
-	plainstring include_path;
+	/// custom print handler
+	static void printfunc(HSQUIRRELVM, const SQChar *s, ...);
+};
+
+/**
+ * Class to manage all vm's that are suspended and waiting for the return of
+ * a call to a tool.
+ */
+class suspended_scripts_t {
+private:
+	static inthashtable_tpl<uint32,HSQUIRRELVM> suspended_scripts;
+
+	static HSQUIRRELVM remove_suspended_script(uint32 key);
+
+public:
+	// generates key from a pointer
+	static uint32 get_unique_key(void* key);
+
+	static void register_suspended_script(uint32 key, HSQUIRRELVM vm);
+
+	// remove any reference to given vm
+	static void remove_vm(HSQUIRRELVM vm);
+
+	template<class R>
+	static void tell_return_value(uint32 key, R& ret)
+	{
+		HSQUIRRELVM vm = remove_suspended_script(key);
+		if (vm) {
+			script_api::param<R>::push(vm, ret);
+			sq_setwakeupretvalue(vm);
+			// this vm can be woken up now
+			sq_pushregistrytable(vm);
+			bool wait = false;
+			script_api::create_slot(vm, "wait_external", wait);
+			sq_poptop(vm);
+		}
+	}
 };
 
 #endif

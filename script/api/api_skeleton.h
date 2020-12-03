@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -19,6 +19,8 @@ struct {
 	 * Corresponds to release numbers (e.g. 112.3).
 	 * Set it to "*" to support nightly versions.
 	 * If this string is not set, the default "112.3" will be used.
+	 *
+	 * @see get_api_version
 	 */
 	/// Required version of api.
 	string api;
@@ -33,6 +35,8 @@ struct {
 	 * Name of savegame. The scenario starts with the world saved there.
 	 * If file == "<attach>" then do not load a saved, attach
 	 * the scenario to the running world instead.
+	 *
+	 * @see get_map_file
 	 */
 	string file;
 }

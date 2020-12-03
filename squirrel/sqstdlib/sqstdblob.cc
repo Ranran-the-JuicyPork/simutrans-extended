@@ -7,7 +7,7 @@
 #include "sqstdstream.h"
 #include "sqstdblobimpl.h"
 
-#define SQSTD_BLOB_TYPE_TAG (SQSTD_STREAM_TYPE_TAG | 0x00000002)
+#define SQSTD_BLOB_TYPE_TAG ((SQUnsignedInteger)(SQSTD_STREAM_TYPE_TAG | 0x00000002))
 
 //Blob
 
@@ -181,7 +181,7 @@ static const SQRegFunction _blob_methods[] = {
 
 static SQInteger _g_blob_swap2(HSQUIRRELVM v)
 {
-	SQInteger i = 0;
+	SQInteger i;
 	sq_getinteger(v,2,&i);
 	short s=(short)i;
 	sq_pushinteger(v,(s<<8)|((s>>8)&0x00FF));
@@ -190,7 +190,7 @@ static SQInteger _g_blob_swap2(HSQUIRRELVM v)
 
 static SQInteger _g_blob_swap4(HSQUIRRELVM v)
 {
-	SQInteger i = 0;
+	SQInteger i;
 	sq_getinteger(v,2,&i);
 	unsigned int t4 = (unsigned int)i;
 	__swap_dword(&t4);

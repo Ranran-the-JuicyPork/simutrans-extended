@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -10,6 +10,7 @@
 #include "../api_param.h"
 #include "../../simobj.h"
 #include "../../simmenu.h"
+#include "../../simunits.h"
 
 using namespace script_api;
 
@@ -97,6 +98,14 @@ void export_global_constants(HSQUIRRELVM vm)
 	enum_slot(vm, "tool_change_water_height", TOOL_CHANGE_WATER_HEIGHT | GENERAL_TOOL);
 	/// change climate of tiles
 	enum_slot(vm, "tool_set_climate", TOOL_SET_CLIMATE | GENERAL_TOOL);
+	/// rotate a building
+	enum_slot(vm, "tool_rotate_building", TOOL_ROTATE_BUILDING | GENERAL_TOOL);
+	/// merge two stops
+	//enum_slot(vm, "tool_merge_stop", TOOL_MERGE_STOP | GENERAL_TOOL);
+	/// scripted tool (one-click)
+	//enum_slot(vm, "tool_exec_script", TOOL_EXEC_SCRIPT | GENERAL_TOOL);
+	/// scripted tool (two-click)
+	//enum_slot(vm, "tool_exec_two_click_script", TOOL_EXEC_TWO_CLICK_SCRIPT | GENERAL_TOOL);
 
 	// simple tools
 	/// increase industry density
@@ -181,7 +190,7 @@ void export_global_constants(HSQUIRRELVM vm)
 	enum_slot(vm, "mo_tree", obj_t::baum);
 	/// pointer (bulldozers etc)
 	enum_slot(vm, "mo_pointer", obj_t::zeiger);
-	/// cloude and smoke
+	/// cloud and smoke
 	enum_slot(vm, "mo_cloud", obj_t::wolke);
 	/// building (houses, halts, factories ...)
 	enum_slot(vm, "mo_building", obj_t::gebaeude);
@@ -218,7 +227,7 @@ void export_global_constants(HSQUIRRELVM vm)
 	/// way object (overhead wires)
 	enum_slot(vm, "mo_wayobj", obj_t::wayobj);
 	/// way
-	enum_slot(vm, "mo_way", obj_t::way	);
+	enum_slot(vm, "mo_way", obj_t::way);
 	/// text label
 	enum_slot(vm, "mo_label", obj_t::label);
 	/// field
@@ -250,6 +259,30 @@ void export_global_constants(HSQUIRRELVM vm)
 	/// moving object (sheep ...)
 	enum_slot(vm, "mo_moving_object", obj_t::movingobj);
 
+	end_enum();
+
+	/**
+	 * Internal units.
+	 */
+	begin_enum("units");
+	/// The length of one side of a tile in car units. @see vehicle_desc_x::get_length
+	enum_slot(vm, "CARUNITS_PER_TILE", (uint32)CARUNITS_PER_TILE);
+
+	end_enum();
+
+	/**
+	 * Climate zones. Their naming may differ from the graphical representation and
+	 * translation in some paksets.
+	 */
+	begin_enum("climates");
+	enum_slot(vm, "cl_water", water_climate);
+	enum_slot(vm, "cl_desert", desert_climate);
+	enum_slot(vm, "cl_tropic", tropic_climate);
+	enum_slot(vm, "cl_mediterran", mediterran_climate);
+	enum_slot(vm, "cl_temperate", temperate_climate);
+	enum_slot(vm, "cl_tundra", tundra_climate);
+	enum_slot(vm, "cl_rocky", rocky_climate);
+	enum_slot(vm, "cl_arctic", arctic_climate);
 	end_enum();
 
 }

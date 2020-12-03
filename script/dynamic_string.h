@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -14,7 +14,6 @@
 class script_vm_t;
 class player_t;
 class loadsave_t;
-
 
 /**
  * Class of strings to hold result of text-returning script functions.

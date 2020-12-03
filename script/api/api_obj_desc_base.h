@@ -1,5 +1,5 @@
 /*
- * This file is part of the Simutrans-Extended project under the Artistic License.
+ * This file is part of the Simutrans project under the Artistic License.
  * (see LICENSE.txt)
  */
 
@@ -16,9 +16,13 @@ class obj_named_desc_t;
 class obj_desc_timelined_t;
 class obj_desc_transport_related_t;
 class tree_desc_t;
+class bridge_desc_t;
 class building_desc_t;
 class building_tile_desc_t;
 class goods_desc_t;
+class roadsign_desc_t;
+class tunnel_desc_t;
+class vehicle_desc_t;
 class way_desc_t;
 
 namespace script_api {
@@ -79,6 +83,10 @@ namespace script_api {
 	declare_desc_param(goods_desc_t, "good_desc_x");
 	declare_desc_param(building_desc_t, "building_desc_x");
 	declare_desc_param(way_desc_t, "way_desc_x");
+	declare_desc_param(vehicle_desc_t, "vehicle_desc_x");
+	declare_desc_param(tunnel_desc_t, "tunnel_desc_x");
+	declare_desc_param(bridge_desc_t, "bridge_desc_x");
+	declare_desc_param(roadsign_desc_t, "sign_desc_x");
 
 	// only push the building_desc_t-pointer
 	declare_desc_param(building_tile_desc_t, "building_desc_x");

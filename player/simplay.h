@@ -35,7 +35,15 @@ class finance_t;
 class player_t
 {
 public:
-	enum { EMPTY=0, HUMAN=1, AI_GOODS=2, AI_PASSENGER=3, MAX_AI, PASSWORD_PROTECTED=128 };
+	enum {
+		EMPTY        = 0,
+		HUMAN        = 1,
+		AI_GOODS     = 2,
+		AI_PASSENGER = 3,
+		AI_SCRIPTED  = 4,
+		MAX_AI,
+		PASSWORD_PROTECTED=128
+	};
 
 protected:
 	char player_name_buf[256];
@@ -440,7 +448,7 @@ public:
 		headquarter_pos = hq_pos;
 	}
 	koord get_headquarter_pos() const { return headquarter_pos; }
-	short get_headquarters_level() const { return headquarter_level; }
+	short get_headquarter_level() const { return headquarter_level; }
 
 	void begin_liquidation();
 	void complete_liquidation();
