@@ -26,7 +26,7 @@ sint16 env_t::simple_drawing_normal = 4;
 sint16 env_t::simple_drawing_default = 24;
 uint8 env_t::follow_convoi_underground = 2;
 
-char env_t::program_dir[PATH_MAX];
+char env_t::data_dir[PATH_MAX];
 plainstring env_t::default_theme;
 const char *env_t::user_dir = 0;
 const char *env_t::savegame_version_str = SAVEGAME_VER_NR;
@@ -396,7 +396,7 @@ void env_t::rdwr(loadsave_t *file)
 
 	file->rdwr_long( autosave );
 	file->rdwr_long( fps );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 31) || file->get_extended_version() >= 15) {
+	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
 		file->rdwr_long(ff_fps);
 	}
 	file->rdwr_short( max_acceleration );
@@ -447,7 +447,7 @@ void env_t::rdwr(loadsave_t *file)
 	file->rdwr_short( global_volume );
 	file->rdwr_short( midi_volume );
 	file->rdwr_bool( global_mute_sound );
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 31) || file->get_extended_version() >= 15) {
+	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
 		for( int i = 0; i <= 5; i++ ) {
 			file->rdwr_short( specific_volume[ i ] );
 		}
@@ -565,7 +565,7 @@ void env_t::rdwr(loadsave_t *file)
 	if (file->get_version_int()>120007) {
 		rdwr_win_settings(file);
 	}
-	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 31) || file->get_extended_version() >= 15) {
+	if ((file->get_extended_version() == 14 && file->get_extended_revision() >= 32) || file->get_extended_version() >= 15) {
 		file->rdwr_byte(show_money_message);
 		file->rdwr_byte(follow_convoi_underground);
 		file->rdwr_byte( gui_player_color_dark );
