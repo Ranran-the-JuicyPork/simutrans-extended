@@ -23,22 +23,22 @@
 using namespace script_api;
 
 
-void_t add_scenario_message_at(const char* text, koord pos)
+script_api::void_t add_scenario_message_at(const char* text, koord pos)
 {
 	if (text) {
 		message_t *msg = welt->get_message();
 		msg->add_message(text, pos, message_t::scenario, PLAYER_FLAG|welt->get_active_player()->get_player_nr());
 	}
-	return void_t();
+	return script_api::void_t();
 }
 
-void_t add_ai_message_at(player_t *player, const char* text, koord pos)
+script_api::void_t add_ai_message_at(player_t *player, const char* text, koord pos)
 {
 	if (text) {
 		message_t *msg = welt->get_message();
 		msg->add_message(text, pos, message_t::ai, PLAYER_FLAG|player->get_player_nr());
 	}
-	return void_t();
+	return script_api::void_t();
 }
 
 
@@ -51,7 +51,7 @@ call_tool_init add_scenario_message(player_t* player, const char* text)
 	return call_tool_init(TOOL_ADD_MESSAGE | SIMPLE_TOOL, (const char*)buf, 0, player ? player : welt->get_active_player());
 }
 
-void_t open_info_win_client(const char* tab, uint8 player_nr)
+script_api::void_t open_info_win_client(const char* tab, uint8 player_nr)
 {
 	if (env_t::server) {
 		// void network_send_all(network_command_t* nwc, bool exclude_us )
@@ -63,15 +63,15 @@ void_t open_info_win_client(const char* tab, uint8 player_nr)
 	else {
 		welt->get_scenario()->open_info_win(tab);
 	}
-	return void_t();
+	return script_api::void_t();
 }
 
-void_t open_info_win_at(const char* tab)
+script_api::void_t open_info_win_at(const char* tab)
 {
 	return open_info_win_client(tab, PLAYER_UNOWNED);
 }
 
-void_t open_info_win()
+script_api::void_t open_info_win()
 {
 	return open_info_win_client("", PLAYER_UNOWNED);
 }

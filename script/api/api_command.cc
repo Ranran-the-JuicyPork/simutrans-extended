@@ -269,10 +269,10 @@ uint8 get_flags(tool_t *tool)
 }
 
 
-void_t set_flags(tool_t *tool, uint8 flags)
+script_api::void_t set_flags(tool_t *tool, uint8 flags)
 {
 	tool->flags = flags & (tool_t::WFL_SHIFT | tool_t:: WFL_CTRL);
-	return void_t();
+	return script_api::void_t();
 }
 
 
