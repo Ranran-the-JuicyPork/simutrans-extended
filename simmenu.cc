@@ -125,7 +125,7 @@ tool_t *create_general_tool(int toolnr)
 		                           return NULL;
 	}
 	// check for right id (exception: TOOL_SLICED_AND_UNDERGROUND_VIEW)
-	assert(tool->get_id()  ==  (toolnr | GENERAL_TOOL)  ||  toolnr == TOOL_SLICED_AND_UNDERGROUND_VIEW  ||  toolnr == TOOL_REASSIGN_SIGNAL_DEPRECATED);
+	assert(tool->get_id()  ==  (toolnr | GENERAL_TOOL)  ||  toolnr == TOOL_SLICED_AND_UNDERGROUND_VIEW);
 	return tool;
 }
 
@@ -418,8 +418,7 @@ void tool_t::read_menu(const std::string &objfilename)
 			tool_t *tool = info[t].tools[i];
 			if(*str) {
 				// Check if tool is deprecated
-				if(  (  t==0  &&  i==TOOL_REASSIGN_SIGNAL_DEPRECATED  )
-				   || (  t==1  &&  ( i== TOOL_RECOLOUR_TOOL_DEPRECATED || i==TOOL_ACCESS_TOOL_DEPRECATED )  )  ) {
+				if(  (  t==1  &&  ( i== TOOL_RECOLOUR_TOOL_DEPRECATED || i==TOOL_ACCESS_TOOL_DEPRECATED )  )  ) {
 					// Do not warn if new id also appears in menuconf:
 					char new_id[256];
 					sprintf( new_id, "%s[%i]", info[t].type, tool->get_id()&0xFFF );

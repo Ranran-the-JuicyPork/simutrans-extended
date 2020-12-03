@@ -281,7 +281,7 @@ public:
 // open scripted-tools dialog
 class dialog_script_tool_t : public tool_t {
 public:
-	dialog_script_tool_t() : tool_t(DIALOG_SCRIPT_TOOL | DIALOGE_TOOL) {}
+	dialog_script_tool_t() : tool_t(DIALOG_SCRIPT_TOOL | DIALOG_TOOL) {}
 	char const* get_tooltip(player_t const*) const OVERRIDE{ return translator::translate("Load tool script"); }
 	bool is_selected() const OVERRIDE{ return win_get_magic(magic_load_t); }
 	bool init(player_t*) OVERRIDE{
@@ -290,7 +290,7 @@ public:
 		return false;
 	}
 	bool exit(player_t*) OVERRIDE{ destroy_win(magic_load_t); return false; }
-	bool is_init_network_save() const OVERRIDE{ return true; }
+	bool is_init_network_save() const { return true; }
 };
 
 // open scenario dialog
