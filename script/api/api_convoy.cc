@@ -281,6 +281,11 @@ void export_convoy(HSQUIRRELVM vm)
 	 * @returns array, index [0] corresponds to current month
 	 */
 	register_method_fv(vm, &get_convoy_stat, "get_way_tolls",         freevariable<sint32>(convoi_t::CONVOI_WAYTOLL), true );
+
+	register_method_fv(vm, &get_convoy_stat, "get_average_speed",     freevariable<sint32>(convoi_t::CONVOI_AVERAGE_SPEED), true );
+	register_method_fv(vm, &get_convoy_stat, "get_comfort",           freevariable<sint32>(convoi_t::CONVOI_COMFORT), true );
+	register_method_fv(vm, &get_convoy_stat, "get_refunds",           freevariable<sint32>(convoi_t::CONVOI_REFUNDS), true );
+
 	/**
 	 * @returns lifetime traveled distance of this convoy
 	 */
