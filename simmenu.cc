@@ -26,6 +26,8 @@
 #include "script/script_tool_manager.h"
 
 #include "descriptor/building_desc.h"
+#include "descriptor/bridge_desc.h"
+#include "descriptor/tunnel_desc.h"
 
 #include "boden/grund.h"
 #include "boden/wege/strasse.h"
