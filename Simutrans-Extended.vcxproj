@@ -1970,6 +1970,7 @@
     <ClCompile Include="display\simview.cc" />
     <ClCompile Include="display\viewport.cc" />
     <ClCompile Include="gui\ai_option_t.cc" />
+    <ClCompile Include="gui\ai_selector.cc" />
     <ClCompile Include="gui\components\gui_container.cc" />
     <ClCompile Include="gui\components\gui_convoiinfo.cc" />
     <ClCompile Include="gui\components\gui_factory_storage_info.cc" />
@@ -2559,6 +2560,7 @@
     <ClInclude Include="display\simview.h" />
     <ClInclude Include="display\viewport.h" />
     <ClInclude Include="gui\ai_option_t.h" />
+    <ClInclude Include="gui\ai_selector.h" />
     <ClInclude Include="gui\components\action_listener.h" />
     <ClInclude Include="gui\components\ding_view_t.h" />
     <ClInclude Include="gui\components\gui_action_creator.h" />
