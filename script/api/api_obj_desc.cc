@@ -352,6 +352,9 @@ void export_goods_desc(HSQUIRRELVM vm)
 	 * @returns a list of all available vehicles at the current in-game-time
 	 */
 	STATIC register_method(vm, &get_available_vehicles, "get_available_vehicles", false, true);
+
+	register_method(vm, &vehicle_desc_t::is_bidirectional, "is_bidirectional", true);
+
 	/**
 	 * Power of the vehicle. This value can be used in convoy_x::calc_max_speed.
 	 * It returns (power of vehicle in kW) * (gear value) * 64, where power and gear are as shown in-game.
@@ -370,10 +373,18 @@ void export_goods_desc(HSQUIRRELVM vm)
 	 * @returns capacity
 	 */
 	register_method(vm, &vehicle_desc_t::get_capacity, "get_capacity");
+	register_method(vm, &vehicle_desc_t::get_total_capacity, "get_total_capacity");
+	register_method(vm, &vehicle_desc_t::get_overcrowded_capacity, "get_overcrowded_capacity");
+
+	register_method(vm, &vehicle_desc_t::get_adjusted_comfort, "get_adjusted_comfort");
+
 	/**
 	 * @returns running cost in 1/100 credits per tile
 	 */
-	register_method(vm, &vehicle_desc_t::get_running_cost, "get_running_cost");
+	//register_method(vm, &vehicle_desc_t::get_running_cost, "get_running_cost"); //FIXME
+	register_method(vm, &vehicle_desc_t::get_adjusted_monthly_fixed_cost, "get_fixed_cost");
+	register_method(vm, &vehicle_desc_t::get_upgrade_price, "get_upgrade_price");
+
 	/**
 	 * @returns fixed cost in 1/100 credits per month
 	 */
@@ -638,7 +649,7 @@ void export_goods_desc(HSQUIRRELVM vm)
 	 * @param speedkmh actual achieved speed in km/h
 	 * @returns revenue
 	 */
-	register_method(vm, &ware_t::calc_revenue, "calc_revenue", true);
+	register_method(vm, &goods_desc_t::get_base_fare, "calc_revenue", true);
 	end_class(vm);
 
 	/**
