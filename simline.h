@@ -234,7 +234,7 @@ public:
 		}
 	}
 
-	static line_cost_t convoi_to_line_catgory(convoi_t::convoi_cost_t convoi_cost_type);
+	static line_cost_t convoi_to_line_catgory(int convoi_cost_type);
 
 	void new_month();
 

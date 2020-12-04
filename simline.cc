@@ -35,7 +35,7 @@ line_cost_t convoi_to_line_catgory_[convoi_t::MAX_CONVOI_COST] =
 	LINE_WAYTOLL
 };
 
-line_cost_t simline_t::convoi_to_line_catgory(convoi_t::convoi_cost_t cnv_cost)
+line_cost_t simline_t::convoi_to_line_catgory(int cnv_cost)
 {
 	assert(cnv_cost < convoi_t::MAX_CONVOI_COST);
 	return convoi_to_line_catgory_[cnv_cost];

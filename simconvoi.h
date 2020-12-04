@@ -70,19 +70,19 @@ struct route_range_specification
 class convoi_t : public sync_steppable, public overtaker_t, public lazy_convoy_t
 {
 public:
-	enum convoi_cost_t {			// Exp|Std|Description
-		CONVOI_CAPACITY = 0,		//  0 | 0 | the amount of ware that could be transported, theoretically
-		CONVOI_TRANSPORTED_GOODS,	//  1 | 1 | the amount of ware that has been transported
-		CONVOI_AVERAGE_SPEED,		//  2 |   | the average speed of the convoy per rolling month
-		CONVOI_COMFORT,				//  3 |   | the aggregate comfort rating of this convoy
-		CONVOI_REVENUE,				//  4 | 2 | the income this CONVOI generated
-		CONVOI_OPERATIONS,			//  5 | 3 | the cost of operations this CONVOI generated
-		CONVOI_PROFIT,				//  6 | 4 | total profit of this convoi
-		CONVOI_DISTANCE,			//  7 | 5 | total distance traveled this month
-		CONVOI_REFUNDS,				//  8 |   | the refunds passengers waiting for this convoy (only when not attached to a line) have received.
-//		CONVOI_MAXSPEED,			//    | 6 | average max. possible speed
-		CONVOI_WAYTOLL,				//  9 | 7 |
-		MAX_CONVOI_COST				// 10 | 8 |
+	enum {                          // Exp|Std|Description
+		CONVOI_CAPACITY = 0,        //  0 | 0 | the amount of ware that could be transported, theoretically
+		CONVOI_TRANSPORTED_GOODS,   //  1 | 1 | the amount of ware that has been transported
+		CONVOI_AVERAGE_SPEED,       //  2 |   | the average speed of the convoy per rolling month
+		CONVOI_COMFORT,             //  3 |   | the aggregate comfort rating of this convoy
+		CONVOI_REVENUE,             //  4 | 2 | the income this CONVOI generated
+		CONVOI_OPERATIONS,          //  5 | 3 | the cost of operations this CONVOI generated
+		CONVOI_PROFIT,              //  6 | 4 | total profit of this convoi
+		CONVOI_DISTANCE,            //  7 | 5 | total distance traveled this month
+		CONVOI_REFUNDS,             //  8 |   | the refunds passengers waiting for this convoy (only when not attached to a line) have received.
+//		CONVOI_MAXSPEED,            //    | 6 | average max. possible speed
+		CONVOI_WAYTOLL,             //  9 | 7 |
+		MAX_CONVOI_COST             // 10 | 8 |
 	};
 
 	/** Constants */
@@ -1242,7 +1242,7 @@ public:
 	* book a certain amount into the convois financial history
 	* is called from vehicle during un/load
 	*/
-	void book(sint64 amount, convoi_cost_t cost_type);
+	void book(sint64 amount, int cost_type);
 
 	/**
 	* return a pointer to the financial history
@@ -1252,8 +1252,8 @@ public:
 	/**
 	* return a specified element from the financial history
 	*/
-	inline sint64 get_finance_history(int month, convoi_cost_t cost_type) const { return financial_history[month][cost_type]; }
-	sint64 get_stat_converted(int month, convoi_cost_t cost_type) const;
+	inline sint64 get_finance_history(int month, int cost_type) const { return financial_history[month][cost_type]; }
+	sint64 get_stat_converted(int month, int cost_type) const;
 
 	/**
 	* only purpose currently is to roll financial history

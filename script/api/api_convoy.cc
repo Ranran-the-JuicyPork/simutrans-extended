@@ -32,7 +32,7 @@ waytype_t get_convoy_wt(convoi_t* cnv)
 }
 
 
-vector_tpl<sint64> const& get_convoy_stat(convoi_t* cnv, convoi_t::convoi_cost_t INDEX)
+vector_tpl<sint64> const& get_convoy_stat(convoi_t* cnv, sint32 INDEX)
 {
 	static vector_tpl<sint64> v;
 	v.clear();

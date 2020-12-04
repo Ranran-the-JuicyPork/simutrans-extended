@@ -6363,7 +6363,7 @@ void convoi_t::dump() const
 }
 
 
-void convoi_t::book(sint64 amount, convoi_cost_t cost_type)
+void convoi_t::book(sint64 amount, int cost_type)
 {
 	assert(  cost_type<MAX_CONVOI_COST);
 
@@ -8156,7 +8156,7 @@ void convoi_t::clear_departures()
 	clear_estimated_times();
 }
 
-sint64 convoi_t::get_stat_converted(int month, convoi_cost_t cost_type) const
+sint64 convoi_t::get_stat_converted(int month, int cost_type) const
 {
 	sint64 value = financial_history[month][cost_type];
 	switch(cost_type) {
