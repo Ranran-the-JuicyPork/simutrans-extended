@@ -33,7 +33,6 @@
 #include "simmesg.h"
 #include "simskin.h"
 #include "simsound.h"
-#include "sys/simsys.h"
 #include "simticker.h"
 #include "simunits.h"
 #include "simversion.h"
@@ -41,8 +40,7 @@
 #include "simtool-scripted.h"
 #include "gui/simwin.h"
 #include "simworld.h"
-
-#include "vehicle/simpeople.h"
+#include "sys/simsys.h"
 
 #include "tpl/vector_tpl.h"
 #include "tpl/binary_heap_tpl.h"
@@ -55,6 +53,7 @@
 #include "old_blockmanager.h"
 #include "vehicle/simvehicle.h"
 #include "vehicle/simroadtraffic.h"
+#include "vehicle/simpeople.h"
 #include "vehicle/movingobj.h"
 #include "boden/wege/schiene.h"
 
@@ -80,6 +79,7 @@
 #include "network/network_file_transfer.h"
 #include "network/network_socket_list.h"
 #include "network/network_cmd_ingame.h"
+
 #include "dataobj/height_map_loader.h"
 #include "dataobj/ribi.h"
 #include "dataobj/translator.h"
@@ -102,7 +102,6 @@
 #include "bauer/wegbauer.h"
 #include "bauer/hausbauer.h"
 #include "bauer/vehikelbauer.h"
-#include "bauer/hausbauer.h"
 #include "bauer/goods_manager.h"
 
 #include "descriptor/ground_desc.h"
@@ -117,6 +116,7 @@
 #include "player/finance.h"
 #include "player/ai_passenger.h"
 #include "player/ai_goods.h"
+#include "player/ai_scripted.h"
 
 #include "dataobj/tabfile.h" // For reload of simuconf.tab to override savegames
 
