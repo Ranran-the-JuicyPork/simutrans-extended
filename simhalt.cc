@@ -2895,7 +2895,7 @@ uint32 haltestelle_t::get_ware_fuer_zielpos(const goods_desc_t *wtyp, const koor
 }
 
 
-uint32 haltestelle_t::get_ware_fuer_zwischenziel(const ware_besch_t *wtyp, const halthandle_t zwischenziel) const
+uint32 haltestelle_t::get_ware_fuer_zwischenziel(const goods_desc_t *wtyp, const halthandle_t zwischenziel) const
 {
 	uint32 sum = 0;
 	const vector_tpl<ware_t> * warray = waren[wtyp->get_catg_index()];
