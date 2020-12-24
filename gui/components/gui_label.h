@@ -200,9 +200,9 @@ private:
 	const char * tooltip;
 
 public:
-	gui_heading_t(const char* text = NULL, PIXVAL text_color = SYSCOL_TEXT_HIGHLIGHT, PIXVAL frame_color = SYSCOL_TEXT, uint8 style = 0);
+	gui_heading_t(const char* text = NULL, PIXVAL text_color = SYSCOL_HEADING_TEXT, PIXVAL frame_color = SYSCOL_HEADING_FRAME, uint8 style = 0);
 
-	void init(const char* text_par, scr_coord pos_par, PIXVAL color_par = SYSCOL_TEXT_HIGHLIGHT, PIXVAL frame_color_par = SYSCOL_TEXT, uint8 style_par = 0) {
+	void init(const char* text_par, scr_coord pos_par, PIXVAL color_par = SYSCOL_HEADING_TEXT, PIXVAL frame_color_par = SYSCOL_HEADING_FRAME, uint8 style_par = 0) {
 		set_pos(pos_par);
 		set_text(text_par);
 		set_text_color(color_par);

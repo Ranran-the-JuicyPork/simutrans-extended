@@ -252,6 +252,8 @@ public:
 	static PIXVAL gui_color_empty;                        //@< Color for empty entries
 	static PIXVAL gui_color_up_pointing_triangle;         //@< (EX unique) Color to draw an upward triangle indicating an increase in the number
 	static PIXVAL gui_color_down_pointing_triangle;       //@< (EX unique) Color to draw an downward triangle indicating an decrease in the number
+	static PIXVAL gui_color_heading_text;                 //@< (EX unique) Text color of headings whose text color is not specified
+	static PIXVAL gui_color_heading_frame;                //@< (EX unique) Frame color of headings whose frame color is not specified
 
 	/// @}
 

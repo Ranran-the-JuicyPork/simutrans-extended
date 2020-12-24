@@ -65,6 +65,8 @@ PIXVAL gui_theme_t::gui_color_out_of_production;
 PIXVAL gui_theme_t::gui_color_empty;
 PIXVAL gui_theme_t::gui_color_up_pointing_triangle;
 PIXVAL gui_theme_t::gui_color_down_pointing_triangle;
+PIXVAL gui_theme_t::gui_color_heading_text;
+PIXVAL gui_theme_t::gui_color_heading_frame;
 
 /**
  * Max Kielland
@@ -194,6 +196,8 @@ void gui_theme_t::init_gui_defaults()
 
 	gui_color_up_pointing_triangle         = color_idx_to_rgb(COL_LIGHT_TURQUOISE);
 	gui_color_down_pointing_triangle       = color_idx_to_rgb(COL_LIGHT_ORANGE-2);
+	gui_color_heading_text                 = gui_color_text;
+	gui_color_heading_frame                = color_idx_to_rgb(COL_SOFT_BLUE);
 
 	env_t::gui_player_color_bright = 4;
 	env_t::gui_player_color_dark   = 1;

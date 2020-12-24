@@ -200,6 +200,8 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define SYSCOL_EMPTY                        gui_theme_t::gui_color_empty
 #define SYSCOL_UP_TRIANGLE                  gui_theme_t::gui_color_up_pointing_triangle
 #define SYSCOL_DOWN_TRIANGLE                gui_theme_t::gui_color_down_pointing_triangle
+#define SYSCOL_HEADING_TEXT                 gui_theme_t::gui_color_heading_text
+#define SYSCOL_HEADING_FRAME                gui_theme_t::gui_color_heading_frame
 
 // Customer evaluation colors
 // TODO: These colors can be changed by theme or pakset (Should be considered together with the symbol design)
