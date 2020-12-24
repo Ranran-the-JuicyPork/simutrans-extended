@@ -37,6 +37,14 @@ gui_text_highlight= #FFFFFF
 #gui_color_button_text_offset = top, left, bottom, right
 #gui_button_text_offset = top, left, bottom, right
 
+################################extended stuff################################
+#gui_color_up_pointing_triangle = #008000
+#gui_color_down_pointing_triangle = #FF3333
+
+gui_color_heading_text = #333333
+gui_color_heading_text_highlight = #FFFFFF
+gui_color_heading_frame = #666666
+
 ##################################window stuff##################################
 
 # when moving, you can use windows to snap onto each other seamlessly

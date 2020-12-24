@@ -201,6 +201,7 @@ typedef unsigned int FLAGGED_PIXVAL;
 #define SYSCOL_UP_TRIANGLE                  gui_theme_t::gui_color_up_pointing_triangle
 #define SYSCOL_DOWN_TRIANGLE                gui_theme_t::gui_color_down_pointing_triangle
 #define SYSCOL_HEADING_TEXT                 gui_theme_t::gui_color_heading_text
+#define SYSCOL_HEADING_TEXT_HIGHLIGHT       gui_theme_t::gui_color_heading_text_highlight
 #define SYSCOL_HEADING_FRAME                gui_theme_t::gui_color_heading_frame
 
 // Customer evaluation colors

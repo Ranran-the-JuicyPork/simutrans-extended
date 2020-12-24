@@ -66,6 +66,7 @@ PIXVAL gui_theme_t::gui_color_empty;
 PIXVAL gui_theme_t::gui_color_up_pointing_triangle;
 PIXVAL gui_theme_t::gui_color_down_pointing_triangle;
 PIXVAL gui_theme_t::gui_color_heading_text;
+PIXVAL gui_theme_t::gui_color_heading_text_highlight;
 PIXVAL gui_theme_t::gui_color_heading_frame;
 
 /**
@@ -197,7 +198,8 @@ void gui_theme_t::init_gui_defaults()
 	gui_color_up_pointing_triangle         = color_idx_to_rgb(COL_LIGHT_TURQUOISE);
 	gui_color_down_pointing_triangle       = color_idx_to_rgb(COL_LIGHT_ORANGE-2);
 	gui_color_heading_text                 = gui_color_text;
-	gui_color_heading_frame                = color_idx_to_rgb(COL_SOFT_BLUE);
+	gui_color_heading_text_highlight       = gui_color_text_highlight;
+	gui_color_heading_frame                = color_idx_to_rgb(MN_GREY1);
 
 	env_t::gui_player_color_bright = 4;
 	env_t::gui_player_color_dark   = 1;
@@ -546,6 +548,9 @@ bool gui_theme_t::themes_init(const char *file_name, bool init_fonts, bool init_
 	gui_theme_t::gui_color_empty                        = (PIXVAL)contents.get_color("gui_color_empty", SYSCOL_EMPTY);
 	gui_theme_t::gui_color_up_pointing_triangle         = (PIXVAL)contents.get_color("gui_color_up_pointing_triangle", SYSCOL_UP_TRIANGLE);
 	gui_theme_t::gui_color_down_pointing_triangle       = (PIXVAL)contents.get_color("gui_color_down_pointing_triangle", SYSCOL_DOWN_TRIANGLE);
+	gui_theme_t::gui_color_heading_text                 = (PIXVAL)contents.get_color("gui_color_heading_text", SYSCOL_DOWN_TRIANGLE);
+	gui_theme_t::gui_color_heading_text_highlight       = (PIXVAL)contents.get_color("gui_color_heading_text_highlight", SYSCOL_DOWN_TRIANGLE);
+	gui_theme_t::gui_color_heading_frame                = (PIXVAL)contents.get_color("gui_color_heading_frame", SYSCOL_DOWN_TRIANGLE);
 
 	gui_theme_t::gui_waitingbar_width = (uint32)contents.get_int("gui_waitingbar_width", gui_theme_t::gui_waitingbar_width);
 

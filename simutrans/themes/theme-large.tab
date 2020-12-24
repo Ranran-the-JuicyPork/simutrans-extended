@@ -119,8 +119,13 @@ gui_color_loadingbar_inner = #D6ECF7
 gui_player_color_dark = 1
 gui_player_color_bright = 3
 
+################################extended stuff################################
 gui_color_up_pointing_triangle = #008000
 gui_color_down_pointing_triangle = #FF3333
+
+gui_color_heading_text = #005C9E
+gui_color_heading_text_highlight = #FFFFFF
+gui_color_heading_frame = #338FCC
 
 ##################################size stuff##################################
 
