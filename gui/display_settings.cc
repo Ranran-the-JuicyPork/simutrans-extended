@@ -238,7 +238,7 @@ void gui_settings_t::draw(scr_coord offset)
 map_settings_t::map_settings_t()
 {
 	set_table_layout( 1, 0 );
-	new_component<gui_label_t>("Grid");
+	new_component<gui_heading_t>("Grid", SYSCOL_HEADING_TEXT, SYSCOL_HEADING_FRAME, 3);
 	add_table(3,0);
 	{
 		// Show grid checkbox
@@ -273,7 +273,7 @@ map_settings_t::map_settings_t()
 	}
 	end_table();
 
-	new_component<gui_label_t>("Brightness");
+	new_component<gui_heading_t>("Brightness", SYSCOL_HEADING_TEXT, SYSCOL_HEADING_FRAME, 3);
 	add_table(3, 0);
 	{
 		// Day/night change checkbox
@@ -293,7 +293,7 @@ map_settings_t::map_settings_t()
 	}
 	end_table();
 
-	new_component<gui_label_t>("Map scroll");
+	new_component<gui_heading_t>("Map scroll", SYSCOL_HEADING_TEXT, SYSCOL_HEADING_FRAME, 3);
 	add_table(3, 0);
 	{
 		// Scroll inverse checkbox
@@ -320,7 +320,7 @@ map_settings_t::map_settings_t()
 	end_table();
 	new_component<gui_divider_t>();
 
-	new_component<gui_label_t>("transparencies");
+	new_component<gui_heading_t>("transparencies", SYSCOL_HEADING_TEXT, SYSCOL_HEADING_FRAME, 3);
 	add_table(3, 0);
 	{
 		// Transparent instead of hidden checkbox
@@ -409,7 +409,7 @@ label_settings_t::label_settings_t()
 	add_component(buttons + IDBTN_SHOW_SIGNALBOX_COVERAGE);
 	new_component<gui_divider_t>();
 
-	new_component<gui_label_t>("Station display");
+	new_component<gui_heading_t>("Station display", SYSCOL_HEADING_TEXT, SYSCOL_HEADING_FRAME, 3);
 	add_table(5, 0);
 	{
 		// Transparent station coverage
@@ -476,7 +476,7 @@ label_settings_t::label_settings_t()
 
 	new_component<gui_divider_t>();
 
-	new_component<gui_label_t>("Convoy tooltips");
+	new_component<gui_heading_t>("Convoy tooltips", SYSCOL_HEADING_TEXT, SYSCOL_HEADING_FRAME, 3);
 	add_table(3,0);
 	{
 		// Convoy nameplate
