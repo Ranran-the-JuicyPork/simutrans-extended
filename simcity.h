@@ -174,11 +174,11 @@ private:
 	// this counter will increment by one for every change => dialogs can question, if they need to update map
 	uint32 pax_destinations_new_change;
 
-	koord pos;				// Gruendungsplanquadrat der City ("founding grid square" - Google)
-	koord townhall_road;	// road in front of townhall
-	koord lo, ur;			// max size of housing area
+	koord pos;             // Gruendungsplanquadrat der City ("founding grid square" - Google)
+	koord townhall_road;   // road in front of townhall
+	koord lo, ur;          // max size of housing area
 
-	bool allow_citygrowth;	// Whether growth is permitted (true by default)
+	bool allow_citygrowth; // Whether growth is permitted (true by default)
 
 	bool has_townhall;
 
@@ -268,7 +268,7 @@ private:
 	// Key: city (etc.) location
 	// Value: journey time per tile (equiv. straight line distance)
 	// (in 10ths of minutes); UINT32_MAX_VALUE = unreachable.
-	typedef koordhashtable_tpl<koord, uint32> connexion_map;
+	typedef koordhashtable_tpl<koord, uint32, N_BAGS_MEDIUM> connexion_map;
 	connexion_map connected_cities;
 	connexion_map connected_industries;
 	connexion_map connected_attractions;
@@ -513,6 +513,7 @@ public:
 	sint32 get_city_visitor_demand() const { return (sint32) city_history_month[0][HIST_VISITOR_DEMAND]; }
 
 	uint32 get_buildings()  const { return buildings.get_count(); }
+	uint32 get_population_by_class(uint8 p_class);
 	sint32 get_unemployed() const { return bev - arb; }
 	sint32 get_homeless()   const { return bev - won; }
 

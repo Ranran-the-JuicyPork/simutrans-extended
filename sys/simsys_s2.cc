@@ -21,9 +21,10 @@ extern int __argc;
 extern char **__argv;
 #endif
 
-#include "../macros.h"
 #include "simsys_w32_png.h"
 #include "simsys.h"
+
+#include "../macros.h"
 #include "../simversion.h"
 #include "../simevent.h"
 #include "../display/simgraph.h"
@@ -32,6 +33,7 @@ extern char **__argv;
 #include "../gui/simwin.h"
 #include "../gui/components/gui_component.h"
 #include "../gui/components/gui_textinput.h"
+
 
 // Maybe Linux is not fine too, had critical bugs...
 #if !defined(__linux__)
@@ -653,6 +655,7 @@ static void internal_GetEvents(bool const wait)
 				case SDLK_RIGHT:      code = SIM_KEY_RIGHT;                 break;
 				case SDLK_UP:         code = SIM_KEY_UP;                    break;
 				case SDLK_PAUSE:      code = SIM_KEY_PAUSE;                 break;
+				case SDLK_SCROLLLOCK: code = SIM_KEY_SCROLLLOCK;            break;
 				default: {
 					// Handle CTRL-keys. SDL_TEXTINPUT event handles regular input
 					if(  (sys_event.key_mod & 2)  &&  SDLK_a <= sym  &&  sym <= SDLK_z  ) {

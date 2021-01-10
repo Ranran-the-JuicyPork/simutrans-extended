@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <tuple>
 
 #include "../../tpl/slist_tpl.h"
 
@@ -57,6 +58,7 @@ static pthread_mutexattr_t mutex_attributes;
  */
 vector_tpl <weg_t *> alle_wege;
 
+static slist_tpl<std::tuple<weg_t*, uint32, uint32>> pending_road_travel_time_updates;
 /**
  * Get list of all ways
  */
@@ -712,11 +714,10 @@ void weg_t::info(cbuffer_t & buf) const
 	if (wtyp == air_wt && desc->get_styp() == type_runway)
 	{
 		runway_directions run_dirs = get_runway_directions();
-		const double km_per_tile = welt->get_settings().get_meters_per_tile();
 
 		if(run_dirs.runway_36_18)
 		{
-			const double runway_meters_36_18 = (double)get_runway_length(true) * km_per_tile;
+			const double runway_meters_36_18 = welt->tiles_to_km(get_runway_length(true))*1000.0;
 
 			buf.printf("%s: ", translator::translate("runway_36/18"));
 			buf.append(runway_meters_36_18);
@@ -725,7 +726,7 @@ void weg_t::info(cbuffer_t & buf) const
 		}
 		if(run_dirs.runway_9_27)
 		{
-			const double runway_meters_09_27 = (double)get_runway_length(false) * km_per_tile;
+			const double runway_meters_09_27 = welt->tiles_to_km(get_runway_length(false))*1000.0;
 
 			buf.printf("%s: ", translator::translate("runway_09/27"));
 			buf.append(runway_meters_09_27);
@@ -1959,4 +1960,23 @@ void weg_t::remove_private_car_route(koord destination, bool reading_set)
 	(void)error;
 #endif
 
+}
+void weg_t::add_travel_time_update(weg_t* w, uint32 actual, uint32 ideal) {
+	pending_road_travel_time_updates.append(std::make_tuple(w, actual, ideal));
+}
+
+void weg_t::apply_travel_time_updates() {
+	while(!pending_road_travel_time_updates.empty() ) {
+		weg_t* str;
+		uint32 actual;
+		uint32 ideal;
+		std::tie(str, actual, ideal) = pending_road_travel_time_updates.remove_first();
+		if(str) {
+			str->update_travel_times(actual,ideal);
+		}
+	}
+}
+
+void weg_t::clear_travel_time_updates() {
+	pending_road_travel_time_updates.clear();
 }

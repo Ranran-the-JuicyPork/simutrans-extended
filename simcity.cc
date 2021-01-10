@@ -59,6 +59,7 @@
 #include "bauer/brueckenbauer.h"
 #include "bauer/hausbauer.h"
 #include "bauer/fabrikbauer.h"
+#include "bauer/goods_manager.h"
 #include "utils/cbuffer_t.h"
 #include "utils/simrandom.h"
 #include "utils/simstring.h"
@@ -2852,7 +2853,7 @@ void stadt_t::calc_growth()
 
 	FOR(const vector_tpl<fabrik_t*>, const& fab, welt->get_fab_list())
 	{
-		if(fab && fab->get_city() == this && fab->get_lieferziele().empty() && !fab->get_suppliers().empty())
+		if(fab && fab->get_city() == this && fab->get_consumers().empty() && !fab->get_suppliers().empty())
 		{
 			// consumer => check for it storage
 			const factory_desc_t *const desc = fab->get_desc();
@@ -2860,7 +2861,7 @@ void stadt_t::calc_growth()
 			{
 				city_history_month[0][HIST_GOODS_NEEDED] ++;
 				city_history_year[0][HIST_GOODS_NEEDED] ++;
-				if(  fab->input_vorrat_an( desc->get_supplier(i)->get_input_type() )>0  )
+				if(fab->count_input_stock(desc->get_supplier(i)->get_input_type()) > 0  )
 				{
 					city_history_month[0][HIST_GOODS_RECEIVED] ++;
 					city_history_year[0][HIST_GOODS_RECEIVED] ++;
@@ -4850,6 +4851,19 @@ void stadt_t::add_building_to_list(gebaeude_t* building, bool ordered, bool do_n
 		welt->add_building_to_world_list(building, ordered);
 	}
 }
+
+
+uint32 stadt_t::get_population_by_class(uint8 p_class)
+{
+	uint32 sum = 0;
+	for (weighted_vector_tpl<gebaeude_t*>::const_iterator i = buildings.begin(); i != buildings.end(); ++i)
+	{
+		gebaeude_t* building = *i;
+		sum += building->get_adjusted_population_by_class(p_class);
+	}
+	return sum;
+}
+
 
 void stadt_t::add_all_buildings_to_world_list()
 {

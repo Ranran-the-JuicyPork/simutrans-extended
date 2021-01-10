@@ -1253,7 +1253,7 @@ public:
 	 */
 	void call_change_player_tool(uint8 cmd, uint8 player_nr, uint16 param, bool scripted_call=false);
 
-	enum change_player_tool_cmds { new_player=1, toggle_freeplay=2, delete_player=3 };
+	enum change_player_tool_cmds { new_player=1, toggle_freeplay=2, delete_player=3, toggle_player_active=4 };
 	/**
 	 * @param exec If false checks whether execution is allowed, if true executes tool.
 	 * @returns Whether execution is allowed.
@@ -1591,6 +1591,10 @@ public:
 		return seconds_to_ticks(seconds, get_settings().get_meters_per_tile());
 	}
 #endif
+	inline double tiles_to_km(uint32 tiles) const
+	{
+		return (double)tiles * get_settings().get_meters_per_tile() / 1000.0;
+	}
 	/**
 	* Adds a single tile of a building to the relevant world list for passenger
 	* and mail generation purposes
@@ -2693,7 +2697,7 @@ public:
 
 private:
 
-	void calc_generic_road_time_per_tile_city() { generic_road_time_per_tile_city = calc_generic_road_time_per_tile(city_road); }
+	void calc_generic_road_time_per_tile_city() { generic_road_time_per_tile_city = calc_generic_road_time_per_tile(NULL); }
 	void calc_generic_road_time_per_tile_intercity();
 	void calc_max_road_check_depth();
 

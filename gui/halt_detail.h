@@ -7,23 +7,27 @@
 #define GUI_HALT_DETAIL_H
 
 
-#include "components/gui_textarea.h"
+#include "../simfab.h"
+#include "../simline.h"
+#include "../halthandle_t.h"
+#include "../utils/cbuffer_t.h"
+
+#include "../player/simplay.h"
 
 #include "gui_frame.h"
+#include "simwin.h"
+#include "halt_info.h"
 #include "components/gui_scrollpane.h"
 #include "components/gui_label.h"
 #include "components/gui_tab_panel.h"
+#include "components/gui_textarea.h"
 #include "components/gui_container.h"
 #include "components/action_listener.h"
 #include "components/gui_button.h"
 #include "components/gui_halthandled_lines.h"
 
-#include "../halthandle_t.h"
-#include "../utils/cbuffer_t.h"
-#include "../gui/simwin.h"
-#include "../simfab.h"
-
 class player_t;
+class gui_halt_waiting_indicator_t;
 
 
 // tab1 - pax and mail
@@ -87,7 +91,110 @@ public:
 	void draw(scr_coord offset) OVERRIDE;
 };
 
+class gui_halt_service_info_t : public gui_aligned_container_t
+{
+	/**
+     * Button to open line window
+     */
+	class gui_line_button_t : public button_t, public action_listener_t
+	{
+		linehandle_t line;
+	public:
+		gui_line_button_t(linehandle_t line) : button_t()
+		{
+			this->line = line;
+			init(button_t::posbutton, NULL);
+			add_listener(this);
+		}
 
+		bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE
+		{
+			player_t *player = world()->get_active_player();
+			if (player == line->get_owner()) {
+				player->simlinemgmt.show_lineinfo(player, line);
+			}
+			return true;
+		}
+
+		void draw(scr_coord offset) OVERRIDE
+		{
+			if (line->get_owner() == world()->get_active_player()) {
+				button_t::draw(offset);
+			}
+		}
+	};
+	/**
+	 * Button to open convoi window
+	 */
+	class gui_convoi_button_t : public button_t, public action_listener_t
+	{
+		convoihandle_t convoi;
+	public:
+		gui_convoi_button_t(convoihandle_t convoi) : button_t() {
+			this->convoi = convoi;
+			init(button_t::posbutton, NULL);
+			add_listener(this);
+		}
+
+		bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE {
+			convoi->show_info();
+			return true;
+		}
+	};
+
+private:
+	gui_aligned_container_t container;
+	gui_scrollpane_t scrolly;
+
+	halthandle_t halt;
+
+	uint32 cached_line_count;
+	uint32 cached_convoy_count;
+
+	void insert_show_nothing() {
+		new_component<gui_empty_t>();
+		new_component<gui_label_t>("keine", SYSCOL_TEXT_INACTIVE);
+	}
+
+public:
+	gui_halt_service_info_t( halthandle_t halt = halthandle_t() );
+
+	void init(halthandle_t halt);
+
+	void update_connections(halthandle_t halt);
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	// FIXME
+	//scr_size get_min_size() const OVERRIDE { return get_size(); }
+	//scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+class gui_halt_route_info_t : public gui_world_component_t
+{
+private:
+	halthandle_t halt;
+
+	vector_tpl<halthandle_t> halt_list;
+	uint32 line_selected;
+
+	uint8 selected_route_catg_index = goods_manager_t::INDEX_PAS;
+	uint8 selected_class = 255;
+	bool station_display_mode;
+
+	void draw_list_by_catg(scr_coord offset);
+	void draw_list_by_dest(scr_coord offset);
+
+public:
+	gui_halt_route_info_t(const halthandle_t& halt, uint8 catg_index, bool station_mode = false);
+
+	void build_halt_list(uint8 catg_index, uint8 g_class = 255, bool station_mode = false);
+	bool infowin_event(event_t const *ev) OVERRIDE;
+
+	void recalc_size();
+
+	void draw(scr_coord offset) OVERRIDE;
+};
 
 class halt_detail_t : public gui_frame_t, action_listener_t
 {
@@ -102,27 +209,31 @@ private:
 	static sint16 tabstate;
 	bool show_pas_info, show_freight_info;
 
-	cbuffer_t buf;
-
 	gui_halthandled_lines_t line_number;
+	gui_halt_waiting_indicator_t *waiting_bar;
 	halt_detail_pas_t pas;
 	halt_detail_goods_t goods;
-	gui_textarea_t txt_info;
-	gui_container_t cont, cont_goods;
-	gui_scrollpane_t scrolly_pas, scrolly_goods;
-	gui_label_t lb_nearby_factory;
+	gui_container_t cont_goods, cont_desinations;
+	gui_aligned_container_t cont_route;
+	gui_halt_service_info_t cont_service;
+	gui_scrollpane_t scrolly_pas, scrolly_goods, scrolly_service, scrolly_route;
+	gui_label_t lb_selected_route_catg;
+	gui_heading_t lb_nearby_factory, lb_routes, lb_serve_catg;
 
 	gui_halt_nearby_factory_info_t nearby_factory;
 	gui_tab_panel_t tabs;
-	gui_scrollpane_t scrolly;
 
-
-	slist_tpl<button_t *>posbuttons;
-	slist_tpl<gui_label_t *>linelabels;
-	slist_tpl<button_t *>linebuttons;
-	slist_tpl<gui_label_t *> convoylabels;
-	slist_tpl<button_t *> convoybuttons;
-	slist_tpl<char*> label_names;
+	// route tab stuffs
+	gui_halt_route_info_t destinations;
+	bool list_by_station = false;
+	button_t bt_by_category, bt_by_station;
+	slist_tpl<button_t *>catg_buttons, pas_class_buttons, mail_class_buttons;
+	char *pass_class_name_untranslated[32];
+	char *mail_class_name_untranslated[32];
+	uint8 selected_route_catg_index = goods_manager_t::INDEX_NONE;
+	uint8 selected_class = 0;
+	// Opening and closing the button panel on the route tab
+	void open_close_catg_buttons();
 
 	bool has_min_sizer() const OVERRIDE { return true; }
 
@@ -131,11 +242,9 @@ private:
 	void set_tab_opened();
 
 public:
-	halt_detail_t(halthandle_t halt);
+	halt_detail_t(halthandle_t halt = halthandle_t());
 
 	~halt_detail_t();
-
-	void halt_detail_info();
 
 	void init();
 
@@ -154,9 +263,6 @@ public:
 
 	// only defined to update schedule, if changed
 	void draw( scr_coord pos, scr_size size ) OVERRIDE;
-
-	// this constructor is only used during loading
-	halt_detail_t();
 
 	void rdwr( loadsave_t *file ) OVERRIDE;
 

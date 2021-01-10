@@ -82,7 +82,7 @@ void traffic_vehicle_t::flush_travel_times(strasse_t* str)
 {
 	if(get_max_speed() && str->get_max_speed() && dist_travelled_since_last_hop > (128 << YARDS_PER_VEHICLE_STEP_SHIFT))
 	{
-		str->update_travel_times(world()->get_ticks() - time_at_last_hop, dist_travelled_since_last_hop / min(get_max_speed(), kmh_to_speed(str->get_max_speed())));
+		weg_t::add_travel_time_update(str, world()->get_ticks() - time_at_last_hop, dist_travelled_since_last_hop / min(get_max_speed(), kmh_to_speed(str->get_max_speed())));
 	}
 	reset_measurements();
 }
@@ -3722,6 +3722,7 @@ bool road_vehicle_t::choose_route(sint32 &restart_speed, ribi_t::ribi start_dire
 bool road_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uint8 second_check_count)
 {
 	// check for traffic lights (only relevant for the first car in a convoi)
+	assert(cnv->get_state() != convoi_t::ROUTING_1 && cnv->get_state() != convoi_t::ROUTING_2);
 	if(  leading  ) {
 		// no further check, when already entered a crossing (to allow leaving it)
 		if(  !second_check_count  ) {
@@ -4818,8 +4819,6 @@ int rail_vehicle_t::get_cost(const grund_t *gr, const sint32 max_speed, koord fr
 		return 9999;
 	}
 
-	const koord to_pos = gr->get_pos().get_2d();
-
 	// add cost for going (with maximum speed, cost is 10)
 	const sint32 max_tile_speed = w->get_max_speed();
 	int costs = (max_speed <= max_tile_speed) ? 10 : 40 - (30 * max_tile_speed) / max_speed;
@@ -4830,10 +4829,10 @@ int rail_vehicle_t::get_cost(const grund_t *gr, const sint32 max_speed, koord fr
 
 	// effect of slope
 	if(  gr->get_weg_hang()!=0  ) {
-		// check if the slope is upwards, relative to the previous tile
-		const koord before_from_pos = from_pos - to_pos;
+		// check if the slope is upwards relative to the previous tile
+		from_pos -= gr->get_pos().get_2d();
 		// 125 hardcoded, see get_cost_upslope()
-		costs += 125 * slope_t::get_sloping_upwards( gr->get_weg_hang(), before_from_pos.x, before_from_pos.y );
+		costs += 125 * slope_t::get_sloping_upwards( gr->get_weg_hang(), from_pos.x, from_pos.y );
 	}
 
 	// Strongly prefer routes for which the vehicle is not overweight.
@@ -4844,17 +4843,12 @@ int rail_vehicle_t::get_cost(const grund_t *gr, const sint32 max_speed, koord fr
 		costs += 400;
 	}
 
-	// Slightly discourage passing signals from behind (opposite to the intended direction of travel)
-	if(w->get_signal(ribi_type(to_pos, from_pos)))
-	{
-		costs += 10;
-	}
-
 	if(w->is_diagonal())
 	{
 		// Diagonals are a *shorter* distance.
 		costs = (costs * 5) / 7; // was: costs /= 1.4
 	}
+
 
 	return costs;
 }
@@ -5073,6 +5067,7 @@ sint32 rail_vehicle_t::activate_choose_signal(const uint16 start_block, uint16 &
 bool rail_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uint8)
 {
 	assert(leading);
+	assert(cnv->get_state() != convoi_t::ROUTING_1 && cnv->get_state() != convoi_t::ROUTING_2);
 	cnv = get_convoi(); // This should not be necessary, but for some unfathomable reason, cnv is sometimes not equal to get_convoi(), even though get_convoi() just returns cnv (!?!)
 	uint16 next_signal = INVALID_INDEX;
 	schedule_entry_t destination = cnv->get_schedule()->get_current_entry();
@@ -9053,6 +9048,7 @@ bool air_vehicle_t::can_enter_tile(const grund_t *gr, sint32 &restart_speed, uin
 {
 	restart_speed = -1;
 
+	assert(cnv->get_state() != convoi_t::ROUTING_1 && cnv->get_state() != convoi_t::ROUTING_2);
 	assert(gr);
 
 	if(gr->get_top()>250) {

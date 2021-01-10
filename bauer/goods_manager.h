@@ -18,7 +18,7 @@ class goods_desc_t;
 class goods_manager_t
 {
 private:
-	static stringhashtable_tpl<const goods_desc_t *> desc_names;
+	static stringhashtable_tpl<const goods_desc_t *, N_BAGS_MEDIUM> desc_names;
 	static vector_tpl<goods_desc_t *> goods;
 
 	static goods_desc_t *load_passengers;
@@ -29,7 +29,11 @@ private:
 	static uint8 max_catg_index;
 
 public:
-	enum { INDEX_PAS=0, INDEX_MAIL=1, INDEX_NONE=2 };
+	enum {
+		INDEX_PAS  = 0,
+		INDEX_MAIL = 1,
+		INDEX_NONE = 2
+	};
 
 	static const goods_desc_t *passengers;
 	static const goods_desc_t *mail;

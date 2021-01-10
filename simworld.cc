@@ -186,7 +186,7 @@ static std::string last_network_game;
 
 karte_t* karte_t::world = NULL;
 
-stringhashtable_tpl<karte_t::missing_level_t>missing_pak_names;
+stringhashtable_tpl<karte_t::missing_level_t, N_BAGS_MEDIUM>missing_pak_names;
 
 #ifdef MULTI_THREAD
 #include "utils/simthread.h"
@@ -682,6 +682,7 @@ void karte_t::destroy()
 	world_attractions.clear();
 	DBG_MESSAGE("karte_t::destroy()", "attraction list destroyed");
 
+	weg_t::clear_travel_time_updates();
 	weg_t::clear_list_of__ways();
 	DBG_MESSAGE("karte_t::destroy()", "way list destroyed");
 
@@ -3254,6 +3255,9 @@ karte_t::karte_t() :
 	// for new world just set load version to current savegame version
 	load_version = loadsave_t::int_version( env_t::savegame_version_str, NULL );
 
+	load_version.extended_version = EX_VERSION_MAJOR;
+	load_version.extended_revision = EX_VERSION_MINOR;
+
 	// standard prices
 	goods_manager_t::set_multiplier( 1000, settings.get_meters_per_tile() );
 
@@ -3356,40 +3360,40 @@ void karte_t::set_scale()
 	}
 
 	// Ways
-	stringhashtable_tpl <way_desc_t *> * ways = way_builder_t::get_all_ways();
+	stringhashtable_tpl <way_desc_t *, N_BAGS_LARGE> * ways = way_builder_t::get_all_ways();
 
 	if(ways != NULL)
 	{
-		FOR(stringhashtable_tpl<way_desc_t *>, & info, *ways)
+		for(auto & info : *ways)
 		{
 			info.value->set_scale(scale_factor);
 		}
 	}
 
 	// Tunnels
-	stringhashtable_tpl <tunnel_desc_t *> * tunnels = tunnel_builder_t::get_all_tunnels();
+	stringhashtable_tpl <tunnel_desc_t *, N_BAGS_MEDIUM> * tunnels = tunnel_builder_t::get_all_tunnels();
 
 	if(tunnels != NULL)
 	{
-		FOR(stringhashtable_tpl<tunnel_desc_t *>, & info, *tunnels)
+		for(auto & info : *tunnels)
 		{
 			info.value->set_scale(scale_factor);
 		}
 	}
 
 	// Bridges
-	stringhashtable_tpl <bridge_desc_t *> * bridges = bridge_builder_t::get_all_bridges();
+	stringhashtable_tpl <bridge_desc_t *, N_BAGS_MEDIUM> * bridges = bridge_builder_t::get_all_bridges();
 
 	if(bridges != NULL)
 	{
-		FOR(stringhashtable_tpl<bridge_desc_t *>, & info, *bridges)
+		for(auto & info : *bridges)
 		{
 			info.value->set_scale(scale_factor);
 		}
 	}
 
 	// Way objects
-	FOR(stringhashtable_tpl<way_obj_desc_t *>, & info, *wayobj_t::get_all_wayobjects())
+	for(auto & info : *wayobj_t::get_all_wayobjects())
 	{
 		info.value->set_scale(scale_factor);
 	}
@@ -3408,7 +3412,7 @@ void karte_t::set_scale()
 	}
 
 	// Industries
-	FOR(stringhashtable_tpl<factory_desc_t*>, & info, factory_builder_t::modifiable_table)
+	for(auto & info : factory_builder_t::modifiable_table)
 	{
 		info.value->set_scale(scale_factor);
 	}
@@ -4328,6 +4332,21 @@ bool karte_t::change_player_tool(uint8 cmd, uint8 player_nr, uint16 param, bool 
 			}
 			return true;
 		}
+		case toggle_player_active: {
+			// range check, player existent?
+			if (  player_nr <=1  ||  player_nr >= PLAYER_UNOWNED  ||   get_player(player_nr)==NULL ) {
+				return false;
+			}
+			// only public player can (de)activate other players
+			if ( !public_player_unlocked ) {
+				return false;
+			}
+			if (exec) {
+				player_t *player = get_player(player_nr);
+				player->set_active(param != 0);
+			}
+			return true;
+		}
 		case toggle_freeplay: {
 			// only public player can change freeplay mode
 			if (!public_player_unlocked  ||  !settings.get_allow_player_change()) {
@@ -4860,7 +4879,7 @@ stadt_t *karte_t::find_nearest_city(const koord k, uint32 rank) const
 	stadt_t *best = NULL;	// within city limits
 	rank = max(rank, 1);
 
-	inthashtable_tpl<uint32, stadt_t*> distances;
+	inthashtable_tpl<uint32, stadt_t*, N_BAGS_MEDIUM> distances;
 	slist_tpl<uint32> ordered_distances;
 
 	if(  is_within_limits(k)  ) {
@@ -5893,7 +5912,10 @@ void karte_t::step()
 	}
 #endif
 
+	weg_t::apply_travel_time_updates();
+
 	rands[16] = get_random_seed();
+
 
 	INT_CHECK("karte_t::step 3c");
 
@@ -8488,7 +8510,14 @@ void karte_t::save(const char *filename, bool autosave, const char *version_str,
 DBG_MESSAGE("karte_t::save()", "saving game to '%s'", filename);
 	loadsave_t  file;
 	std::string savename = filename;
-	savename[savename.length()-1] = '_';
+	if (!env_t::networkmode || env_t::server)
+	{
+		// There are some problems with re-naming this temporary file.
+		// Corruption is less of an issue when a client is saving a game from a network server,
+		// so abandon this security in this instance to prevent the problems with re-naming causing
+		// problems. This can be reversed if those problems be ever solved.
+		savename[savename.length() - 1] = '_';
+	}
 
 	display_show_load_pointer( true );
 	if(!file.wr_open( savename.c_str(), autosave ? loadsave_t::autosave_mode : loadsave_t::save_mode, autosave ? loadsave_t::autosave_level : loadsave_t::save_level, env_t::objfilename.c_str(), version_str, ex_version_str, ex_revision_str )) {
@@ -8504,7 +8533,14 @@ DBG_MESSAGE("karte_t::save()", "saving game to '%s'", filename);
 			create_win( new news_img(err_str), w_time_delete, magic_none);
 		}
 		else {
-			dr_rename( savename.c_str(), filename );
+			if (!env_t::networkmode || env_t::server)
+			{
+				const int renamed_correctly = dr_rename(savename.c_str(), filename);
+				if (renamed_correctly)
+				{
+					dbg->error("karte_t::save()", "cannot open file for renaming: error %u. check permissions.", renamed_correctly);
+				}
+			}
 			if(!silent) {
 				create_win( new news_img("Spielstand wurde\ngespeichert!\n"), w_time_delete, magic_none);
 				// update the filename, if no autosave
@@ -9120,8 +9156,9 @@ bool karte_t::load(const char *filename)
 
 	if(!file.rd_open(name)) {
 
-		if(  file.get_version_int()==-0  ||  file.get_version_int()>loadsave_t::int_version(SAVEGAME_VER_NR, NULL).version  ) {
+		if(file.get_version_int() == 0 || file.get_version_int() > loadsave_t::int_version(env_t::savegame_version_str, NULL).version) {
 			dbg->warning("karte_t::load()", translator::translate("WRONGSAVE") );
+			dbg->warning("karte_t::load()", "Version is %u (Ex %u.%u)", file.get_version_int(), file.get_extended_version(), file.get_extended_revision());
 			create_win( new news_img("WRONGSAVE"), w_info, magic_none );
 		}
 		else {
@@ -9203,7 +9240,7 @@ DBG_MESSAGE("karte_t::load()","Savegame version is %u", file.get_version_int());
 
 				cbuffer_t paklog;
 				paklog.append( "\n" );
-				FOR(stringhashtable_tpl<missing_level_t>, const& i, missing_pak_names) {
+				for(auto const& i : missing_pak_names) {
 					if (i.value <= MISSING_ERROR) {
 						error_paks.append(translator::translate(i.key));
 						error_paks.append("<br>\n");
@@ -9370,7 +9407,6 @@ void karte_t::load(loadsave_t *file)
 			tool->cleanup();
 		}
 	}
-
 	destroy_all_win(true);
 
 	clear_random_mode(~LOAD_RANDOM);
@@ -9378,9 +9414,6 @@ void karte_t::load(loadsave_t *file)
 	destroy();
 
 	loadingscreen_t ls(translator::translate("Loading map ..."), 1, true, true );
-
-	clear_random_mode(~LOAD_RANDOM);
-	set_random_mode(LOAD_RANDOM);
 
 	// Added by : Knightly
 	path_explorer_t::initialise(this);
@@ -9391,7 +9424,6 @@ void karte_t::load(loadsave_t *file)
 #endif
 
 	tile_counter = 0;
-
 	simloops = 60;
 
 	// zum laden vorbereiten -> tablele loeschen
@@ -10250,6 +10282,9 @@ DBG_MESSAGE("karte_t::load()", "%d factories loaded", fab_list.get_count());
 
 	// loading finished, reset savegame version to current
 	load_version = loadsave_t::int_version( env_t::savegame_version_str, NULL );
+
+	load_version.extended_version = EX_VERSION_MAJOR;
+	load_version.extended_revision = EX_VERSION_MINOR;
 
 	FOR(slist_tpl<depot_t *>, const dep, depot_t::get_depot_list())
 	{
@@ -11941,7 +11976,7 @@ void karte_t::set_citycar_speed_average()
 	}
 	sint32 vehicle_speed_sum = 0;
 	sint32 count = 0;
-	FOR(stringhashtable_tpl<const citycar_desc_t *>, const& iter, private_car_t::table)
+	for(auto const& iter : private_car_t::table)
 	{
 		// Take into account the *distribution_weight* of vehicles, too: fewer people have sports cars than Minis.
 		vehicle_speed_sum += (speed_to_kmh(iter.value->get_topspeed())) * iter.value->get_distribution_weight();
@@ -11978,7 +12013,7 @@ sint32 karte_t::calc_generic_road_time_per_tile(const way_desc_t* desc)
 	}
 	else if(city_road)
 	{
-		const sint32 road_speed_limit = city_road->get_topspeed();
+		const sint32 road_speed_limit = min(settings.get_town_road_speed_limit(), city_road->get_topspeed());
 		if (speed_average > road_speed_limit)
 		{
 			speed_average = road_speed_limit;
@@ -12003,11 +12038,11 @@ sint32 karte_t::calc_generic_road_time_per_tile(const way_desc_t* desc)
 void karte_t::calc_max_road_check_depth()
 {
 	sint32 max_road_speed = 0;
-	stringhashtable_tpl <way_desc_t *> * ways = way_builder_t::get_all_ways();
+	stringhashtable_tpl <way_desc_t *, N_BAGS_LARGE> * ways = way_builder_t::get_all_ways();
 
 	if(ways != NULL)
 	{
-		FOR(stringhashtable_tpl <way_desc_t *>, const& iter, *ways)
+		for(auto const& iter : *ways)
 		{
 			if(iter.value->get_wtyp() != road_wt || iter.value->get_intro_year_month() > current_month || iter.value->get_retire_year_month() > current_month)
 			{

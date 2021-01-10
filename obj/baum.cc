@@ -85,7 +85,7 @@ weighted_vector_tpl<uint32>* baum_t::tree_list_per_climate = NULL;
 /*
  * Diese Tabelle ermoeglicht das Auffinden einer Description durch ihren Namen
  */
-stringhashtable_tpl<const tree_desc_t *> baum_t::desc_names;
+stringhashtable_tpl<const tree_desc_t *, N_BAGS_SMALL> baum_t::desc_names;
 
 
 // total number of trees
@@ -240,7 +240,7 @@ DBG_MESSAGE("verteile_baeume()","distributing single trees");
 		for(  pos.x=xtop;  pos.x<xbottom;  pos.x++  ) {
 			grund_t *gr = welt->lookup_kartenboden(pos);
 			if(gr->get_top() == 0  &&  gr->get_typ() == grund_t::boden)  {
-				// plant spare trees, (those with low preffered density) or in an entirely tree climate
+				// plant spare trees, (those with low preferred density) or in an entirely tree climate
 				uint16 cl = 1 << welt->get_climate(pos);
 				settings_t const& s = welt->get_settings();
 				if ((cl & s.get_no_tree_climates()) == 0 && ((cl & s.get_tree_climates()) != 0 || simrand(s.get_forest_inverse_spare_tree_density() * density, "baum_t::fill_trees()") < 100)) {
@@ -265,7 +265,7 @@ bool baum_t::successfully_loaded()
 		DBG_MESSAGE("baum_t", "No trees found - feature disabled");
 	}
 
-	FOR(stringhashtable_tpl<tree_desc_t const*>, const& i, desc_names) {
+	for(auto const& i : desc_names) {
 		tree_list.insert_ordered(i.value, compare_tree_desc);
 		if(  tree_list.get_count()==255  ) {
 			dbg->error( "baum_t::successfully_loaded()", "Maximum tree count exceeded! (max 255 instead of %i)", desc_names.get_count() );

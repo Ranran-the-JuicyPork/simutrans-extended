@@ -277,6 +277,7 @@ convoi_t::~convoi_t()
 	assert(self.is_bound());
 	assert(vehicle_count==0);
 
+	destroy_win( magic_convoi_detail + self.get_id() );
 	close_windows();
 
 DBG_MESSAGE("convoi_t::~convoi_t()", "destroying %d, %p", self.get_id(), this);
@@ -327,7 +328,6 @@ void convoi_t::close_windows()
 {
 	// close windows
 	destroy_win( magic_convoi_info+self.get_id() );
-	destroy_win( magic_convoi_detail+self.get_id() );
 	destroy_win( magic_replace+self.get_id() );
 }
 
@@ -2688,12 +2688,6 @@ void convoi_t::start()
 		no_load = false;
 		depot_when_empty = false;
 
-		// if the schedule is mirrored, convoys starting
-		// reversed should go directly to the end.
-		if( schedule->is_mirrored() && reverse_schedule ) {
-			schedule->advance_reverse();
-		}
-
 		state = ROUTING_1;
 
 		// recalc weight and image
@@ -3702,6 +3696,15 @@ void convoi_t::vorfahren()
 		}
 		else {
 			ziel_erreicht();
+		}
+	}
+
+	// override reversed schedule status for the first and last stops of a mirrored schedule
+	if(schedule->is_mirrored()) {
+		if(schedule->get_current_stop() == 0) {
+			set_reverse_schedule(true);
+		} else if(schedule->get_current_stop() == schedule->get_count()-1) {
+			set_reverse_schedule(false);
 		}
 	}
 
@@ -5358,7 +5361,7 @@ void convoi_t::laden() //"load" (Babelfish)
 	if(journey_distance > 0 && state == LOADING)
 	{
 		arrival_time = welt->get_ticks();
-		inthashtable_tpl<uint16, sint64> best_times_in_schedule; // Key: halt ID; value: departure time.
+		inthashtable_tpl<uint16, sint64, N_BAGS_SMALL> best_times_in_schedule; // Key: halt ID; value: departure time.
 		FOR(departure_map, const& iter, departures)
 		{
 			const sint64 journey_time_ticks = arrival_time - iter.value.departure_time;
@@ -5456,7 +5459,7 @@ void convoi_t::laden() //"load" (Babelfish)
 		{
 			book(average_speed, CONVOI_AVERAGE_SPEED);
 
-			typedef inthashtable_tpl<uint16, sint64> int_map;
+			typedef inthashtable_tpl<uint16, sint64, N_BAGS_SMALL> int_map;
 			FOR(int_map, const& iter, best_times_in_schedule)
 			{
 				id_pair pair(iter.key, this_halt_id);
@@ -6165,7 +6168,7 @@ station_tile_search_ready: ;
 	{
 		wait_lock = 0;
 	}
-	else
+	else if(state != WAITING_FOR_CLEARANCE && state != WAITING_FOR_CLEARANCE_ONE_MONTH && state != WAITING_FOR_CLEARANCE_TWO_MONTHS) // Do not add extra delay if the convoy has already decided to depart and is just waiting for clearance.
 	{
 		if (loading_limit > 0 && !wait_for_time)
 		{

@@ -191,9 +191,10 @@ ifneq ($(PROFILE),)
   LDFLAGS += -pg
 endif
 
+
 ifdef USE_ZSTD
-  ifeq ($(shell expr $(USE_UPNP) \>= 1), 1)
-    CFLAGS      += -DUSE_ZSTD
+  ifeq ($(shell expr $(USE_ZSTD) \>= 1), 1)
+    FLAGS      += -DUSE_ZSTD
     LDFLAGS     += -lzstd
   endif
 endif

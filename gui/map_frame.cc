@@ -170,6 +170,7 @@ map_frame_t::map_frame_t() :
 	karte->player_showed_on_map = -1;
 
 	p_scrolly = new gui_scrollpane_map_t( minimap_t::get_instance());
+	p_scrolly->set_maximize( true );
 	p_scrolly->set_min_width( D_DEFAULT_WIDTH-D_MARGIN_LEFT-D_MARGIN_RIGHT );
 	// initialize scrollbar positions -- LATER
 	const scr_size size = karte->get_size();
@@ -413,7 +414,7 @@ void map_frame_t::update_factory_legend()
 			}
 		}
 		else {
-			FOR(stringhashtable_tpl<factory_desc_t const*>, i, factory_builder_t::get_factory_table()) {
+			for(auto i : factory_builder_t::get_factory_table()) {
 				factory_desc_t const* const d = i.value;
 				if (d->get_distribution_weight() > 0) {
 					factory_types.append_unique(d);

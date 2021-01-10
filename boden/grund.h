@@ -236,7 +236,14 @@ protected:
 	virtual void calc_image_internal(const bool calc_only_snowline_change) = 0;
 
 public:
-	enum typ { boden = 1, wasser, fundament, tunnelboden, brueckenboden, monorailboden };
+	enum typ {
+		boden = 1,
+		wasser,
+		fundament,
+		tunnelboden,
+		brueckenboden,
+		monorailboden
+	};
 
 	grund_t(koord3d pos);
 
@@ -339,10 +346,9 @@ public:
 	void show_info();
 
 	/**
-	* Gibt die Farbe des Beschreibungstexthintergrundes zuurck
-	* @return die Farbe des Beschreibungstexthintergrundes.
-	*/
-	FLAGGED_PIXVAL text_farbe() const;
+	 * @return player that owns the label to show it in player's colors
+	 */
+	const player_t* get_label_owner() const;
 
 	/**
 	 * Sets the label text (by copying it)
@@ -758,7 +764,7 @@ void display_obj_fg(const sint16 xpos, const sint16 ypos, const bool is_global, 
 	bool removing_way_would_disrupt_public_right_of_way(waytype_t wt);
 	bool removing_road_would_break_monument_loop();
 
-	typedef koordhashtable_tpl<koord, bool> road_network_plan_t;
+	typedef koordhashtable_tpl<koord, bool, N_BAGS_SMALL> road_network_plan_t;
 	/**
 	 * Check whether building a road would result in a 2x2 square
 	 * of road tiles.
