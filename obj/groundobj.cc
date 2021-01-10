@@ -50,7 +50,7 @@ int groundobj_t::get_count(climate cl)
 bool groundobj_t::plant_groundobj_on_coordinate(koord pos, const groundobj_desc_t *desc, const bool check_climate)
 {
 	// none there
-	if(  desc_table.empty()  ) {
+	if(  desc_names.empty()  ) {
 		return false;
 	}
 	grund_t *gr = welt->lookup_kartenboden(pos);

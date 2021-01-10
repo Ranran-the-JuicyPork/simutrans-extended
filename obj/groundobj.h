@@ -70,7 +70,7 @@ public:
 
 	const groundobj_desc_t* get_desc() const { return groundobj_typen[groundobjtype]; }
 	static vector_tpl<groundobj_desc_t const*> const& get_all_desc() { return groundobj_typen; }
-	static const groundobj_desc_t *find_groundobj( const char *obj_name ) { return groundobj_typen.empty() ? NULL : desc_table.get(obj_name); }
+	static const groundobj_desc_t *find_groundobj( const char *obj_name ) { return groundobj_typen.empty() ? NULL : desc_names.get(obj_name); }
 	static bool plant_groundobj_on_coordinate(koord pos, const groundobj_desc_t *desc, const bool check_climate);
 	static const groundobj_desc_t *random_groundobj_for_climate(climate cl) { uint16 b = random_groundobj_for_climate_intern(cl);  return b!=0xFFFF ? groundobj_typen[b] : NULL; }
 

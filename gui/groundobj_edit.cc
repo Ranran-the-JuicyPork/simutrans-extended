@@ -46,7 +46,7 @@ static bool compare_groundobj_desc_name(const groundobj_desc_t* a, const groundo
 }
 static bool compare_groundobj_desc_cost(const groundobj_desc_t* a, const groundobj_desc_t* b)
 {
-	int diff = a->get_price() - b->get_price();
+	int diff = a->get_value() - b->get_value();
 	if(diff ==0) {
 		diff = strcmp( a->get_name(), b->get_name() );
 	}
@@ -151,7 +151,7 @@ void groundobj_edit_frame_t::change_item_info(sint32 entry)
 			buf.printf( "\n%s\n", translator::translate("Can be overgrown") );
 		}
 		buf.printf("\n%s ", translator::translate("cost for removal"));
-		buf.append_money( desc->get_price()/100.0 );
+		buf.append_money( desc->get_value()/100.0 );
 		buf.append("$\n");
 
 		if (char const* const maker = desc->get_copyright()) {
@@ -160,7 +160,7 @@ void groundobj_edit_frame_t::change_item_info(sint32 entry)
 			buf.append("\n");
 		}
 
-		groundobj_image.set_image(desc->get_image_id( seasons>2 ? 2 : 0, 0 ), true);
+		groundobj_image.set_image(desc->get_image_nr( seasons>2 ? 2 : 0, 0 ), true);
 
 		param_str.clear();
 		param_str.printf( "%i%i,%s", bt_climates.pressed, bt_timeline.pressed, desc->get_name() );
