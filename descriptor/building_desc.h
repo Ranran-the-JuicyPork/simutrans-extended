@@ -248,8 +248,6 @@ class building_desc_t : public obj_desc_timelined_t {
 
 	tool_t *builder;
 
-	static uint8 city_building_max_size;
-
 public:
 
 	koord get_size(uint8 layout = 0) const {

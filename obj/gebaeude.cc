@@ -259,7 +259,7 @@ gebaeude_t::~gebaeude_t()
 	}
 	if (our_city)
 	{
-		our_city->remove_gebaeude_from_stadt(this, !has_city_defined, false);
+		our_city->remove_gebaeude_from_stadt(this, !has_city_defined);
 	}
 	else if(is_in_world_list > 0)
 	{

@@ -457,7 +457,7 @@ public:
 
 	// this function removes houses from the city house list
 	// (called when removed by player, or by town)
-	void remove_gebaeude_from_stadt(gebaeude_t *gb, bool map_generation, bool original_pos);
+	void remove_gebaeude_from_stadt(gebaeude_t *gb, bool map_generation);
 
 	// This is necessary to be separate from add/remove gebaeude_to_stadt
 	// because of the need for the present to retain the existing pattern
