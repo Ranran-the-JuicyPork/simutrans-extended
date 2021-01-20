@@ -1762,7 +1762,7 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 				// [avarage speed]
 				buf.clear();
-				sint64 average_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time);
+				const sint64 average_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time);
 				buf.printf(" (%2ukm/h) ", average_speed);
 				catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
 
@@ -1773,8 +1773,8 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 						display_color_img_with_tooltip(skinverwaltung_t::waiting_time->get_image_id(0), offset.x + xoff + catg_xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate("Route average waiting time and speed evaluation"));
 						catg_xoff += GOODS_SYMBOL_CELL_WIDTH;
 					}
+					char waiting_time_as_clock[32];
 					if (cnx->waiting_time > 0) {
-						char waiting_time_as_clock[32];
 						welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), cnx->waiting_time);
 						if (!skinverwaltung_t::waiting_time) {
 							buf.printf(translator::translate("%s mins. waiting"), waiting_time_as_clock);
@@ -1795,8 +1795,9 @@ void gui_halt_route_info_t::draw_list_by_dest(scr_coord offset)
 
 					// [avarage schedule speed]
 					buf.clear();
-					sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time + cnx->waiting_time);
-					buf.printf(" (%2ukm/h) ", schedule_speed);
+					const sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time + cnx->waiting_time);
+					welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), cnx->journey_time + cnx->waiting_time);
+					buf.printf(" (%5s, %2ukm/h) ", waiting_time_as_clock, schedule_speed);
 					catg_xoff += display_proportional_clip_rgb(offset.x + xoff + catg_xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
 					max_x = max(max_x, catg_xoff);
 				}
@@ -1914,7 +1915,7 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 #ifdef DEBUG
 		// [avarage speed]
 		buf.clear();
-		sint64 average_speed = kmh_from_meters_and_tenths((int)(km_to_halt*1000), cnx->journey_time);
+		const sint64 average_speed = kmh_from_meters_and_tenths((int)(km_to_halt*1000), cnx->journey_time);
 		buf.printf(" (%2ukm/h)", average_speed);
 		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
 #endif
@@ -1924,11 +1925,11 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 		buf.clear();
 		if (!is_walking){
 			if (skinverwaltung_t::waiting_time) {
-				display_color_img(skinverwaltung_t::waiting_time->get_image_id(0), offset.x + xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false);
+				display_color_img_with_tooltip(skinverwaltung_t::waiting_time->get_image_id(0), offset.x + xoff, offset.y + yoff + FIXED_SYMBOL_YOFF, 0, false, false, translator::translate("Route average waiting time and speed evaluation"));
 				xoff += GOODS_SYMBOL_CELL_WIDTH;
 			}
+			char waiting_time_as_clock[32];
 			if (cnx->waiting_time > 0) {
-				char waiting_time_as_clock[32];
 				welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), cnx->waiting_time);
 				if (!skinverwaltung_t::waiting_time) {
 					buf.printf(translator::translate("%s mins. waiting"), waiting_time_as_clock);
@@ -1946,13 +1947,12 @@ void gui_halt_route_info_t::draw_list_by_catg(scr_coord offset)
 				}
 			}
 			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-#ifdef DEBUG
 			// [avarage schedule speed]
 			buf.clear();
-			sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time + cnx->waiting_time);
-			buf.printf(" (%2ukm/h) ", schedule_speed);
+			const sint64 schedule_speed = kmh_from_meters_and_tenths((int)(km_to_halt * 1000), cnx->journey_time + cnx->waiting_time);
+			welt->sprintf_time_tenths(waiting_time_as_clock, sizeof(waiting_time_as_clock), cnx->journey_time + cnx->waiting_time);
+			buf.printf(" (%5s, %2ukm/h) ", waiting_time_as_clock, schedule_speed);
 			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y + yoff, buf, ALIGN_LEFT, MN_GREY0, true);
-#endif
 
 #ifdef DEBUG
 			// Who offers the best service?
