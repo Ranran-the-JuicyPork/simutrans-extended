@@ -15,7 +15,7 @@
 class bridge_desc_t;
 class grund_t;
 class karte_ptr_t;
-class player_t;               // Hajo: 22-Nov-01: Added forward declaration
+class player_t;
 class way_desc_t;
 class tool_selector_t;
 
@@ -100,7 +100,7 @@ public:
 	static void build_bridge(player_t *player, const koord3d start, const koord3d end, koord zv, sint8 bridge_height, const bridge_desc_t *desc, const way_desc_t *way_desc) {  build_bridge(player,start,end,zv,bridge_height,desc,way_desc,twoway_mode); }
 
 	/**
-	 * Registers a new bridge type
+	 * Registers a new bridge type and adds it to the list of build tools.
 	 *
 	 * @param desc Description of the bridge to register.
 	 */
@@ -109,15 +109,8 @@ public:
 
 	static bool laden_erfolgreich();
 
-	static stringhashtable_tpl<bridge_desc_t *> * get_all_bridges();
+	static stringhashtable_tpl<bridge_desc_t *, N_BAGS_MEDIUM> * get_all_bridges();
 
-
-	/**
-	* adds it to the list of build tools.
-	*
-	* @param desc Description of the bridge to register.
-	*/
-	static bool successfully_loaded();
 
 	/**
 	 * Method to retrieve bridge descriptor

@@ -11,7 +11,6 @@
 
 /**
  * A schedule entry.
- * @author Hj. Malthaner
  */
 struct schedule_entry_t
 {
@@ -29,27 +28,23 @@ public:
 
 	/**
 	 * target position
-	 * @author Hj. Malthaner
 	 */
 	koord3d pos;
 
 	/**
 	 * Wait for % load at this stops
 	 * (ignored on waypoints)
-	 * @author Hj. Malthaner
 	 */
 	uint16 minimum_loading;
 
 	/**
 	 * spacing shift
-	 * @author Inkelyad
 	 */
 	sint16 spacing_shift;
 
 	/**
 	* maximum waiting time in 1/2^(16-n) parts of a month
 	* (only active if minimum_loading!=0)
-	* @author prissi
 	*/
 	sint8 waiting_time_shift;
 
@@ -67,5 +62,11 @@ public:
 	 */
 	bool wait_for_time;
 };
+
+inline bool operator ==(const schedule_entry_t &a, const schedule_entry_t &b)
+{
+	return a.pos == b.pos  &&  a.minimum_loading == b.minimum_loading  &&  a.waiting_time_shift == b.waiting_time_shift;
+}
+
 
 #endif

@@ -9,12 +9,16 @@
 
 #include "gui_frame.h"
 #include "components/action_listener.h"
+#include "components/gui_numberinput.h"
+#include "components/gui_label.h"
+
 
 class gui_numberinput_t;
 class button_t;
 class gui_label_t;
 class tool_build_roadsign_t;
 class player_t;
+
 
 /*
  * Dialogue to set the signal spacing, when CTRL+clicking a signal on toolbar
@@ -30,8 +34,6 @@ private:
 	player_t *player;
 	tool_build_roadsign_t* tool;
 	gui_numberinput_t signal_spacing_inp;
-	gui_label_t signal_label;
-	gui_label_t meter_label;
 	button_t remove_button, replace_button, backward_button;
 
 public:

@@ -212,7 +212,6 @@ void leitung_t::cleanup(player_t *player) //"remove".
 
 /**
  * called during map rotation
- * @author prissi
  */
 void leitung_t::rotate90()
 {
@@ -221,9 +220,9 @@ void leitung_t::rotate90()
 }
 
 
-/* replace networks connection
+/**
+ * replace networks connection
  * non-trivial to handle transformers correctly
- * @author prissi
  */
 void leitung_t::replace(powernet_t* new_net)
 {
@@ -247,7 +246,6 @@ void leitung_t::replace(powernet_t* new_net)
 /**
  * Connect this piece of powerline to its neighbours
  * -> this can merge power networks
- * @author Hj. Malthaner
  */
 void leitung_t::verbinde()
 {
@@ -290,7 +288,6 @@ void leitung_t::verbinde()
 }
 
 
-/* extended by prissi */
 void leitung_t::calc_image()
 {
 	is_crossing = false;
@@ -345,12 +342,9 @@ void leitung_t::calc_image()
 	}
 }
 
-
 /**
  * Recalculates the images of all neighbouring
  * powerlines and the powerline itself
- *
- * @author Hj. Malthaner
  */
 void leitung_t::calc_neighbourhood()
 {
@@ -385,11 +379,6 @@ void print_power(cbuffer_t & buf, uint64 power_in_internal_units, const char *fm
 }
 
 
-/**
- * @return Einen Beschreibungsstring für das Objekt, der z.B. in einem
- * Beobachtungsfenster angezeigt wird.
- * @author Hj. Malthaner
- */
 void leitung_t::info(cbuffer_t & buf) const
 {
 	obj_t::info(buf);
@@ -407,27 +396,18 @@ void leitung_t::info(cbuffer_t & buf) const
 }
 
 
-/**
- * Wird nach dem Laden der Welt aufgerufen - üblicherweise benutzt
- * um das Aussehen des Dings an Boden und Umgebung anzupassen
- *
- * @author Hj. Malthaner
- */
 void leitung_t::finish_rd()
 {
 #ifdef MULTI_THREAD
 	pthread_mutex_lock( &verbinde_mutex );
-#endif
 	verbinde();
-#ifdef MULTI_THREAD
 	pthread_mutex_unlock( &verbinde_mutex );
-#endif
-#ifdef MULTI_THREAD
 	pthread_mutex_lock( &calc_image_mutex );
-#endif
 	calc_neighbourhood();
-#ifdef MULTI_THREAD
 	pthread_mutex_unlock( &calc_image_mutex );
+#else
+	verbinde();
+	calc_neighbourhood();
 #endif
 	const grund_t *gr = welt->lookup(get_pos());
 	assert(gr); (void)gr;
@@ -441,7 +421,6 @@ void leitung_t::finish_rd()
  *
  * @param file Zeigt auf die Datei, in die das Objekt geschrieben werden
  * soll.
- * @author Hj. Malthaner
  */
 void leitung_t::rdwr(loadsave_t *file)
 {
@@ -462,7 +441,7 @@ void leitung_t::rdwr(loadsave_t *file)
 		}
 		city_pos.rdwr(file);
 
-		if(file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->get_version() >= 112006))
+		if(file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->get_version_int() >= 112006))
 		{
 			if(get_typ() == senke)
 			{
@@ -491,7 +470,7 @@ void leitung_t::rdwr(loadsave_t *file)
 				city->add_substation((senke_t*)this);
 			}
 
-			if(file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->get_version() >= 112006))
+			if(file->get_extended_version() >= 12 || (file->get_extended_version() == 11 && file->get_version_int() >= 112006))
 			{
 				uint32 lpd = 0;
 				file->rdwr_long(lpd);
@@ -508,7 +487,7 @@ void leitung_t::rdwr(loadsave_t *file)
 		/* ATTENTION: during loading this MUST not be called from the constructor!!!
 		 * (Otherwise it will be always true!)
 		 */
-		if(file->get_version() > 102002 && (file->get_extended_version() >= 8 || file->get_extended_version() == 0))
+		if(file->get_version_int() > 102002 && (file->get_extended_version() >= 8 || file->get_extended_version() == 0))
 		{
 			if(file->is_saving())
 			{

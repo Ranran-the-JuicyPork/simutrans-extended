@@ -138,7 +138,7 @@ static void dl_free(obj_t** p, uint8 size)
 		freelist_t::putback_node(sizeof(*p) * size, p);
 	}
 	else {
-		guarded_free(p);
+		free(p);
 	}
 }
 
@@ -168,11 +168,20 @@ objlist_t::objlist_t()
 objlist_t::~objlist_t()
 {
 	if(  capacity == 1  ) {
-		delete obj.one;
+		obj.one->set_flag(obj_t::not_on_map);
+
+		if(!obj.one->has_managed_lifecycle()) {
+			delete obj.one;
+		}
 	}
 	else {
 		for(  uint8 i=0;  i<top;  i++  ) {
-			delete obj.some[i];
+			obj_t* const object = obj.some[i];
+			object->set_flag(obj_t::not_on_map);
+
+			if(!object->has_managed_lifecycle()) {
+				delete object;
+			}
 		}
 	}
 
@@ -512,7 +521,7 @@ bool objlist_t::remove(const obj_t* remove_obj)
  * removes object from map
  * deletes object if it is not a zeiger_t
  */
-void local_delete_object(obj_t *remove_obj, player_t *player)
+static void local_delete_object(obj_t *remove_obj, player_t *player)
 {
 	vehicle_base_t* const v = obj_cast<vehicle_base_t>(remove_obj);
 	if (v  &&  remove_obj->get_typ() != obj_t::pedestrian  &&  remove_obj->get_typ() != obj_t::road_user  &&  remove_obj->get_typ() != obj_t::movingobj) {
@@ -523,7 +532,7 @@ void local_delete_object(obj_t *remove_obj, player_t *player)
 		remove_obj->set_flag(obj_t::not_on_map);
 		// all objects except zeiger (pointer) are destroyed here
 		// zeiger's will be deleted if their associated tool terminates
-		if (remove_obj->get_typ() != obj_t::zeiger) {
+		if (!remove_obj->has_managed_lifecycle()) {
 			delete remove_obj;
 		}
 	}
@@ -717,7 +726,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 	if(file->is_loading()) {
 
 		sint32 max_object_index;
-		if(  file->get_version()<=110000  ) {
+		if(  file->get_version_int()<=110000  ) {
 			file->rdwr_long(max_object_index);
 			if(max_object_index>254) {
 				dbg->error("objlist_t::laden()","Too many objects (%i) at (%i,%i), some vehicle may not appear immediately.",max_object_index,current_pos.x,current_pos.y);
@@ -769,7 +778,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 				// some old offsets will be converted to new ones
 				case obj_t::old_fussgaenger:
 					typ = obj_t::pedestrian;
-					// fallthrough
+					/* FALLTHROUGH */
 				case obj_t::pedestrian:
 				{
 					pedestrian_t* const pedestrian = new pedestrian_t(file);
@@ -787,7 +796,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 
 				case obj_t::old_verkehr:
 					typ = obj_t::road_user;
-					// fallthrough
+					/* FALLTHROUGH */
 				case obj_t::road_user:
 				{
 					private_car_t* const car = new private_car_t(file);
@@ -804,13 +813,13 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 
 				case obj_t::old_monoraildepot:
 					typ = obj_t::monoraildepot;
-					// fallthrough
+					/* FALLTHROUGH */
 				case obj_t::monoraildepot:
 					new_obj = new monoraildepot_t(file);
 					break;
 				case obj_t::old_tramdepot:
 					typ = obj_t::tramdepot;
-					// fallthrough
+					/* FALLTHROUGH */
 				case obj_t::tramdepot:
 					new_obj = new tramdepot_t(file);
 					break;
@@ -822,7 +831,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 					break;
 				case obj_t::old_airdepot:
 					typ = obj_t::airdepot;
-					// fallthrough
+					/* FALLTHROUGH */
 				case obj_t::airdepot:
 					new_obj = new airdepot_t(file);
 					break;
@@ -864,8 +873,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 				// check for pillars
 				case obj_t::old_pillar:
 					typ = obj_t::pillar;
-					// fallthrough
-
+					/* FALLTHROUGH */
 				case obj_t::pillar:
 					{
 						pillar_t *p = new pillar_t(file);
@@ -947,8 +955,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 
 				case obj_t::old_roadsign:
 					typ = obj_t::roadsign;
-					// fallthrough
-
+					/* FALLTHROUGH */
 				case obj_t::roadsign:
 					{
 						roadsign_t *rs = new roadsign_t(file);
@@ -1015,7 +1022,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 				||  (new_obj->get_typ()==obj_t::gebaeude  &&  ((gebaeude_t *)new_obj)->get_fabrik())
 				// things with convoi will not be saved
 				||  (new_obj->get_typ()>=66  &&  new_obj->get_typ()<82)
-				||  (env_t::server  &&  new_obj->get_typ()==obj_t::baum  &&  file->get_version()>=110001)
+				||  (env_t::server  &&  new_obj->get_typ()==obj_t::baum  &&  file->get_version_int()>=110001)
 			) {
 				// these objects are simply not saved
 			}
@@ -1025,7 +1032,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 		}
 		// now we know the number of stuff to save
 		max_object_index --;
-		if(  file->get_version()<=110000  ) {
+		if(  file->get_version_int()<=110000  ) {
 			file->rdwr_long( max_object_index );
 		}
 		else {
@@ -1054,29 +1061,7 @@ void objlist_t::rdwr(loadsave_t *file, koord3d current_pos)
 }
 
 
-/* Dumps a short info about the things on this tile
- *  @author prissi
- */
-void objlist_t::dump() const
-{
-	if(capacity==0) {
-//		DBG_MESSAGE("objlist_t::dump()","empty");
-		return;
-	}
-	else if(capacity==1) {
-		DBG_MESSAGE("objlist_t::dump()","one object \'%s\' owned by sp %p", obj.one->get_name(), obj.one->get_owner() );
-		return;
-	}
-
-	DBG_MESSAGE("objlist_t::dump()","%i objects", top );
-	for(uint8 n=0; n<top; n++) {
-		DBG_MESSAGE( obj.some[n]->get_name(), "at %i owned by sp %p", n, obj.some[n]->get_owner() );
-	}
-}
-
-
 /** display all things, faster, but will lead to clipping errors
- *  @author prissi
  */
 #ifdef MULTI_THREAD
 void objlist_t::display_obj_quick_and_dirty( const sint16 xpos, const sint16 ypos, const uint8 start_offset, const sint8 clip_num ) const
@@ -1129,7 +1114,6 @@ void objlist_t::display_obj_quick_and_dirty( const sint16 xpos, const sint16 ypo
  *
  * objlist_t::display_obj_bg() .. called by the methods in grund_t
  * local_display_obj_bg()        .. local function to avoid code duplication, returns false if the first non-valid obj is reached
- * @author Dwachs
  */
 inline bool local_display_obj_bg(const obj_t *obj, const sint16 xpos, const sint16 ypos  CLIP_NUM_DEF)
 {
@@ -1168,7 +1152,6 @@ uint8 objlist_t::display_obj_bg( const sint16 xpos, const sint16 ypos, const uin
  *
  * objlist_t::display_obj_vh() .. called by the methods in grund_t
  * local_display_obj_vh()        .. local function to avoid code duplication, returns false if the first non-valid obj is reached
- * @author Dwachs
  */
 inline bool local_display_obj_vh(const obj_t *draw_obj, const sint16 xpos, const sint16 ypos, const ribi_t::ribi ribi, const bool ontile  CLIP_NUM_DEF)
 {

@@ -66,6 +66,7 @@ option(SIMUTRANS_VALGRIND_SUPPORT  "Add support for valgrind \"memcheck\" tool" 
 if (Freetype_FOUND)
 	option(SIMUTRANS_USE_FREETYPE "Enable TrueType font support using freetype library" OFF)
 endif (Freetype_FOUND)
+set(SIMUTRANS_USE_FREETYPE OFF)
 
 if (MiniUPNP_FOUND)
 	option(SIMUTRANS_USE_UPNP "Use MiniUPNP for easier server setup" ON)
@@ -194,22 +195,27 @@ add_executable(simutrans-extended
 	gui/banner.cc
 	gui/base_info.cc
 	gui/baum_edit.cc
+	gui/building_info.cc
 	gui/citybuilding_edit.cc
 	gui/city_info.cc
 	gui/citylist_frame_t.cc
 	gui/citylist_stats_t.cc
 	gui/climates.cc
+	gui/components/gui_aligned_container.cc
+	gui/components/gui_building.cc
 	gui/components/gui_button.cc
+	gui/components/gui_button_to_chart.cc
 	gui/components/gui_chart.cc
+	gui/components/gui_colorbox.cc
 	gui/components/gui_combobox.cc
 	gui/components/gui_component.cc
-	gui/components/gui_component_table.cc
 	gui/components/gui_container.cc
 	gui/components/gui_convoiinfo.cc
 	gui/components/gui_convoy_assembler.cc
 	gui/components/gui_convoy_formation.cc
 	gui/components/gui_convoy_label.cc
 	gui/components/gui_convoy_payloadinfo.cc
+	gui/components/gui_divider.cc
 	gui/components/gui_factory_storage_info.cc
 	gui/components/gui_fixedwidth_textarea.cc
 	gui/components/gui_flowtext.cc
@@ -238,6 +244,7 @@ add_executable(simutrans-extended
 	gui/curiositylist_frame_t.cc
 	gui/curiositylist_stats_t.cc
 	gui/depot_frame.cc
+	gui/depotlist_frame.cc
 	gui/display_settings.cc
 	gui/enlarge_map_frame_t.cc
 	gui/extend_edit.cc
@@ -249,6 +256,7 @@ add_executable(simutrans-extended
 	gui/goods_frame_t.cc
 	gui/goods_stats_t.cc
 	gui/ground_info.cc
+	gui/groundobj_edit.cc
 	gui/gui_frame.cc
 	gui/gui_theme.cc
 	gui/halt_detail.cc
@@ -257,8 +265,8 @@ add_executable(simutrans-extended
 	gui/halt_list_frame.cc
 	gui/halt_list_stats.cc
 	gui/help_frame.cc
+	gui/headquarter_info.cc
 	gui/jump_frame.cc
-	gui/karte.cc
 	gui/kennfarbe.cc
 	gui/label_info.cc
 	gui/labellist_frame_t.cc
@@ -266,6 +274,7 @@ add_executable(simutrans-extended
 	gui/line_class_manager.cc
 	gui/line_item.cc
 	gui/line_management_gui.cc
+	gui/loadfont_frame.cc
 	gui/load_relief_frame.cc
 	gui/loadsave_frame.cc
 	gui/map_frame.cc
@@ -273,6 +282,7 @@ add_executable(simutrans-extended
 	gui/message_frame_t.cc
 	gui/message_option_t.cc
 	gui/message_stats_t.cc
+	gui/minimap.cc
 	gui/money_frame.cc
 	gui/obj_info.cc
 	gui/onewaysign_info.cc
@@ -294,6 +304,7 @@ add_executable(simutrans-extended
 	gui/settings_stats.cc
 	gui/signal_info.cc
 	gui/signal_spacing.cc
+	gui/signalboxlist_frame.cc
 	gui/simwin.cc
 	gui/sound_frame.cc
 	gui/sprachen.cc
@@ -304,8 +315,14 @@ add_executable(simutrans-extended
 	gui/times_history_entry.cc
 	gui/tool_selector.cc
 	gui/trafficlight_info.cc
+	gui/vehiclelist_frame.cc
 	gui/vehicle_class_manager.cc
 	gui/welt.cc
+	io/rdwr/bzip2_file_rdwr_stream.cc
+	io/rdwr/raw_file_rdwr_stream.cc
+	io/rdwr/rdwr_stream.cc
+	io/rdwr/zlib_file_rdwr_stream.cc
+	io/classify_file.cc
 	network/checksum.cc
 	network/memory_rw.cc
 	network/network_address.cc
@@ -343,6 +360,7 @@ add_executable(simutrans-extended
 	player/simplay.cc
 	script/api/api_city.cc
 	script/api/api_const.cc
+	script/api/api_control.cc
 	script/api/api_convoy.cc
 	script/api/api_factory.cc
 	script/api/api_gui.cc
@@ -511,6 +529,7 @@ if (SIMUTRANS_USE_UPNP)
 endif (SIMUTRANS_USE_UPNP)
 
 if (SIMUTRANS_USE_ZSTD)
+	target_sources(simutrans-extended PRIVATE io/rdwr/zstd_file_rdwr_stream.cc)
 	target_compile_definitions(simutrans-extended PRIVATE USE_ZSTD=1)
 	target_link_libraries(simutrans-extended PRIVATE ZSTD::ZSTD)
 endif (SIMUTRANS_USE_ZSTD)

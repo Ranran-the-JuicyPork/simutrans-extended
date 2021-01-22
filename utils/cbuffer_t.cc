@@ -118,11 +118,17 @@ void cbuffer_t::append(const char* text, size_t maxchars)
 
 void cbuffer_t::append(double n,int decimals)
 {
-	char tmp[32];
+	char tmp[128];
 	number_to_string( tmp, n, decimals );
 	append(tmp);
 }
 
+void cbuffer_t::append_money(double money)
+{
+	char tmp[128];
+	money_to_string(tmp, money, true);
+	append(tmp);
+}
 
 const char* cbuffer_t::get_str() const
 {
@@ -206,7 +212,7 @@ static void get_format_mask(const char* format, char *typemask, int max_params, 
 		for(uint16 i=0; i<found; i++) {
 			if (typemask[i]==0) {
 				// unspecified
-				error.printf("Positional parameter %d not specified.", i+1);
+				error.printf("Positional parameter %d not specified.", i);
 				return;
 			}
 		}
@@ -295,7 +301,7 @@ static int my_vsnprintf(char *buf, size_t n, const char* fmt, va_list ap )
 		char pos[13];
 		static char format_string[256];
 		char *cfmt = format_string;
-		static char buffer[16000];	// the longest possible buffer ...
+		static char buffer[16000]; // the longest possible buffer ...
 		int count = 0;
 		for(  ;  c  &&  count<9;  count++  ) {
 			sprintf( pos, "%%%i$", count+1 );
@@ -382,12 +388,17 @@ void cbuffer_t::vprintf(const char *fmt, va_list ap )
 		size_t inc;
 
 		va_list args;
-#ifdef __va_copy
+
+#if defined(va_copy)
+		va_copy(args, ap);
+#elif defined(__va_copy)
+		// Deprecated macro possibly used by older compilers.
 		__va_copy(args, ap);
 #else
-		// HACK: this is undefined behavior but should work ... hopefully ...
-		args = ap;
+		// Undefined behaviour that might work.
+		args = ap; // If this throws an error then C++11 conformance may be required.
 #endif
+
 		const int count = my_vsnprintf( buf+size, n, fmt, args );
 		if(  count < 0  ) {
 #ifdef _WIN32
@@ -407,6 +418,8 @@ void cbuffer_t::vprintf(const char *fmt, va_list ap )
 			inc = (size_t)count;
 		}
 		extend(inc);
+
+		va_end(args);
 	}
 }
 

@@ -12,22 +12,23 @@
 #include "components/gui_combobox.h"
 #include "components/gui_label.h"
 #include "components/action_listener.h"
+#include "components/gui_textarea.h"
 #include "components/gui_textinput.h"
 #include "../dataobj/gameinfo.h"
 #include "../utils/cbuffer_t.h"
 
+class gui_minimap_t;
+
 /**
  * When connected to a network server, this dialog shows game information
  * When not connected, it provides the mechanism for joining a remote game
- * @author Hj. Malthaner
  */
 class server_frame_t : public gui_frame_t, private action_listener_t
 {
 private:
 	gameinfo_t gi;
-	cbuffer_t buf, time, revision_buf, pakset_checksum_buf;
+	cbuffer_t buf;
 
-	bool display_map;       // Controls minimap display
 	bool custom_valid;      // Custom server entry is valid
 
 	gui_textinput_t addinput, nick;
@@ -36,17 +37,18 @@ private:
 	gui_scrolled_list_t serverlist;
 	button_t add, join, find_mismatch;
 	button_t show_mismatched, show_offline;
-	gui_label_t info_list, info_manual, revision, pak_version, date, nick_label;
+	gui_label_t pak_version;
+	gui_label_buf_t revision, date, label_size;
 #if DEBUG>=4
-	gui_label_t pakset_checksum;
+	gui_label_buf_t pakset_checksum;
 #endif
-
+	gui_minimap_t *map;
+	gui_textarea_t game_text;
 	/**
 	 * Server items to add to the listing panel
 	 * Stores dnsname (for connection) and servername (for display in list)
 	 * Also stores online/offline status of the server for filtering
 	 * Adds get_dns() method to retrieve dnsname
-	 * @author Timothy Baldock <tb@entropy.me.uk>
 	 */
 	class server_scrollitem_t : public gui_scrolled_list_t::const_text_scrollitem_t {
 	private:
@@ -54,7 +56,7 @@ private:
 		cbuffer_t serverdns;
 		bool status;
 	public:
-		server_scrollitem_t (const cbuffer_t& name, const cbuffer_t& dns, bool status, uint8 col) : gui_scrolled_list_t::const_text_scrollitem_t( NULL, col ), servername( name ), serverdns( dns ), status( status ) { servername.append( " (" ); servername.append( serverdns.get_str() ); servername.append( ")" ); }
+		server_scrollitem_t (const cbuffer_t& name, const cbuffer_t& dns, bool status, PIXVAL col) : gui_scrolled_list_t::const_text_scrollitem_t( NULL, col ), servername( name ), serverdns( dns ), status( status ) { servername.append( " (" ); servername.append( serverdns.get_str() ); servername.append( ")" ); }
 		char const* get_text () const OVERRIDE { return servername.get_str(); }
 		char const* get_dns () const { return serverdns.get_str(); }
 		void set_text (char const* newtext) OVERRIDE { servername.clear(); servername.append( newtext ); serverdns.clear(); serverdns.append( newtext ); }
@@ -64,11 +66,10 @@ private:
 	/**
 	 * Update UI fields with data from the current state of gameinfo_t gi
 	 */
-	void update_info();
+	PIXVAL update_info();
 
 	/**
 	 * Update UI fields to show connection errors
-	 * @author Timothy Baldock <tb@entropy.me.uk>
 	 */
 	void update_error ( const char* );
 
@@ -76,7 +77,6 @@ private:
 	 * Update server listing (retrieve from listings server)
 	 * Display depends on the state of the show_mismatched and
 	 * show_offline checkboxes
-	 * @author Timothy Baldock <tb@entropy.me.uk>
 	 */
 	bool update_serverlist ();
 
@@ -88,7 +88,6 @@ public:
 	/**
 	 * Return name of file which contains associated help text for this window
 	 * @return Help file name, nor NULL if no help file exists
-	 * @author Hj. Malthaner
 	 */
 	const char *get_help_filename() const OVERRIDE {return "server.txt";}
 

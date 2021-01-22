@@ -25,10 +25,10 @@ class slope_t {
 	/// Named constants for the flags table
 	enum {
 		doubles = 1,   ///< two-height difference slopes
-		way_ns = 2,   ///< way possible in north-south direction
-		way_ew = 4,   ///< way possible in east-west direction
-		single = 8,   ///< way possible
-		all_up = 16,  ///< all corners raised
+		way_ns  = 2,   ///< way possible in north-south direction
+		way_ew  = 4,   ///< way possible in east-west direction
+		single  = 8,   ///< way possible
+		all_up  = 16   ///< all corners raised
 	};
 
 public:
@@ -121,10 +121,10 @@ struct slope4_t {
 	*/
 	typedef sint8 type;
 
-#define scorner_sw(i) (i%2)    	// sw corner
-#define scorner_se(i) ((i/2)%2)	// se corner
-#define scorner_ne(i) ((i/4)%2)	// ne corner
-#define scorner_nw(i) (i/8)    	// nw corner
+	#define scorner_sw(i) (i%2)     // sw corner
+	#define scorner_se(i) ((i/2)%2) // se corner
+	#define scorner_ne(i) ((i/4)%2) // ne corner
+	#define scorner_nw(i) (i/8)     // nw corner
 	enum _corners {
 		corner_SW = 1,
 		corner_SE = 2,
@@ -135,10 +135,9 @@ struct slope4_t {
 
 
 /**
-* Directions in simutrans.
-* ribi_t = Richtungs-Bit = Directions-Bitfield
-* @author Hj. Malthaner
-*/
+ * Directions in simutrans.
+ * ribi_t = Richtungs-Bit = Directions-Bitfield
+ */
 class ribi_t {
 	/// Static lookup table
 	static const int flags[16];
@@ -148,9 +147,9 @@ class ribi_t {
 		single = 1,  ///< only one bit set, way ends here
 		straight_ns = 2,  ///< contains straight n/s connection
 		straight_ew = 4,  ///< contains straight e/w connection
-		bend = 8,   ///< is a bend
-		twoway = 16, ///< two bits set
-		threeway = 32, ///< three bits set
+		bend        = 8,   ///< is a bend
+		twoway      = 16, ///< two bits set
+		threeway    = 32  ///< three bits set
 	};
 
 public:

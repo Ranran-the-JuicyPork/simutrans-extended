@@ -7,7 +7,6 @@
 
 #include "gui_world_view_t.h"
 #include "../../simworld.h"
-#include "../../display/simview.h"
 #include "../../display/viewport.h"
 #include "../../simobj.h"
 #include "../../display/simgraph.h"
@@ -34,14 +33,16 @@ world_view_t::world_view_t(scr_size size ) :
 	raster(get_base_tile_raster_width())
 {
 	set_size( size );
+	min_size = size;
+
 	world_view_t::view_list.append(this);
 }
 
 
 world_view_t::world_view_t() :
-	raster(get_base_tile_raster_width()),
 	prepared_rect(),
-	display_rect()
+	display_rect(),
+	raster(get_base_tile_raster_width())
 {
 	world_view_t::view_list.append(this);
 }
@@ -55,7 +56,6 @@ world_view_t::~world_view_t()
 /**
  * Events werden hiermit an die GUI-components
  * gemeldet
- * @author Hj. Malthaner
  */
 bool world_view_t::infowin_event(const event_t* ev)
 {
@@ -139,10 +139,10 @@ void world_view_t::internal_draw(const scr_coord offset, obj_t const* const obj)
 	/* Not very elegant, but works: Fill everything with black for underground
 	 * mode. */
 	if(  grund_t::underground_mode  ) {
-		display_fillbox_wh(pos.x, pos.y, size.w, size.h, COL_BLACK, true);
+		display_fillbox_wh_clip_rgb(pos.x, pos.y, size.w, size.h, color_idx_to_rgb(COL_BLACK), true);
 	}
 	else {
-		welt->get_view()->display_background(pos.x, pos.y, size.w, size.h, true);
+		display_fillbox_wh_clip_rgb(pos.x, pos.y, size.w, size.h, env_t::background_color, true);
 	}
 
 	const sint16 yoff = obj && obj->is_moving() ?
@@ -227,13 +227,12 @@ void world_view_t::internal_draw(const scr_coord offset, obj_t const* const obj)
 	}
 
 	display_set_clip_wh(old_clip.x, old_clip.y, old_clip.w, old_clip.h);
-	display_ddd_box_clip(pos.x - 1, pos.y - 1, size.w + 2, size.h + 2, MN_GREY0, MN_GREY4);
+	display_ddd_box_clip_rgb(pos.x - 1, pos.y - 1, size.w + 2, size.h + 2, color_idx_to_rgb(MN_GREY0), color_idx_to_rgb(MN_GREY4));
 }
 
 
 /**
  * Resize the contents of the window
- * @author prissi
  */
 void world_view_t::set_size(scr_size size)
 {

@@ -14,7 +14,6 @@
 class cbuffer_t;
 
 /**
- * Knightly :
  *	A fixed-width, automatically line-wrapping text-area,
  *	optionally with a reserved area in the upper right corner.
  *	It does *not* add 10px margins from the top and the left.
@@ -32,7 +31,7 @@ private:
 	/**
 	 * For calculating text height and/or displaying the text.
 	 */
-	scr_size calc_display_text(const scr_coord offset, const bool draw);
+	scr_size calc_display_text(const scr_coord offset, const bool draw) const;
 
 public:
 	gui_fixedwidth_textarea_t(cbuffer_t* buf, const sint16 width);
@@ -47,7 +46,11 @@ public:
 	// it will deliberately ignore the y-component (height) of the size
 	void set_size(scr_size size) OVERRIDE;
 
-	virtual void draw(scr_coord offset) OVERRIDE;
+	void draw(scr_coord offset) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE;
 };
 
 #endif

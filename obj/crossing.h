@@ -7,16 +7,19 @@
 #define OBJ_CROSSING_H
 
 
+#include "../simobj.h"
+
 #include "../simtypes.h"
 #include "../display/simimg.h"
 #include "../descriptor/crossing_desc.h"
 #include "../dataobj/crossing_logic.h"
 
+
 class vehicle_base_t;
+
 
 /**
  * road sign for traffic (one way minimum speed, traffic lights)
- * @author Hj. Malthaner
  */
 class crossing_t : public obj_no_info_t
 {
@@ -30,7 +33,7 @@ protected:
 public:
 #ifdef INLINE_OBJ_TYPE
 #else
-	typ get_typ() const { return crossing; }
+	typ get_typ() const OVERRIDE { return crossing; }
 #endif
 	const char* get_name() const OVERRIDE { return "Kreuzung"; }
 
@@ -46,7 +49,6 @@ public:
 
 	/**
 	 * crossing logic is removed here
-	 * @author prissi
 	 */
 	virtual ~crossing_t();
 
@@ -56,15 +58,13 @@ public:
 
 	/**
 	 * @return string (only used for debug at the moment)
-	 * @author prissi
 	 */
-	void info(cbuffer_t & buf) const OVERRIDE { logic->info(buf); }
+	void info(cbuffer_t & buf) const OVERRIDE;
 
 	/**
 	 * @return NULL when OK, otherwise an error message
-	 * @author Hj. Malthaner
 	 */
-	const char * is_deletable(const player_t *player) OVERRIDE;
+	const char *is_deletable(const player_t *player) OVERRIDE;
 
 	// returns true, if the crossing can be passed by this vehicle
 	bool request_crossing( const vehicle_base_t *v, bool check_only = false ) { return logic->request_crossing( v, check_only ); }
@@ -87,7 +87,6 @@ public:
 
 	/**
 	 * Dient zur Neuberechnung des Bildes
-	 * @author Hj. Malthaner
 	 */
 	void calc_image() OVERRIDE;
 
@@ -109,7 +108,6 @@ public:
 
 	/**
 	* For the front image hiding vehicles
-	* @author prissi
 	*/
 	image_id get_front_image() const OVERRIDE { return foreground_image; }
 

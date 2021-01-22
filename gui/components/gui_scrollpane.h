@@ -13,44 +13,68 @@
 /*
  * this is a scrolling area in which subcomponents are drawn
  */
+class loadsave_t;
+
+/*
+ * this is a scrolling area in which subcomponents are drawn
+ */
 class gui_scrollpane_t : public gui_component_t
 {
 private:
-	/**
-	 * The scrolling component
-	 * @author Hj. Malthaner
-	 */
-	gui_component_t *comp;
 	scr_size old_comp_size;
+	scr_size cached_min_size;
+	scr_size cached_max_size;
 
 	/**
 	 * Scrollbar X/Y
-	 * @author Hj. Malthaner
 	 */
 	scrollbar_t scroll_x, scroll_y;
 
 	bool b_show_scroll_x:1;
 	bool b_show_scroll_y:1;
 	bool b_has_size_corner:1;
+	bool maximize:1;
+	bool take_cached_size:1;
+
+	// for oversized entries
+	scr_coord_val max_width;
+
+protected:
+	/**
+	 * The scrolling component
+	 */
+	gui_component_t *comp;
 
 	void recalc_sliders(scr_size size);
 
 public:
 	/**
 	 * @param comp, the scrolling component
-	 * @author Hj. Malthaner
 	 */
-	gui_scrollpane_t(gui_component_t *comp);
+	gui_scrollpane_t(gui_component_t *comp, bool b_scroll_x = false, bool b_scroll_y = true);
+
+	void set_component(gui_component_t *comp) { this->comp = comp; }
+
+	/**
+	* this is the maximum width a scrollbar requests as minimum size
+	* default is the stadard width of a dialoge (4*button width+3*space)
+	* @param width, the minimum width it should strech to
+	*/
+	virtual void set_min_width( scr_coord_val width ) { max_width = width; }
 
 	/**
 	 * This method MUST be used to set the size of scrollpanes.
-	 * @author Hj. Malthaner
 	 */
 	void set_size(scr_size size) OVERRIDE;
 
 	/**
+	 * Request other pane-size.
+	 * @returns realized size.
+	 */
+	scr_size request_size(scr_size request);
+
+	/**
 	 * Set the position of the Scrollbars
-	 * @author Hj. Malthaner
 	 */
 	void set_scroll_position(int x, int y);
 
@@ -69,7 +93,6 @@ public:
 
 	/**
 	 * Draw the component
-	 * @author Hj. Malthaner
 	 */
 	void draw(scr_coord offset) OVERRIDE;
 
@@ -83,9 +106,8 @@ public:
 
 	/**
 	 * Returns true if the hosted component is focusable
-	 * @author Knightly
 	 */
-	virtual bool is_focusable() OVERRIDE { return comp->is_focusable(); }
+	bool is_focusable() OVERRIDE { return comp->is_focusable(); }
 
 	/**
 	 * returns element that has the focus
@@ -93,11 +115,25 @@ public:
 	gui_component_t *get_focus() OVERRIDE { return comp->get_focus(); }
 
 	/**
+	 * Adjust scrollbars to make focused element visible if necessary
+	 */
+	void show_focused();
+
+	/**
 	 * Get the relative position of the focused component.
 	 * Used for auto-scrolling inside a scroll pane.
-	 * @author Knightly
 	 */
-	virtual scr_coord get_focus_pos() OVERRIDE { return pos + ( comp->get_focus_pos() - scr_coord( scroll_x.get_knob_offset(), scroll_y.get_knob_offset() ) ); }
+	scr_coord get_focus_pos() OVERRIDE { return pos + ( comp->get_focus_pos() - scr_coord( scroll_x.get_knob_offset(), scroll_y.get_knob_offset() ) ); }
+
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE;
+
+	/// load/save scrollbar positions
+	void rdwr( loadsave_t *file );
+
+	bool is_marginless() const OVERRIDE { return maximize; }
+	void set_maximize(bool b) { maximize = b; }
 };
 
 #endif

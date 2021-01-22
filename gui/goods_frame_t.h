@@ -9,21 +9,21 @@
 
 #include "gui_frame.h"
 #include "components/gui_button.h"
+#include "components/gui_numberinput.h"
+#include "components/gui_combobox.h"
 #include "components/gui_scrollpane.h"
 #include "components/gui_label.h"
-#include "components/gui_numberinput.h"
 #include "components/action_listener.h"
-#include "components/gui_combobox.h"
 #include "goods_stats_t.h"
 #include "../utils/cbuffer_t.h"
 
 // for waytype_t
 #include "../simtypes.h"
 
+class goods_desc_t;
 
 /**
  * Shows statistics. Only goods so far.
- * @author Hj. Malthaner
  */
 class goods_frame_t : public gui_frame_t, private action_listener_t
 {
@@ -51,16 +51,10 @@ private:
 	char		catering_txt[6];
 	char		class_txt[6];
 	cbuffer_t	descriptive_text;
-	uint16		good_list[256];
+	vector_tpl<const goods_desc_t*> good_list;
 
-	gui_label_t		sort_label;
 	gui_combobox_t	sortedby;
 	button_t		sort_asc, sort_desc;
-	gui_label_t		change_speed_label;
-	gui_label_t		change_distance_label;
-	gui_label_t		change_comfort_label;
-	gui_label_t		change_catering_label;
-	gui_label_t		change_class_label;
 
 	/*
 	button_t		speed_up;
@@ -77,39 +71,34 @@ private:
 	// @author: HeinBloed, April 2012
 	gui_numberinput_t distance_input, comfort_input, catering_input, speed_input, class_input;
 
+	gui_aligned_container_t *sort_row;
+
 	button_t		filter_goods_toggle;
 
 	goods_stats_t goods_stats;
 	gui_scrollpane_t scrolly;
 
 	// creates the list and pass it to the child function good_stats, which does the display stuff ...
-	static bool compare_goods(uint16, uint16);
+	static bool compare_goods(goods_desc_t const* const w1, goods_desc_t const* const w2);
 	void sort_list();
 
 public:
 	goods_frame_t();
 
-	/**
-	* resize window in response to a resize event
-	* @author Hj. Malthaner
-	* @date   16-Oct-2003
-	*/
-	void resize(const scr_coord delta) OVERRIDE;
+	// yes we can reload
+	uint32 get_rdwr_id() OVERRIDE;
+	void rdwr( loadsave_t *file ) OVERRIDE;
 
 	bool has_min_sizer() const OVERRIDE {return true;}
 
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author V. Meyer
 	 */
 	const char * get_help_filename() const OVERRIDE {return "goods_filter.txt"; }
 
 	/**
-	 * Draw new component. The values to be passed refer to the window
-	 * i.e. It's the screen coordinates of the window where the
-	 * component is displayed.
-	 * @author Hj. Malthaner
+	 * Draw the component
 	 */
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 

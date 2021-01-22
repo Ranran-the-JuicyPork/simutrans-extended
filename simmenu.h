@@ -72,8 +72,11 @@ enum {
 	TOOL_ERROR_MESSAGE,
 	TOOL_CHANGE_WATER_HEIGHT,
 	TOOL_SET_CLIMATE,
-	TOOL_BUILD_SIGNALBOX_DEPRECATED,
+	TOOL_ROTATE_BUILDING,
 	TOOL_REASSIGN_SIGNAL_DEPRECATED,
+	TOOL_EXEC_SCRIPT,
+	TOOL_EXEC_TWO_CLICK_SCRIPT,
+	TOOL_PLANT_GROUNDOBJ,
 	GENERAL_TOOL_STANDARD_COUNT,
 	// Extended entries from here:
 	TOOL_BUILD_SIGNALBOX=0x0080,
@@ -120,8 +123,8 @@ enum {
 	TOOL_TOGGLE_RESERVATION,
 	TOOL_VIEW_OWNER,
 	TOOL_HIDE_UNDER_CURSOR,
-	TOOL_CHANGE_ROADSIGN_DEPRECATED,
-	TOOL_SHOW_RIBI_DEPRECATED,
+	TOOL_MOVE_MAP,
+	TOOL_ROLLUP_ALL_WIN,
 	TOOL_RECOLOUR_TOOL_DEPRECATED,
 	TOOL_ACCESS_TOOL_DEPRECATED,
 	SIMPLE_TOOL_STANDARD_COUNT,
@@ -169,15 +172,23 @@ enum {
 	DIALOG_SETTINGS,
 	DIALOG_GAMEINFO,
 	DIALOG_THEMES,
+	DIALOG_SCENARIO,
+	DIALOG_SCENARIO_INFO,
+	DIALOG_LIST_DEPOT,
+	DIALOG_LIST_VEHICLE,
+	DIALOG_SCRIPT_TOOL, // dummy
+	DIALOG_EDIT_GROUNDOBJ,
 	DIALOG_TOOL_STANDARD_COUNT,
 	// Extended entries from here:
-	DIALOG_TOOL_COUNT=0x0080,
+	DIALOG_LIST_SIGNALBOX =0x0080,
+	DIALOG_TOOL_COUNT,
 	DIALOG_TOOL = 0x4000
 };
 
 enum {
 	// toolbars
 	TOOL_MAINMENU = 0,
+	TOOL_LAST_USED = 1022,
 	TOOLBAR_TOOL = 0x8000u
 };
 
@@ -218,11 +229,11 @@ public:
 	sint16 ok_sound;
 
 	enum {
-		WFL_SHIFT  = 1, ///< shift-key was pressed when mouse-click happened
-		WFL_CTRL   = 2, ///< ctrl-key was pressed when mouse-click happened
-		WFL_LOCAL  = 4, ///< tool call was issued by local client
-		WFL_SCRIPT = 8,  ///< tool call was issued by script (no password checks)
-		WFL_NO_CHK = 16, ///< tool call needs no password or scenario checks
+		WFL_SHIFT  = 1 << 0, ///< shift-key was pressed when mouse-click happened
+		WFL_CTRL   = 1 << 1, ///< ctrl-key was pressed when mouse-click happened
+		WFL_LOCAL  = 1 << 2, ///< tool call was issued by local client
+		WFL_SCRIPT = 1 << 3, ///< tool call was issued by script
+		WFL_NO_CHK = 1 << 4  ///< tool call needs no password or scenario checks
 	};
 	uint8 flags; // flags are set before init/work/move is called
 
@@ -231,8 +242,9 @@ public:
 	bool is_local_execution() const { return flags & WFL_LOCAL; }
 	bool is_scripted()        const { return flags & WFL_SCRIPT; }
 	bool no_check()           const { return flags & WFL_NO_CHK; }
-	bool can_use_gui()        const { return is_local_execution() && !is_scripted(); }
+	bool can_use_gui()        const { return is_local_execution()  &&  !is_scripted(); }
 
+	uint8  command_flags; // only shift and control
 	uint16 command_key;// key to toggle action for this function
 
 	static vector_tpl<tool_t *> general_tool;
@@ -268,7 +280,7 @@ public:
 	virtual image_id get_icon(player_t *) const { return icon; }
 	void set_icon(image_id i) { icon = i; }
 
-	// returns default_param of this tool for player player
+	// returns default_param of this tool for player
 	// if player==NULL returns default_param that was used to create the tool
 	virtual const char* get_default_param(player_t* = NULL) const { return default_param; }
 	void set_default_param(const char* str) { default_param = str; }
@@ -280,19 +292,19 @@ public:
 	virtual bool is_selected() const;
 
 	// when true, local execution would do no harm
-	virtual bool is_init_network_save() const { return false; }
-	virtual bool is_move_network_save(player_t *) const { return true; }
+	virtual bool is_init_network_safe() const { return false; }
+	virtual bool is_move_network_safe(player_t *) const { return true; }
 
-	// if is_work_network_save()==false
-	// and is_work_here_network_save(...)==false
+	// if is_work_network_safe()==false
+	// and is_work_here_network_safe(...)==false
 	// then work-command is sent over network
-	virtual bool is_work_network_save() const { return false; }
-	virtual bool is_work_here_network_save(player_t *, koord3d) { return false; }
+	virtual bool is_work_network_safe() const { return false; }
+	virtual bool is_work_here_network_safe(player_t *, koord3d) { return false; }
 
 	// will draw a dark frame, if selected
 	virtual void draw_after(scr_coord pos, bool dirty) const;
 
-	virtual const char *get_tooltip(player_t const* ) const { return NULL; }
+	virtual const char *get_tooltip(const player_t *) const { return NULL; }
 
 	/**
 	 * @return true if this tool operates over the grid, not the map tiles.
@@ -326,7 +338,7 @@ public:
 	 * Should be overloaded if derived class implements move,
 	 * move will only be called, if this function returns true.
 	 */
-	virtual bool move_has_effects() const { return false; }
+	virtual bool move_has_effects() const { return false;}
 
 	/**
 	 * Returns whether the 2d koordinate passed it's a valid position for this tool to highlight a tile,
@@ -334,7 +346,7 @@ public:
 	 * @see check_pos
 	 * @return true is the coordinate it's found valid, false otherwise.
 	 */
-	bool check_valid_pos(koord k ) const;
+	bool check_valid_pos( koord k ) const;
 
 	/**
 	 * Specifies if the cursor will need a position update after this tool takes effect (ie: changed the height of the tile)
@@ -358,10 +370,10 @@ public:
 	char const* check_pos(player_t*, koord3d) OVERRIDE;
 };
 
-/*
+
+/**
  * Class for tools needing two clicks (e.g. building ways).
  * Dragging is also possible.
- * @author Gerd Wachsmuth
  */
 class two_click_tool_t : public tool_t {
 public:
@@ -378,7 +390,7 @@ public:
 	char const* move(player_t*, uint16 /* buttonstate */, koord3d) OVERRIDE;
 	bool move_has_effects() const OVERRIDE { return true; }
 
-	bool is_work_here_network_save(player_t *, koord3d) OVERRIDE;
+	bool is_work_here_network_safe(player_t *, koord3d) OVERRIDE;
 
 	/**
 	 * @returns true if cleanup() needs to be called before another tool can be executed
@@ -437,7 +449,7 @@ protected:
 
 /* toolbar are a new overclass */
 class toolbar_t : public tool_t {
-private:
+protected:
 	const char *helpfile;
 	tool_selector_t *tool_selector;
 	slist_tpl<tool_t *>tools;
@@ -452,14 +464,27 @@ public:
 	tool_selector_t *get_tool_selector() const { return tool_selector; }
 	image_id get_icon(player_t*) const OVERRIDE;
 	bool is_selected() const OVERRIDE;
-	bool is_init_network_save() const OVERRIDE { return true; }
-	bool is_work_network_save() const OVERRIDE { return true; }
+	bool is_init_network_safe() const OVERRIDE { return true; }
+	bool is_work_network_safe() const OVERRIDE { return true; }
 	// show this toolbar
 	bool init(player_t*) OVERRIDE;
 	// close this toolbar
 	bool exit(player_t*) OVERRIDE;
-	void update(player_t *);	// just refresh content
+	virtual void update(player_t *); // just refresh content
 	void append(tool_t *tool) { tools.append(tool); }
+};
+
+#define MAX_LAST_TOOLS (10)
+
+class toolbar_last_used_t : public toolbar_t {
+private:
+	slist_tpl<tool_t *>all_tools[MAX_PLAYER_COUNT];
+public:
+	toolbar_last_used_t(uint16 const id, char const* const t, char const* const h) : toolbar_t(id,t,h) {}
+	static toolbar_last_used_t *last_used_tools;
+	void update(player_t *) OVERRIDE; // just refresh content
+	void append(tool_t *, player_t *);
+	void clear();
 };
 
 // create new instance of tool

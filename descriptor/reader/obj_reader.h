@@ -13,19 +13,19 @@
 #include "../objversion.h"
 #include "../../simdebug.h"
 #include "../../simtypes.h"
+#include "../../macros.h"
 
 
 class obj_desc_t;
-template<class key_t, class value_t> class inthashtable_tpl;
-template<class value_t> class stringhashtable_tpl;
-template<class key_t, class value_t> class ptrhashtable_tpl;
+template<class key_t, class value_t, size_t n_bags> class inthashtable_tpl;
+template<class value_t, size_t n_bags> class stringhashtable_tpl;
+template<class key_t, class value_t, size_t n_bags> class ptrhashtable_tpl;
 template<class T> class slist_tpl;
 
 
 
 /**
  * Reads uint8 from memory area. Advances pointer by 1 byte.
- * @author Hj. Malthaner
  */
 inline uint8 decode_uint8(char * &data)
 {
@@ -39,7 +39,6 @@ inline uint8 decode_uint8(char * &data)
 
 /**
  * Reads uint16 from memory area. Advances pointer by 2 bytes.
- * @author Hj. Malthaner
  */
 inline uint16 decode_uint16(char * &data)
 {
@@ -53,7 +52,6 @@ inline uint16 decode_uint16(char * &data)
 
 /**
  * Reads uint32 from memory area. Advances pointer by 4 bytes.
- * @author Hj. Malthaner
  */
 inline uint32 decode_uint32(char * &data)
 {
@@ -71,16 +69,16 @@ class obj_reader_t
 	//
 	// table of registered obj readers sorted by id
 	//
-	typedef inthashtable_tpl<obj_type, obj_reader_t*> obj_map;
+	typedef inthashtable_tpl<obj_type, obj_reader_t*, N_BAGS_LARGE> obj_map;
 	static obj_map* obj_reader;
 	//
 	// object addresses needed for resolving xrefs later
 	// - stored in a hash table with type and name
 	//
-	static inthashtable_tpl<obj_type, stringhashtable_tpl<obj_desc_t *> > loaded;
-	typedef inthashtable_tpl<obj_type, stringhashtable_tpl<slist_tpl<obj_desc_t**> > > unresolved_map;
+	static inthashtable_tpl<obj_type, stringhashtable_tpl<obj_desc_t *, N_BAGS_LARGE>, N_BAGS_LARGE> loaded;
+	typedef inthashtable_tpl<obj_type, stringhashtable_tpl<slist_tpl<obj_desc_t**>, N_BAGS_LARGE>, N_BAGS_LARGE > unresolved_map;
 	static unresolved_map unresolved;
-	static ptrhashtable_tpl<obj_desc_t **, int>  fatals;
+	static ptrhashtable_tpl<obj_desc_t **, int, N_BAGS_SMALL>  fatals;
 
 	static void read_nodes(FILE* fp, obj_desc_t*& data, int register_nodes,uint32 version);
 	static void skip_nodes(FILE *fp,uint32 version);

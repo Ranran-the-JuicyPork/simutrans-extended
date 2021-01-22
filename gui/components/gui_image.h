@@ -22,6 +22,9 @@ class gui_image_t : public gui_component_t
 		uint16              player_nr;
 		scr_coord           remove_offset;
 		bool                remove_enabled;
+		FLAGGED_PIXVAL      color_index;
+
+		const char * tooltip;
 
 	public:
 		gui_image_t( const image_id i=IMG_EMPTY, const uint8 p=0, control_alignment_t alignment_par = ALIGN_NONE, bool remove_offset = false );
@@ -30,11 +33,18 @@ class gui_image_t : public gui_component_t
 
 		void enable_offset_removal(bool remove_offsets) { set_image(id,remove_offsets); }
 
+		void set_transparent(FLAGGED_PIXVAL c) { color_index = c; }
+
 		/**
 		 * Draw the component
-		 * @author Hj. Malthaner
 		 */
 		void draw( scr_coord offset ) OVERRIDE;
+
+		scr_size get_min_size() const OVERRIDE;
+
+		scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+
+		void set_tooltip(const char * tooltip);
 };
 
 #endif

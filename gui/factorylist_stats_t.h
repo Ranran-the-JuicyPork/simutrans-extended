@@ -14,13 +14,12 @@ class fabrik_t;
 
 
 namespace factorylist {
-    enum sort_mode_t { by_name=0, by_available, by_output, by_maxprod, by_status, by_power, by_sector, by_staffing, by_operation_rate, SORT_MODES, by_input, by_transit,  };	// the last two not used
+	enum sort_mode_t { by_name=0, by_available, by_output, by_maxprod, by_status, by_power, by_sector, by_staffing, by_operation_rate, by_region, SORT_MODES, by_input, by_transit  };	// the last two not used
 };
 
 /**
  * Factory list stats display
  * Where factory stats are calculated for list dialog
- * @author Hj. Malthaner
  */
 class factorylist_stats_t : public gui_world_component_t
 {
@@ -38,7 +37,7 @@ public:
 
 	void sort(factorylist::sort_mode_t sortby, bool sortreverse, bool own_network, uint8 goods_catg_index);
 
-	bool display_operation_stats = false;
+	uint8 display_mode = 0;
 	bool infowin_event(event_t const*) OVERRIDE;
 
 	/**
@@ -46,10 +45,12 @@ public:
 	 */
 	void recalc_size();
 
-	/**
-	* Draw the component
-	* @author Hj. Malthaner
-	*/
+/*	char const* get_text() const OVERRIDE { return fab->get_name(); }
+	bool infowin_event(const event_t *) OVERRIDE;
+	bool is_valid() const OVERRIDE;
+	void set_size(scr_size size) OVERRIDE;
+*/
+
 	void draw(scr_coord offset) OVERRIDE;
 };
 

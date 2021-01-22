@@ -21,10 +21,9 @@
 #include "sound_desc.h"
 #include "ground_desc.h"
 
-/* sound of the program *
- * @author prissi
+/*
+ * sound of the program
  */
-
 class sound_ids {
 public:
 	std::string filename;
@@ -35,7 +34,7 @@ public:
 };
 
 
-static stringhashtable_tpl<sound_ids *> name_sound;
+static stringhashtable_tpl<sound_ids *, N_BAGS_MEDIUM> name_sound;
 static bool sound_on=false;
 static std::string sound_path;
 
@@ -59,7 +58,7 @@ void sound_desc_t::init()
 {
 	// ok, now init
 	sound_on = true;
-	sound_path = env_t::program_dir;
+	sound_path = env_t::data_dir;
 	sound_path= sound_path + env_t::objfilename + "sound/";
 	// process sound.tab
 	tabfile_t soundconf;
@@ -95,7 +94,7 @@ DBG_MESSAGE("sound_desc_t::init()","assigned system sound %d to sound %s (id=%i)
 /* return sound id from index */
 sint16 sound_desc_t::get_sound_id(const char *name)
 {
-	if(!sound_on  ||  name==NULL  ||  *name==0) {
+	if(  !sound_on  &&  (name==NULL  ||  *name==0)  ) {
 		return NO_SOUND;
 	}
 	sound_ids *s = name_sound.get(name);
@@ -123,7 +122,7 @@ DBG_MESSAGE("sound_desc_t::get_sound_id()","successfully retrieved sound %s inte
  */
 bool sound_desc_t::register_desc(sound_desc_t *desc)
 {
-	if(!sound_on) {
+	if(  !sound_on  ) {
 		return false;
 	}
 	// register, if not there (all done by this one here)

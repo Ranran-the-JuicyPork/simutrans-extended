@@ -13,9 +13,7 @@ class karte_t;
 #include "../simobj.h"
 
 /**
- * Brueckenteile (sichtbar)
- *
- * Hj. Malthaner
+ * Bridges (visible)
  */
 class bruecke_t : public obj_no_info_t
 {
@@ -35,7 +33,7 @@ public:
 	const char *get_name() const OVERRIDE {return "Bruecke";}
 #ifdef INLINE_OBJ_TYPE
 #else
-	typ get_typ() const { return bruecke; }
+	typ get_typ() const OVERRIDE { return bruecke; }
 #endif
 
 #ifdef MULTI_THREAD
@@ -51,7 +49,7 @@ public:
 	const bridge_desc_t *get_desc() const { return desc; }
 
 	inline void set_image( image_id b ) { image = b; }
-	image_id get_image() const OVERRIDE { return image; }
+	image_id get_image() const OVERRIDE;
 
 	image_id get_front_image() const OVERRIDE;
 
@@ -75,11 +73,11 @@ public:
 	void cleanup(player_t *player) OVERRIDE;
 
 	void rotate90() OVERRIDE;
+
 	/**
-	 * @return NULL when OK, otherwise an error message
-	 * @author Hj. Malthaner
+	 * @return NULL wenn OK, ansonsten eine Fehlermeldung
 	 */
-	const char * is_deletable(const player_t *player) OVERRIDE;
+	const char *is_deletable(const player_t *player) OVERRIDE;
 };
 
 #endif

@@ -9,12 +9,8 @@
 
 #include "image.h"
 
-/*
- *  Autor:
- *      Volker Meyer
- *
- *  Description:
- *      Description eines eindimensionalen Arrays von Bildern.
+/**
+ * One-dimensional image list.
  *
  *  Child nodes:
  *	0   1. Image
@@ -22,9 +18,9 @@
  *	... ...
  */
 class image_list_t : public obj_desc_t {
-    friend class imagelist_reader_t;
+	friend class imagelist_reader_t;
 
-    uint16  count;
+	uint16  count;
 
 public:
 	image_list_t() : count(0) {}

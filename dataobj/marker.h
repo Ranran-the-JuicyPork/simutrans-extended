@@ -18,7 +18,7 @@ class grund_t;
  * Singleton.
  */
 class marker_t {
-	// Hajo: added bit mask, because it allows a more efficient
+	// added bit mask, because it allows a more efficient
 	// implementation (use & instead of %)
 	enum { bit_unit = (8 * sizeof(unsigned char)),
 		bit_mask = (8 * sizeof(unsigned char))-1 };
@@ -33,7 +33,7 @@ class marker_t {
 	int cached_size_x;
 
 	/// hashtable to mark non-ground tiles (bridges, tunnels)
-	ptrhashtable_tpl <const grund_t *, bool> more;
+	ptrhashtable_tpl <const grund_t *, bool, N_BAGS_LARGE> more;
 
 	/**
 	 * Initializes marker. Set all tiles to not marked.

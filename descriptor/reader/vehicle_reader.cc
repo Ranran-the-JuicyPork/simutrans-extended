@@ -25,7 +25,7 @@ void vehicle_reader_t::register_obj(obj_desc_t *&data)
 
 	checksum_t *chk = new checksum_t();
 	desc->calc_checksum(chk);
-	pakset_info_t::append(desc->get_name(), chk);
+	pakset_info_t::append(desc->get_name(), get_type(), chk);
 }
 
 
@@ -41,11 +41,11 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 
 	vehicle_desc_t *desc = new vehicle_desc_t();
 
-	// Hajo: Read data
+	// Read data
 	fread(desc_buf, node.size, 1, fp);
 	char * p = desc_buf;
 
-	// Hajo: old versions of PAK files have no version stamp.
+	// old versions of PAK files have no version stamp.
 	// But we know, the higher most bit was always cleared.
 
 	const uint16 v = decode_uint16(p);

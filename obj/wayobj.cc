@@ -44,7 +44,7 @@ static pthread_mutex_t wayobj_calc_image_mutex = PTHREAD_RECURSIVE_MUTEX_INITIAL
 // the descriptions ...
 const way_obj_desc_t *wayobj_t::default_oberleitung=NULL;
 
-stringhashtable_tpl<way_obj_desc_t *> wayobj_t::table;
+stringhashtable_tpl<way_obj_desc_t *, N_BAGS_MEDIUM> wayobj_t::table;
 
 wayobj_t::wayobj_t(loadsave_t* const file) :
 #ifdef INLINE_OBJ_TYPE
@@ -205,8 +205,10 @@ void wayobj_t::rdwr(loadsave_t *file)
 {
 	xml_tag_t t( file, "wayobj_t" );
 	obj_t::rdwr(file);
-	if(file->get_version()>=89000) {
-		file->rdwr_byte(dir);
+	if(file->get_version_int()>=89000) {
+		uint8 ddir = dir;
+		file->rdwr_byte(ddir);
+		dir = ddir;
 		if(file->is_saving()) {
 			const char *s = desc->get_name();
 			file->rdwr_str(s);
@@ -235,7 +237,7 @@ void wayobj_t::rdwr(loadsave_t *file)
 	}
 	else {
 		desc = default_oberleitung;
-		dir = 255;
+		dir = dir_unknown;
 	}
 }
 
@@ -262,7 +264,7 @@ const char *wayobj_t:: is_deletable(const player_t *player)
 void wayobj_t::finish_rd()
 {
 	// (re)set dir
-	if(dir==255) {
+	if(dir==dir_unknown) {
 		const waytype_t wt = (desc->get_wtyp()==tram_wt) ? track_wt : desc->get_wtyp();
 		weg_t *w=welt->lookup(get_pos())->get_weg(wt);
 		if(w) {
@@ -365,7 +367,7 @@ void wayobj_t::calc_image()
 		}
 
 		ribi_t::ribi sec_way_ribi_unmasked = 0;
-		if (wt == any_wt) {
+		if(wt == any_wt) {
 			if (weg_t *sec_w = gr->get_weg_nr(1)) {
 				sec_way_ribi_unmasked = sec_w->get_ribi_unmasked();
 			}
@@ -425,6 +427,9 @@ void wayobj_t::calc_image()
 					// no diagonals available
 					diagonal = false;
 				}
+			}
+
+			if(  ribi_t::is_threeway(dir)  ) {
 			}
 		}
 	}
@@ -544,7 +549,7 @@ bool wayobj_t::successfully_loaded()
 	}
 
 	way_obj_desc_t const* def = 0;
-	FOR(stringhashtable_tpl<way_obj_desc_t *>, const& i, table) {
+	for(auto const& i : table) {
 		way_obj_desc_t const& b = *i.value;
 		if (b.is_overhead_line())							continue;
 		if (b.get_wtyp()     != track_wt)                   continue;
@@ -560,10 +565,8 @@ bool wayobj_t::successfully_loaded()
 bool wayobj_t::register_desc(way_obj_desc_t *desc)
 {
 	// avoid duplicates with same name
-	way_obj_desc_t *old_desc = table.get(desc->get_name());
-	if(old_desc) {
-		dbg->warning( "wayobj_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
-		table.remove(desc->get_name());
+	if(  way_obj_desc_t *old_desc = table.remove(desc->get_name())  ) {
+		dbg->doubled( "wayobj", desc->get_name() );
 		tool_t::general_tool.remove( old_desc->get_builder() );
 		delete old_desc->get_builder();
 		delete old_desc;
@@ -590,7 +593,6 @@ DBG_DEBUG( "wayobj_t::register_desc()","%s", desc->get_name() );
 
 /**
  * Fill menu with icons of given wayobjects from the list
- * @author Hj. Malthaner
  */
 void wayobj_t::fill_menu(tool_selector_t *tool_selector, waytype_t wtyp, sint16 /*sound_ok*/)
 {
@@ -603,7 +605,7 @@ void wayobj_t::fill_menu(tool_selector_t *tool_selector, waytype_t wtyp, sint16 
 
 	vector_tpl<const way_obj_desc_t *>matching;
 
-	FOR(stringhashtable_tpl<way_obj_desc_t *>, const& i, table) {
+	for(auto const& i : table) {
 		way_obj_desc_t const* const desc = i.value;
 		if(  desc->is_available(time)  ) {
 
@@ -624,7 +626,7 @@ void wayobj_t::fill_menu(tool_selector_t *tool_selector, waytype_t wtyp, sint16 
 
 const way_obj_desc_t *wayobj_t::get_overhead_line(waytype_t wt, uint16 time)
 {
-	FOR(stringhashtable_tpl<way_obj_desc_t *>, const& i, table) {
+	for(auto const& i : table) {
 		way_obj_desc_t const* const desc = i.value;
 		if(  desc->is_available(time)  &&  desc->get_wtyp()==wt  &&  desc->is_overhead_line()) {
 			return desc;

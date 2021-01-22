@@ -15,13 +15,9 @@
 
 #define AMBIENT_SOUND_INTERVALL (13000)
 
-/*
- *  Autor:
- *      prissi
- *
- *  Description:
- *      Sounds in the game; name is the file name
- *      ingame, sounds are referred to by their number
+/**
+ * Sounds in the game; name is the file name
+ * ingame, sounds are referred to by their number
  *
  *  Child nodes:
  *	0   Name
@@ -40,7 +36,7 @@
 
 
 class sound_desc_t : public obj_named_desc_t {
-    friend class sound_reader_t;
+	friend class sound_reader_t;
 
 private:
 	static sint16 compatible_sound_id[MAX_OLD_SOUNDS];

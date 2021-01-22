@@ -93,9 +93,8 @@ private:
 	 */
 	void set_viewport_ij_offset( const koord &k );
 
-	/*
+	/**
 	 * The current convoi to follow.
-	 * @author prissi
 	 */
 	convoihandle_t follow_convoi;
 
@@ -168,7 +167,6 @@ public:
 
 	/**
 	 * Set center viewport position.
-	 * @author prissi
 	 */
 	void change_world_position( koord ij, sint16 x=0, sint16 y=0 );
 
@@ -233,11 +231,6 @@ public:
 	 * @return koord3d::invalid if no position exists under the requested coordinate, a 3d koord directly under it otherwise.
 	 */
 	koord3d get_new_cursor_position(const scr_coord &screen_pos, bool grid_coordinates);
-
-	/**
-	 * @return true if the current viewport contains regions outside the world.
-	 */
-	bool is_background_visible() const;
 
 	/**
 	 * @}

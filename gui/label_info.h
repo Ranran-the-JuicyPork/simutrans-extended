@@ -8,8 +8,6 @@
 
 
 #include "gui_frame.h"
-#include "components/gui_label.h"
-#include "components/gui_textarea.h"
 #include "components/gui_textinput.h"
 #include "components/gui_location_view_t.h"
 #include "components/action_listener.h"
@@ -18,16 +16,12 @@ class label_t;
 
 /**
  * Label creation/edition window
- *
- * @author Hj. Malthaner
  */
-
 class label_info_t : public gui_frame_t, private action_listener_t
 {
 private:
 	label_t *label;
 
-	gui_label_t player_name;
 	gui_textinput_t input;
 	location_view_t view;
 	char edit_name[256];

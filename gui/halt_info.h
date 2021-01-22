@@ -13,23 +13,84 @@
 #include "components/gui_textarea.h"
 #include "components/gui_textinput.h"
 #include "components/gui_button.h"
+#include "components/gui_button_to_chart.h"
 #include "components/gui_location_view_t.h"
+#include "components/gui_tab_panel.h"
 #include "components/action_listener.h"
 #include "components/gui_chart.h"
+#include "components/gui_image.h"
+#include "components/gui_colorbox.h"
 #include "components/gui_combobox.h"
 
 #include "../utils/cbuffer_t.h"
 #include "../simhalt.h"
-#include "../gui/simwin.h"
+#include "simwin.h"
+
+//class gui_departure_board_t;
+
+#define HALT_CAPACITY_BAR_WIDTH 100
+
+/**
+ * Helper class to show type symbols (train, bus, etc)
+ */
+class gui_halt_type_images_t : public gui_aligned_container_t
+{
+	halthandle_t halt;
+	gui_image_t img_transport[9];
+public:
+	gui_halt_type_images_t(halthandle_t h);
+
+	void draw(scr_coord offset) OVERRIDE;
+};
+
+/**
+ * Helper class to draw freight type capacity bar
+ */
+class gui_halt_capacity_bar_t : public gui_container_t
+{
+	halthandle_t halt;
+	uint8 freight_type;
+public:
+	gui_halt_capacity_bar_t(halthandle_t h, uint8 ft);
+
+	void draw(scr_coord offset);
+
+	scr_size get_min_size() const OVERRIDE { return scr_size(HALT_CAPACITY_BAR_WIDTH + 2, GOODS_COLOR_BOX_HEIGHT); }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
+/**
+ * Helper class to show three freight category waiting indicator
+ */
+class gui_halt_waiting_indicator_t : public gui_aligned_container_t
+{
+	halthandle_t halt;
+	gui_image_t img_alert;
+	gui_halt_capacity_bar_t *capacity_bar[3];
+	gui_label_buf_t lb_waiting[3];
+	gui_label_buf_t lb_capacity[3];
+	gui_label_buf_t lb_transfer_time[3];
+
+	void init();
+public:
+	gui_halt_waiting_indicator_t(halthandle_t h);
+
+	void update();
+
+	void draw(scr_coord offset) OVERRIDE;
+};
 
 
+/**
+ * Main class: the station info window.
+ * Window with destination information for a stop
+ */
 class halt_info_t : public gui_frame_t, private action_listener_t
 {
 private:
 
 	/**
 	* Buffer for freight info text string.
-	* @author Hj. Malthaner
 	*/
 	cbuffer_t freight_info;
 	cbuffer_t info_buf, joined_buf, tooltip_buf;
@@ -42,7 +103,7 @@ private:
 	gui_label_t sort_label;
 	location_view_t view;
 	button_t button;
-	// button_t sort_button;     // @author hsiegeln
+	// button_t sort_button;
 	button_t filterButtons[MAX_HALT_COST];
 	button_t toggler, toggler_departures;
 	sint16 chart_total_size;
@@ -81,7 +142,7 @@ private:
 	void show_hide_departures( bool show );
 
 public:
-	enum sort_mode_t { by_destination = 0, by_via = 1, by_amount_via = 2, by_amount = 3, by_origin = 4, by_origin_sum = 5, by_destination_detil = 6, by_class_detail = 7, by_class_via = 8, SORT_MODES = 9 };
+	enum sort_mode_t { by_destination = 0, by_via = 1, by_amount_via = 2, by_amount = 3, by_origin = 4, by_origin_sum = 5, by_destination_detil = 6, by_class_detail = 7, by_class_via = 8, by_line = 9, by_line_via = 10, SORT_MODES = 11 };
 //	enum sort_mode_t { by_destination = 0, by_via = 1, by_amount_via = 2, by_amount = 3, by_origin = 4, by_origin_sum = 5, by_destination_detil = 6, by_transfer_time = 7, SORT_MODES = 8 };
 
 	halt_info_t(halthandle_t halt);
@@ -91,7 +152,6 @@ public:
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author Hj. Malthaner
 	 */
 	const char * get_help_filename() const OVERRIDE {return "station.txt";}
 
@@ -99,19 +159,17 @@ public:
 	 * Draw new component. The values to be passed refer to the window
 	 * i.e. It's the screen coordinates of the window where the
 	 * component is displayed.
-	 * @author Hj. Malthaner
 	 */
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
 	/**
 	 * Set window size and adjust component sizes and/or positions accordingly
-	 * @author Hj. Malthaner
 	 */
 	virtual void set_windowsize(scr_size size) OVERRIDE;
 
-	virtual koord3d get_weltpos(bool) OVERRIDE;
+	koord3d get_weltpos(bool) OVERRIDE;
 
-	virtual bool is_weltpos() OVERRIDE;
+	bool is_weltpos() OVERRIDE;
 
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 

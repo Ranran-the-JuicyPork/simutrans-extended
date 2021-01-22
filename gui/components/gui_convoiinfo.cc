@@ -22,31 +22,67 @@
 
 #include "../../utils/simstring.h"
 #include "../../utils/cbuffer_t.h"
-#include "../gui_frame.h"
 #include "../schedule_gui.h"
 
-
-const char *gui_convoiinfo_t::cnvlist_mode_button_texts[gui_convoiinfo_t::DISPLAY_MODES] = {
-	"cl_btn_general",
-	"cl_btn_payload",
-	"cl_btn_formation"
-};
 
 
 gui_convoiinfo_t::gui_convoiinfo_t(convoihandle_t cnv, bool show_line_name):
 	formation(cnv),
-	payload(cnv)
+	loading_bar(cnv)
 {
-    this->cnv = cnv;
+	this->cnv = cnv;
 	this->show_line_name = show_line_name;
 
-    filled_bar.set_pos(scr_coord(2, 33));
-    filled_bar.set_size(scr_size(100, 4));
-    filled_bar.add_color_value(&cnv->get_loading_limit(), COL_YELLOW);
-    filled_bar.add_color_value(&cnv->get_loading_level(), COL_GREEN);
+	set_table_layout(1,0);
+	add_table(2, 2)->set_alignment(ALIGN_TOP);
 
-	formation.set_pos(scr_coord(0, D_MARGIN_TOP));
-	payload.set_pos(scr_coord(0, D_MARGIN_TOP));
+	add_table(1,4)->set_spacing(scr_size(D_H_SPACE, 0));
+	{
+		add_table(3, 1);
+		{
+			img_alert.set_image(IMG_EMPTY);
+			img_alert.set_rigid(false);
+			add_component(&img_alert);
+			img_operation.set_image(IMG_EMPTY);
+			img_operation.set_rigid(false);
+			add_component(&img_operation);
+			add_component(&label_name);
+		}
+		end_table();
+
+		add_component(&label_line);
+
+		add_table(2,1)->set_spacing(scr_size(0, 0));
+		{
+			new_component<gui_margin_t>(LINESPACE/2, 0);
+			loading_bar.set_size_fixed(true);
+			add_component(&loading_bar);
+		}
+		end_table();
+
+		add_table(4,1);
+		{
+			new_component<gui_margin_t>(LINESPACE/3, LINEASCENT);
+			add_component(&switchable_label_title);
+			add_component(&switchable_label_value);
+			new_component<gui_empty_t>();
+		}
+		end_table();
+	}
+	end_table();
+
+	add_table(2,1);
+	{
+		add_component(&formation);
+		new_component<gui_fill_t>();
+	}
+	end_table();
+
+	new_component<gui_margin_t>(100, D_V_SPACE);
+	new_component<gui_margin_t>(100, D_V_SPACE);
+	end_table();
+
+	update_label();
 }
 
 
@@ -54,7 +90,6 @@ gui_convoiinfo_t::gui_convoiinfo_t(convoihandle_t cnv, bool show_line_name):
 /**
  * Events werden hiermit an die GUI-components
  * gemeldet
- * @author Hj. Malthaner
  */
 bool gui_convoiinfo_t::infowin_event(const event_t *ev)
 {
@@ -64,6 +99,7 @@ bool gui_convoiinfo_t::infowin_event(const event_t *ev)
 			return true;
 		}
 		else if(IS_RIGHTRELEASE(ev)) {
+			karte_ptr_t welt;
 			welt->get_viewport()->change_world_position(cnv->get_pos());
 			return true;
 		}
@@ -71,124 +107,177 @@ bool gui_convoiinfo_t::infowin_event(const event_t *ev)
 	return false;
 }
 
+const char* gui_convoiinfo_t::get_text() const
+{
+	return cnv->get_name();
+}
+
+void gui_convoiinfo_t::update_label()
+{
+	if (!cnv.is_bound()) {
+		return;
+	}
+	img_alert.set_visible(false);
+	img_operation.set_visible(false);
+	if (skinverwaltung_t::alerts) {
+		switch (cnv->get_state()) {
+		case convoi_t::EMERGENCY_STOP:
+			img_alert.set_image(skinverwaltung_t::alerts->get_image_id(2), true);
+			img_alert.set_tooltip("Waiting for clearance!");
+			img_alert.set_visible(true);
+			break;
+		case convoi_t::WAITING_FOR_CLEARANCE_ONE_MONTH:
+		case convoi_t::CAN_START_ONE_MONTH:
+		case convoi_t::WAITING_FOR_LOADING_THREE_MONTHS:
+			img_alert.set_image(skinverwaltung_t::alerts->get_image_id(3), true);
+			img_alert.set_tooltip("Waiting for clearance!");
+			img_alert.set_visible(true);
+			break;
+		case convoi_t::WAITING_FOR_CLEARANCE_TWO_MONTHS:
+		case convoi_t::CAN_START_TWO_MONTHS:
+		case convoi_t::WAITING_FOR_LOADING_FOUR_MONTHS:
+			img_alert.set_image(skinverwaltung_t::alerts->get_image_id(4), true);
+			img_alert.set_tooltip("clf_chk_stucked");
+			img_alert.set_visible(true);
+			break;
+		case convoi_t::OUT_OF_RANGE:
+		case convoi_t::NO_ROUTE:
+		case convoi_t::NO_ROUTE_TOO_COMPLEX:
+			if (skinverwaltung_t::pax_evaluation_icons) {
+				img_alert.set_image(skinverwaltung_t::pax_evaluation_icons->get_image_id(4), true);
+			}
+			else {
+				img_alert.set_image(skinverwaltung_t::alerts->get_image_id(4), true);
+			}
+			img_alert.set_tooltip("clf_chk_noroute");
+			img_alert.set_visible(true);
+			break;
+		default:
+			break;
+		}
+		if (cnv->get_withdraw()) {
+			img_operation.set_image(skinverwaltung_t::alerts->get_image_id(2), true);
+			img_operation.set_tooltip("withdraw");
+			img_operation.set_visible(true);
+		}
+		else if (cnv->get_replace()) {
+			img_operation.set_image(skinverwaltung_t::alerts->get_image_id(1), true);
+			img_operation.set_tooltip("Replacing");
+			img_operation.set_visible(true);
+		}
+		else if (cnv->get_no_load()) {
+			img_operation.set_image(skinverwaltung_t::alerts->get_image_id(2), true);
+			img_operation.set_tooltip("No load setting");
+			img_operation.set_visible(true);
+		}
+	}
+
+	switchable_label_value.set_color(SYSCOL_TEXT);
+	switch (switch_label)
+	{
+		case 1: // Next stop
+		{
+			if (!cnv->in_depot()) {
+				switchable_label_title.buf().printf("%s: ", translator::translate("Fahrtziel"));
+				const schedule_t *schedule = cnv->get_schedule();
+				schedule_t::gimme_short_stop_name(switchable_label_value.buf(), world(), cnv->get_owner(), schedule, schedule->get_current_stop(), 50 - strlen(translator::translate("Fahrtziel")));
+				switchable_label_title.set_visible(true);
+				switchable_label_value.set_visible(true);
+			}
+			break;
+		}
+		case 2: // Profit
+			switchable_label_title.buf().printf("%s: ", translator::translate("Gewinn"));
+			switchable_label_value.buf().append_money(cnv->get_jahresgewinn() / 100.0);
+			switchable_label_value.set_color(cnv->get_jahresgewinn() > 0 ? MONEY_PLUS : MONEY_MINUS);
+			switchable_label_title.set_visible(true);
+			switchable_label_value.set_visible(true);
+			break;
+		case 4: // Max speed
+			switchable_label_title.buf().printf("%s ", translator::translate("Max. speed:"));
+			switchable_label_value.buf().printf("%3d km/h", speed_to_kmh(cnv->get_min_top_speed()));
+			switchable_label_title.set_visible(true);
+			switchable_label_value.set_visible(true);
+			break;
+		case 5: // Power
+			switchable_label_title.buf().printf("%s: ", translator::translate("Leistung"));
+			switchable_label_value.buf().printf("%4d kW, %d kN", cnv->get_sum_power()/1000, cnv->get_starting_force().to_sint32()/1000);
+			switchable_label_title.set_visible(true);
+			switchable_label_value.set_visible(true);
+			break;
+		case 6: // Value
+			switchable_label_title.buf().printf("%s: ", translator::translate("cl_btn_sort_value"));
+			switchable_label_value.buf().append_money(cnv->get_purchase_cost()/100.0);
+			switchable_label_title.set_visible(true);
+			switchable_label_value.set_visible(true);
+			break;
+		case 7: // average age(month)
+			switchable_label_title.buf().printf("%s: ", translator::translate("cl_btn_sort_age"));
+			switchable_label_value.buf().printf(cnv->get_average_age() == 1 ? translator::translate("%i month") : translator::translate("%i months"), cnv->get_average_age());
+			if (cnv->has_obsolete_vehicles()) {
+				switchable_label_value.set_color(SYSCOL_OBSOLETE);
+			}
+			switchable_label_title.set_visible(true);
+			switchable_label_value.set_visible(true);
+			break;
+		case 8: //range
+			switchable_label_title.buf().printf("%s: ", translator::translate("cl_btn_range"));
+			if (!cnv->get_min_range()) {
+				switchable_label_value.buf().append(translator::translate("unlimited"));
+			}
+			else {
+				switchable_label_value.buf().printf("%u km", cnv->get_min_range());
+			}
+			switchable_label_title.set_visible(true);
+			switchable_label_value.set_visible(true);
+			break;
+		case 0:
+		default:
+			switchable_label_title.set_visible(false);
+			switchable_label_value.set_visible(false);
+			break;
+	}
+
+	switchable_label_title.update();
+	switchable_label_value.update();
+	label_line.set_visible(true);
+
+	if (cnv->in_depot()) {
+		label_line.buf().append(translator::translate("(in depot)"));
+		label_line.set_color(SYSCOL_TEXT_HIGHLIGHT);
+		loading_bar.set_visible(false);
+	}
+	else if (cnv->get_line().is_bound() && show_line_name) {
+		label_line.buf().printf("  %s %s", translator::translate("Line"), cnv->get_line()->get_name());
+		label_line.set_color(SYSCOL_TEXT);
+		loading_bar.set_visible(true);
+	}
+	else {
+		label_line.buf();
+		label_line.set_visible(false);
+		loading_bar.set_visible(true);
+	}
+	label_line.update();
+
+	label_name.buf().append(cnv->get_name());
+	label_name.update();
+	label_name.set_color(cnv->get_status_color());
+
+	set_size(get_size());
+}
 
 /**
  * Draw the component
- * @author Hj. Malthaner
  */
 void gui_convoiinfo_t::draw(scr_coord offset)
 {
-	clip_dimension clip = display_get_clip_wh();
-	if(! ((pos.y+offset.y) > clip.yy ||  (pos.y+offset.y) < clip.y-32) &&  cnv.is_bound()) {
-		// 1st row: convoy name
-		int w = 0;
-		if (skinverwaltung_t::alerts) {
-			switch (cnv->get_state()) {
-				case convoi_t::EMERGENCY_STOP:
-					display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(2), pos.x + offset.x + 2 + w, pos.y + offset.y + 6, 0, false, false, translator::translate("Waiting for clearance!"));
-					w += 14;
-					break;
-				case convoi_t::WAITING_FOR_CLEARANCE_ONE_MONTH:
-				case convoi_t::CAN_START_ONE_MONTH:
-					display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(3), pos.x + offset.x + 2 + w, pos.y + offset.y + 6, 0, false, false, translator::translate("Waiting for clearance!"));
-					w += 14;
-					break;
-				case convoi_t::WAITING_FOR_CLEARANCE_TWO_MONTHS:
-				case convoi_t::CAN_START_TWO_MONTHS:
-					display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(4), pos.x + offset.x + 2 + w, pos.y + offset.y + 6, 0, false, false, translator::translate("clf_chk_stucked"));
-					w += 14;
-					break;
-				case convoi_t::OUT_OF_RANGE:
-				case convoi_t::NO_ROUTE:
-				case convoi_t::NO_ROUTE_TOO_COMPLEX:
-					display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(4), pos.x + offset.x + 2 + w, pos.y + offset.y + 6, 0, false, false, translator::translate("clf_chk_noroute"));
-					w += 14;
-					break;
-				default:
-					break;
-			}
-			if (cnv->get_withdraw()){
-				display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(2), pos.x + offset.x + 2 + w, pos.y + offset.y + 6, 0, false, false, translator::translate("withdraw"));
-				w += 14;
-			}
-			else if (cnv->get_no_load() && !cnv->in_depot()) {
-				display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(2), pos.x + offset.x + 2 + w, pos.y + offset.y + 6, 0, false, false, translator::translate("No load setting"));
-				w += 14;
-			}
-			if (cnv->get_replace()) {
-				display_color_img_with_tooltip(skinverwaltung_t::alerts->get_image_id(1), pos.x + offset.x + 2 + w, pos.y + offset.y + 6, 0, false, false, translator::translate("Replacing"));
-				w += 14;
-			}
-		}
-		// name, use the convoi status color for redraw: Possible colors are YELLOW (not moving) BLUE: obsolete in convoi, RED: minus income, BLACK: ok
-		int max_x = display_proportional_clip(pos.x+offset.x+2+w, pos.y+offset.y+6, cnv->get_name(), ALIGN_LEFT, cnv->get_status_color(), true)+2;
-
-		// 2nd row
-		w = D_MARGIN_LEFT;
-		if (display_mode == cnvlist_normal) {
-			w += display_proportional_clip(pos.x + offset.x + w, pos.y + offset.y + 6 + LINESPACE, translator::translate("Gewinn"), ALIGN_LEFT, SYSCOL_TEXT, true) + 2;
-			char buf[256];
-			money_to_string(buf, cnv->get_jahresgewinn() / 100.0);
-			w += display_proportional_clip(pos.x + offset.x + w + 5, pos.y + offset.y + 6 + LINESPACE, buf, ALIGN_LEFT, cnv->get_jahresgewinn() > 0 ? MONEY_PLUS : MONEY_MINUS, true);
-			max_x = max(max_x, w + 5);
-
-		}
-		else if (display_mode == cnvlist_payload) {
-			payload.set_cnv(cnv);
-			payload.draw(pos + offset + scr_coord(0, LINESPACE + 4));
-		}
-		else if (display_mode == cnvlist_formation) {
-			formation.set_cnv(cnv);
-			formation.draw(pos + offset + scr_coord(0, LINESPACE + 6));
-		}
-
-		// 3rd row
-		w = D_MARGIN_LEFT;
-		if (display_mode == cnvlist_normal || display_mode == cnvlist_payload)
-		{
-			// only show assigned line, if there is one!
-			if (cnv->in_depot()) {
-				const char *txt = translator::translate("(in depot)");
-				w += display_proportional_clip(pos.x + offset.x + w, pos.y + offset.y + 6 + 2 * LINESPACE, txt, ALIGN_LEFT, SYSCOL_TEXT, true) + 2;
-				max_x = max(max_x, w);
-			}
-			else if (cnv->get_line().is_bound() && show_line_name) {
-				w += display_proportional_clip(pos.x + offset.x + w, pos.y + offset.y + 6 + 2 * LINESPACE, translator::translate("Line"), ALIGN_LEFT, SYSCOL_TEXT, true) + 2;
-				w += display_proportional_clip(pos.x + offset.x + w + 5, pos.y + offset.y + 6 + 2 * LINESPACE, cnv->get_line()->get_name(), ALIGN_LEFT, cnv->get_line()->get_state_color(), true);
-				max_x = max(max_x, w + 5);
-			}
-			else if(!show_line_name && display_mode == cnvlist_payload){
-				// next stop
-				cbuffer_t info_buf;
-				info_buf.printf("%s: ", translator::translate("Fahrtziel")); // "Destination"
-				const schedule_t *schedule = cnv->get_schedule();
-				schedule_gui_t::gimme_short_stop_name(info_buf, cnv->get_owner(), schedule, schedule->get_current_stop(), 255);
-				display_proportional_clip(pos.x + offset.x + w, pos.y + offset.y + 6 + 2 * LINESPACE, info_buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-			}
-
-			if (display_mode == cnvlist_normal) {
-				// we will use their images offsets and width to shift them to their correct position
-				// this should work with any vehicle size ...
-				const int xoff = max(190, max_x);
-				int left = pos.x + offset.x + xoff + 4;
-				for (unsigned i = 0; i < cnv->get_vehicle_count();i++) {
-					scr_coord_val x, y, w, h;
-					const image_id image = cnv->get_vehicle(i)->get_loaded_image();
-					display_get_base_image_offset(image, x, y, w, h);
-					display_base_img(image, left - x, pos.y + offset.y + 13 - y - h / 2, cnv->get_owner()->get_player_nr(), false, true);
-					left += (w * 2) / 3;
-				}
-
-				// since the only remaining object is the loading bar, we can alter its position this way ...
-				filled_bar.draw(pos + offset + scr_coord(xoff, 0));
-			}
-		}
-	}
+	update_label();
+	gui_aligned_container_t::draw(offset);
 }
 
 void gui_convoiinfo_t::set_mode(uint8 mode)
 {
-	if (mode < DISPLAY_MODES) {
-		display_mode = mode;
+	if (mode < gui_convoy_formation_t::CONVOY_OVERVIEW_MODES) {
+		formation.set_mode(mode);
 	}
 }

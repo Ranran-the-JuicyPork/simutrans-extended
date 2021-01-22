@@ -68,7 +68,7 @@ simline_t::simline_t(player_t* player, linetype type)
 	this->schedule = NULL;
 	this->player = player;
 	withdraw = false;
-	state_color = COL_WHITE;
+	state_color = SYSCOL_TEXT;
 
 	for(uint8 i = 0; i < MAX_LINE_COST; i ++)
 	{
@@ -118,7 +118,7 @@ simline_t::~simline_t()
 	DBG_MESSAGE("simline_t::~simline_t()", "line %d (%p) destroyed", self.get_id(), this);
 }
 
-simline_t::linetype simline_t::get_linetype(const waytype_t wt)
+simline_t::linetype simline_t::waytype_to_linetype(const waytype_t wt)
 {
 	switch (wt) {
 		case road_wt: return simline_t::truckline;
@@ -132,6 +132,20 @@ simline_t::linetype simline_t::get_linetype(const waytype_t wt)
 		default: return simline_t::MAX_LINE_TYPE;
 	}
 }
+
+
+const char *simline_t::get_linetype_name(const simline_t::linetype lt)
+{
+	return translator::translate( schedule_type_text[lt] );
+}
+
+
+waytype_t simline_t::linetype_to_waytype(const linetype lt)
+{
+	static const waytype_t wt2lt[MAX_LINE_TYPE] = { invalid_wt, road_wt, track_wt, water_wt, air_wt, monorail_wt, tram_wt, maglev_wt, narrowgauge_wt };
+	return wt2lt[lt];
+}
+
 
 void simline_t::create_schedule()
 {
@@ -254,14 +268,14 @@ void simline_t::rdwr_linehandle_t(loadsave_t *file, linehandle_t &line)
 {
 	uint16 id;
 	if (file->is_saving()) {
-		id = line.is_bound() ? line.get_id(): (file->get_version() < 110000  ? INVALID_LINE_ID_OLD : INVALID_LINE_ID);
+		id = line.is_bound() ? line.get_id(): (file->get_version_int() < 110000  ? INVALID_LINE_ID_OLD : INVALID_LINE_ID);
 	}
 	else {
 		// to avoid undefined errors during loading
 		id = 0;
 	}
 
-	if(file->get_version()<88003) {
+	if(file->get_version_int()<88003) {
 		sint32 dummy=id;
 		file->rdwr_long(dummy);
 		id = (uint16)dummy;
@@ -292,7 +306,7 @@ void simline_t::rdwr(loadsave_t *file)
 	schedule->rdwr(file);
 
 	//financial history
-	if(file->get_version() <= 102002 || (file->get_version() < 103000 && file->get_extended_version() < 7))
+	if(file->get_version_int() <= 102002 || (file->get_version_int() < 103000 && file->get_extended_version() < 7))
 	{
 		for (int j = 0; j<LINE_DISTANCE; j++)
 		{
@@ -343,7 +357,7 @@ void simline_t::rdwr(loadsave_t *file)
 					}
 					continue;
 				}
-				else if(j == 7 && file->get_version() >= 111001 && file->get_extended_version() == 0)
+				else if(j == 7 && file->get_version_int() >= 111001 && file->get_extended_version() == 0)
 				{
 					// In Standard, this is LINE_MAXSPEED.
 					sint64 dummy = 0;
@@ -362,7 +376,7 @@ void simline_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version()>=102002) {
+	if(file->get_version_int()>=102002) {
 		file->rdwr_bool(withdraw);
 	}
 
@@ -377,9 +391,9 @@ void simline_t::rdwr(loadsave_t *file)
 	if(file->get_extended_version() >= 2)
 	{
 #ifdef SPECIAL_RESCUE_12_2
-		const uint8 counter = file->get_version() < 103000 ? LINE_DISTANCE : file->get_extended_version() < 12 || file->is_loading() ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
+		const uint8 counter = file->get_version_int() < 103000 ? LINE_DISTANCE : file->get_extended_version() < 12 || file->is_loading() ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
 #else
-		const uint8 counter = file->get_version() < 103000 ? LINE_DISTANCE : file->get_extended_version() < 12 ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
+		const uint8 counter = file->get_version_int() < 103000 ? LINE_DISTANCE : file->get_extended_version() < 12 ? LINE_REFUNDS + 1 : LINE_WAYTOLL;
 #endif
 		for(uint8 i = 0; i < counter; i ++)
 		{
@@ -393,7 +407,7 @@ void simline_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_extended_version() >= 9 && file->get_version() >= 110006)
+	if(file->get_extended_version() >= 9 && file->get_version_int() >= 110006)
 	{
 		file->rdwr_short(livery_scheme_index);
 	}
@@ -488,7 +502,7 @@ void simline_t::rdwr(loadsave_t *file)
 			}
 		}
 	}
-	if(file->get_version() >= 111002 && file->get_extended_version() >= 10 && file->get_extended_version() < 12)
+	if(file->get_version_int() >= 111002 && file->get_extended_version() >= 10 && file->get_extended_version() < 12)
 	{
 		bool dummy_is_alternating_circle_route = false; // Deprecated.
 		file->rdwr_bool(dummy_is_alternating_circle_route);
@@ -714,25 +728,25 @@ void simline_t::recalc_status()
 	if (financial_history[1][LINE_DEPARTURES] < financial_history[1][LINE_DEPARTURES_SCHEDULED])
 	{
 		// Is missing scheduled slots.
-		state_color = COL_DARK_TURQUOISE;
+		state_color = color_idx_to_rgb(COL_DARK_TURQUOISE);
 		state |= line_missing_scheduled_slots;
 	}
 	if (has_overcrowded())
 	{
 		// Overcrowded
-		state_color = COL_DARK_PURPLE;
+		state_color = color_idx_to_rgb(COL_DARK_PURPLE);
 		state |= line_overcrowded;
 	}
 	if((financial_history[0][LINE_DISTANCE]|financial_history[1][LINE_DISTANCE]|financial_history[2][LINE_DISTANCE]) ==0)
 	{
 		// nothing moved
-		state_color = COL_YELLOW;
+		state_color = SYSCOL_TEXT_UNUSED;
 		state |= line_nothing_moved;
 	}
 	if(financial_history[0][LINE_CONVOIS]==0)
 	{
 		// no convoys assigned to this line
-		state_color = SYSCOL_TEXT_HIGHLIGHT;
+		state_color = SYSCOL_EMPTY;
 		state |= line_no_convoys;
 		withdraw = false;
 	}
@@ -1022,4 +1036,33 @@ sint64 simline_t::get_stat_converted(int month, int cost_type) const
 		default: ;
 	}
 	return value;
+}
+
+sint64 simline_t::get_service_frequency()
+{
+	sint64 total_trip_times = 0;
+	sint64 convoys_with_trip_data = 0;
+	for (int i = 0; i < line_managed_convoys.get_count(); i++) {
+		convoihandle_t const cnv = line_managed_convoys[i];
+		if (!cnv->in_depot()) {
+			total_trip_times += cnv->get_average_round_trip_time();
+			if (cnv->get_average_round_trip_time()) {
+				convoys_with_trip_data++;
+			}
+		}
+	}
+
+	sint64 service_frequency = convoys_with_trip_data ? total_trip_times / convoys_with_trip_data : 0; // In ticks.
+	if (line_managed_convoys.get_count()) {
+		service_frequency /= line_managed_convoys.get_count();
+	}
+	const int spacing = schedule->get_spacing();
+	if (line_managed_convoys.get_count() && spacing > 0)
+	{
+		// Check whether the spacing setting affects things.
+		sint64 spacing_ticks = welt->ticks_per_world_month / (sint64)spacing;
+		const uint32 spacing_time = welt->ticks_to_tenths_of_minutes(spacing_ticks);
+		service_frequency = max(spacing_time, service_frequency);
+	}
+	return service_frequency;
 }

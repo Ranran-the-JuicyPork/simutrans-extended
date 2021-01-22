@@ -13,6 +13,8 @@
 #include "../boden/grund.h"
 #include "../dataobj/loadsave.h"
 #include "../dataobj/environment.h"
+#include "../dataobj/translator.h"
+#include "../utils/cbuffer_t.h"
 
 #include "simpeople.h"
 #include "../descriptor/pedestrian_desc.h"
@@ -21,7 +23,7 @@ static uint32 const strecke[] = { 6000, 11000, 15000, 20000, 25000, 30000, 35000
 
 static weighted_vector_tpl<const pedestrian_desc_t*> pedestrian_list; // All pedestrians
 static weighted_vector_tpl<const pedestrian_desc_t*> current_pedestrians; // Only those allowed on the current timeline
-stringhashtable_tpl<const pedestrian_desc_t *> pedestrian_t::table;
+stringhashtable_tpl<const pedestrian_desc_t *, N_BAGS_SMALL> pedestrian_t::table;
 
 
 static bool compare_fussgaenger_desc(const pedestrian_desc_t* a, const pedestrian_desc_t* b)
@@ -34,7 +36,7 @@ static bool compare_fussgaenger_desc(const pedestrian_desc_t* a, const pedestria
 bool pedestrian_t::register_desc(const pedestrian_desc_t *desc)
 {
 	if(  table.remove(desc->get_name())  ) {
-		dbg->warning( "pedestrian_desc_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
+		dbg->doubled( "pedestrian", desc->get_name() );
 	}
 	table.put(desc->get_name(), desc);
 	return true;
@@ -49,11 +51,11 @@ bool pedestrian_t::successfully_loaded()
 	}
 	else {
 		vector_tpl<const pedestrian_desc_t*> temp_liste(0);
-		FOR(stringhashtable_tpl<pedestrian_desc_t const*>, const& i, table) {
+		for(auto const& i : table) {
 			// just entered them sorted
 			temp_liste.insert_ordered(i.value, compare_fussgaenger_desc);
 		}
-		FOR(vector_tpl<pedestrian_desc_t const*>, const i, temp_liste) {
+		for(auto const i : temp_liste) {
 			pedestrian_list.append(i, i->get_distribution_weight());
 		}
 	}
@@ -150,7 +152,7 @@ void pedestrian_t::rdwr(loadsave_t *file)
 		}
 	}
 
-	if(file->get_version()<89004) {
+	if(file->get_version_int()<89004) {
 		time_to_life = pick_any(strecke);
 	}
 }
@@ -366,5 +368,16 @@ void pedestrian_t::check_timeline_pedestrians()
 		{
 			current_pedestrians.append(fd, fd->get_distribution_weight());
 		}
+	}
+}
+
+
+void pedestrian_t::info(cbuffer_t & buf) const
+{
+	char const* const owner = translator::translate("Kein Besitzer\n");
+	buf.append(owner);
+
+	if (char const* const maker = get_desc()->get_copyright()) {
+		buf.printf(translator::translate("Constructed by %s"), maker);
 	}
 }

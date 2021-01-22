@@ -12,7 +12,7 @@
 
 
 /**
- * prissi: a dummy typ for old things, which are now ignored
+ * A dummy type for old things, which are now ignored
  */
 class dummy_obj_t : public obj_t
 {
@@ -31,9 +31,9 @@ class dummy_obj_t : public obj_t
 
 #ifdef INLINE_OBJ_TYPE
 #else
-		typ      get_typ()  const { return obj_t::undefined; }
+		typ      get_typ()   const OVERRIDE { return obj_t::undefined; }
 #endif
-		image_id get_image() const { return IMG_EMPTY; }
+		image_id get_image() const OVERRIDE { return IMG_EMPTY; }
 };
 
 #endif

@@ -58,26 +58,10 @@ public:
 
 /**
  * GUI for Schedule dialog
- *
- * @author Hj. Malthaner
  */
 class schedule_gui_t :	public gui_frame_t,
 						public action_listener_t
 {
- public:
-	/**
-     * Fills buf with description of schedule's i'th entry.
-	 *
-	 * @author Hj. Malthaner
-	 */
-	static void gimme_stop_name(cbuffer_t & buf, const player_t *player_, const schedule_entry_t &entry, bool no_control_tower = false );
-
-	/**
-	 * Append description of entry to buf.
-	 * short version, without loading level and position
-	 */
-	static void gimme_short_stop_name(cbuffer_t& buf, player_t const* player_, const schedule_t *schedule, int i, int max_chars);
-
 private:
 	enum mode_t {adding, inserting, removing, undefined_mode};
 
@@ -151,15 +135,13 @@ public:
 
 	/**
 	 * Draw the Frame
-	 * @author Hansjörg Malthaner
 	 */
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
 	/**
 	 * Set window size and adjust component sizes and/or positions accordingly
-	 * @author Hj. Malthaner
 	 */
-	virtual void set_windowsize(scr_size size) OVERRIDE;
+	void set_windowsize(scr_size size) OVERRIDE;
 
 	/**
 	 * show or hide the line selector combobox and its associated label
@@ -180,7 +162,7 @@ public:
 	// this constructor is only used during loading
 	schedule_gui_t();
 
-	virtual void rdwr( loadsave_t *file ) OVERRIDE;
+	void rdwr( loadsave_t *file ) OVERRIDE;
 
 	uint32 get_rdwr_id() OVERRIDE { return magic_schedule_rdwr_dummy; }
 };

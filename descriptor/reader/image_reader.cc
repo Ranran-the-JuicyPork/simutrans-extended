@@ -29,7 +29,7 @@ obj_desc_t *image_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 	ALLOCA(char, desc_buf, node.size);
 	image_t* desc=NULL;
 
-	// Hajo: Read data
+	// Read data
 	fread(desc_buf, node.size, 1, fp);
 	char * p = desc_buf+6;
 
@@ -167,7 +167,7 @@ adjust_image:
 		uint32 adler = adler32(0L, NULL, 0 );
 		// remember len is sizeof(uint16)!
 		adler = adler32(adler, (const Bytef *)(desc->data), desc->len * 2);
-		static inthashtable_tpl<uint32, image_t *> images_adlers;
+		static inthashtable_tpl<uint32, image_t *, N_BAGS_LARGE> images_adlers;
 		image_t *same = images_adlers.get(adler);
 		if (same) {
 			// same checksum => if same then skip!

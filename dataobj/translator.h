@@ -19,8 +19,6 @@
  *
  * The languages are 0 based index, with a valid range of(with lang being
  * required language): <code>0 <= lang < lang_count</code>.
- *
- * @author Hj. Malthaner, Adam Barclay
  */
 class translator
 {
@@ -53,12 +51,12 @@ public:
 	struct lang_info {
 		const char* translate(const char* text) const;
 
-		stringhashtable_tpl<const char*> texts;
+		stringhashtable_tpl<const char*, N_BAGS_LARGE> texts;
 		const char *name;
 		const char *iso;
 		const char *iso_base;
 		bool is_latin2_based;
-		uint8 eclipse_width;
+		uint8 ellipsis_width;
 	};
 
 	static void init_custom_names(int lang);
@@ -135,11 +133,11 @@ public:
 	// return the name of the month
 	static const char *get_month_name(uint16 month);
 	// return the short name of the month
-	//static const char *get_short_month_name(uint16 month);
+	static const char *get_short_month_name(uint16 month);
 	// return date in selected format
 	//static const char *get_date(uint16 year, uint16 month);
 	static const char *get_date(uint16 year, uint16 month, uint16 day, char const* season);
-	//static const char *get_short_date(uint16 year, uint16 month);
+	static const char *get_short_date(uint16 year, uint16 month);
 
 	/**
 	 * Translates year_month number to month year formatted string.

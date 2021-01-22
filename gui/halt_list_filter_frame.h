@@ -17,10 +17,9 @@
 
 class player_t;
 
-/*
+/**
  * Stations/stops list filter dialog
  * Displays filter settings for the halt list
- * @author V. Meyer
  */
 class halt_list_filter_frame_t : public gui_frame_t , private action_listener_t
 {
@@ -43,12 +42,13 @@ private:
 
 		bool infowin_event(event_t const* const ev) OVERRIDE
 		{
-			if(IS_LEFTRELEASE(ev)) {
-				parent->ware_item_triggered(ware_ab, ware_an);
+			bool swallow = button_t::infowin_event( ev );
+			if(  swallow  &&  IS_LEFTRELEASE(ev)  ) {	// only handle, if we are hit!
+				parent->ware_item_triggered( ware_ab, ware_an );
 			}
-			return button_t::infowin_event(ev);
+			return swallow;
 		}
-		virtual void draw(scr_coord offset) OVERRIDE {
+		void draw(scr_coord offset) OVERRIDE {
 			if(ware_ab) {
 				pressed = parent->get_ware_filter_ab(ware_ab);
 			}
@@ -65,7 +65,6 @@ private:
 	 */
 	enum { FILTER_BUTTONS=16 };
 
-	static scr_coord filter_buttons_pos[FILTER_BUTTONS];
 	static halt_list_frame_t::filter_flag_t filter_buttons_types[FILTER_BUTTONS];
 	static const char *filter_buttons_text[FILTER_BUTTONS];
 
@@ -87,14 +86,14 @@ private:
 	button_t ware_keine_ab;
 	button_t ware_invers_ab;
 
-	gui_container_t ware_cont_ab;
+	gui_aligned_container_t ware_cont_ab;
 	gui_scrollpane_t ware_scrolly_ab;
 
 	button_t ware_alle_an;
 	button_t ware_keine_an;
 	button_t ware_invers_an;
 
-	gui_container_t ware_cont_an;
+	gui_aligned_container_t ware_cont_an;
 	gui_scrollpane_t ware_scrolly_an;
 
 public:
@@ -103,14 +102,12 @@ public:
 
 	/**
 	 * Propagate function from main_frame for ware_item_t
-	 * @author V. Meyer
 	 */
 	bool get_ware_filter_ab(const goods_desc_t *ware) const { return main_frame->get_ware_filter_ab(ware); }
 	bool get_ware_filter_an(const goods_desc_t *ware) const { return main_frame->get_ware_filter_an(ware); }
 
 	/**
 	 * Handler for ware_item_t event.
-	 * @author V. Meyer
 	 */
 	void ware_item_triggered(const goods_desc_t *ware_ab, const goods_desc_t *ware_an);
 
@@ -124,19 +121,12 @@ public:
 	 * Draw new component. The values to be passed refer to the window
 	 * i.e. It's the screen coordinates of the window where the
 	 * component is displayed.
-	 * @author V. Meyer
 	 */
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
-
-    /**
-     * resize window in response to a resize event
-     */
-	void resize(const scr_coord delta) OVERRIDE;
 
 	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author V. Meyer
 	 */
 	const char * get_help_filename() const OVERRIDE {return "haltlist_filter.txt"; }
 

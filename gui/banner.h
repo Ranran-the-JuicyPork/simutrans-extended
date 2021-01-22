@@ -7,8 +7,8 @@
 #define GUI_BANNER_H
 
 
+#include "../dataobj/environment.h"
 #include "components/gui_button.h"
-#include "components/gui_image.h"
 #include "gui_frame.h"
 
 
@@ -19,9 +19,6 @@
 class banner_t : public gui_frame_t, action_listener_t
 {
 private:
-	sint32 last_ms;
-	int line;
-
 	button_t
 		new_map,
 		load_map,
@@ -29,28 +26,23 @@ private:
 		join_map,
 		quit;
 
-	gui_image_t logo;
-
-
 public:
 	banner_t();
 
 	bool has_sticky() const OVERRIDE { return false; }
 
-	virtual bool has_title() const OVERRIDE { return false; }
+	bool has_title() const OVERRIDE { return false; }
 
 	/**
 	* Window Title
-	* @author Hj. Malthaner
 	*/
 	const char *get_name() const {return ""; }
 
 	/**
 	* get color information for the window title
 	* -borders and -body background
-	* @author Hj. Malthaner
 	*/
-	PLAYER_COLOR_VAL get_titlecolor() const OVERRIDE {return WIN_TITLE; }
+	FLAGGED_PIXVAL get_titlecolor() const OVERRIDE {return env_t::default_window_title_color; }
 
 	bool is_hit(int, int) OVERRIDE { return true; }
 
@@ -60,7 +52,6 @@ public:
 	* Draw new component. The values to be passed refer to the window
 	* i.e. It's the screen coordinates of the window where the
 	* component is displayed.
-	* @author Hj. Malthaner
 	*/
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 

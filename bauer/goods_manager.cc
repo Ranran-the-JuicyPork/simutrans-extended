@@ -12,7 +12,7 @@
 #include "../dataobj/translator.h"
 
 
-stringhashtable_tpl<const goods_desc_t *> goods_manager_t::desc_names;
+stringhashtable_tpl<const goods_desc_t *, N_BAGS_MEDIUM> goods_manager_t::desc_names;
 
 vector_tpl<goods_desc_t *> goods_manager_t::goods;
 
@@ -40,10 +40,7 @@ bool goods_manager_t::successfully_loaded()
 		return false;
 	}
 
-	/**
-	* Put special items in front:
-	* Volker Meyer
-	*/
+	// Put special items in front
 	goods.insert_at(0,load_none);
 	goods.insert_at(0,load_mail);
 	goods.insert_at(0,load_passengers);
@@ -90,11 +87,11 @@ bool goods_manager_t::successfully_loaded()
 			assert(goods[i]->get_index()==i);
 			ware_t::index_to_desc[i] = goods[i];
 			if(goods[i]->color==255) {
-				goods[i]->color = 16+4+((i-2)*8)%207;
+				goods[i]->color = ( 16+4+((i-2)*8)%207 );
 			}
 		}
 	}
-	// passenger and good colors
+	// passenger and mail colors
 	if(goods[0]->color==255) {
 		goods[0]->color = COL_GREY3;
 	}
@@ -126,11 +123,9 @@ bool goods_manager_t::register_desc(goods_desc_t *desc)
 	}
 	::register_desc(special_objects, desc);
 	// avoid duplicates with same name
-	goods_desc_t *old_desc = const_cast<goods_desc_t *>(desc_names.get(desc->get_name()));
-	if(  old_desc  ) {
-		dbg->warning( "goods_manager_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
-		desc_names.remove(desc->get_name());
-		goods.remove( old_desc );
+	if(  const goods_desc_t *old_desc = desc_names.remove(desc->get_name())  ) {
+		dbg->doubled( "good", desc->get_name() );
+		goods.remove( const_cast<goods_desc_t*>(old_desc) );
 	}
 	desc_names.put(desc->get_name(), desc);
 

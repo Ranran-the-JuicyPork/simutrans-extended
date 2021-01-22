@@ -39,6 +39,9 @@ else
         ifeq ($(OSTYPE), mingw32)
           CFLAGS  += -DPNG_STATIC -DZLIB_STATIC -static
           LDFLAGS += -static-libgcc -static-libstdc++ -Wl,--large-address-aware -static
+          ifeq ($(USE_FREETYPE),1)
+          	LDFLAGS += -Wl,-Bstatic -lfreetype -lpng -lharfbuzz -lgraphite2 -lfreetype -Wl,-Bdynamic
+          endif
           LIBS += -lmingw32
         endif
         ifeq ($(OSTYPE), mingw64)
@@ -92,7 +95,16 @@ LIBS += -lbz2 -lz
 
 CXXFLAGS +=  -std=gnu++11
 
+ifneq ($(OSTYPE),mingw)
+ LIBS += -lbz2 -lz
+endif
+
+USE_UPNP ?= 0
+USE_FREETYPE ?= 0
+
+ALLEGRO_CONFIG ?= allegro-config
 SDL2_CONFIG    ?= sdl2-config
+FREETYPE_CONFIG ?= freetype-config
 
 ifneq ($(OPTIMISE),)
   CFLAGS += -O3
@@ -126,15 +138,66 @@ else
   CFLAGS += -DNDEBUG
 endif
 
+ifdef MSG_LEVEL
+	CFLAGS += -DMSG_LEVEL=$(MSG_LEVEL)
+endif
+
+ifeq ($(USE_UPNP),1)
+  CFLAGS  += -DUSE_UPNP
+	ifeq ($(OSTYPE),mingw)
+    LDFLAGS += -Wl,-Bstatic -lminiupnpc -Wl,-Bdynamic -liphlpapi
+	else
+    LDFLAGS += -lminiupnpc
+	endif
+endif
+
+ifdef USE_FREETYPE
+  ifeq ($(shell expr $(USE_FREETYPE) \>= 1), 1)
+    CFLAGS   += -DUSE_FREETYPE
+    ifneq ($(FREETYPE_CONFIG),)
+      CFLAGS += $(shell $(FREETYPE_CONFIG) --cflags)
+      ifeq ($(shell expr $(STATIC) \>= 1), 1)
+        # since static is not supported by slightly old freetype versions
+        FTF = $(shell $(FREETYPE_CONFIG) --libs --static)
+        ifneq ($(FTF),)
+          LDFLAGS += $(FTF)
+        else
+          LDFLAGS += $(shell $(FREETYPE_CONFIG) --libs)
+        endif
+      else
+        LDFLAGS   += $(shell $(FREETYPE_CONFIG) --libs)
+      endif
+    else
+      LDFLAGS += -lfreetype
+      ifeq ($(OSTYPE),mingw)
+        LDFLAGS += -lpng -lharfbuzz
+      endif
+    endif
+
+    ifeq ($(OSTYPE),mingw)
+      LDFLAGS += -lfreetype
+    endif
+  endif
+endif
+
 ifneq ($(PROFILE),)
   CFLAGS  += -pg -DPROFILE
   ifdef MSG_LEVEL
-	CFLAGS += -DMSG_LEVEL=$(MSG_LEVEL)
-	endif
+    CFLAGS += -DMSG_LEVEL=$(MSG_LEVEL)
+  endif
   ifneq ($(PROFILE), 2)
     CFLAGS  += -fno-inline -fno-schedule-insns
   endif
   LDFLAGS += -pg
+endif
+
+
+ifdef USE_ZSTD
+  ifeq ($(shell expr $(USE_ZSTD) \>= 1), 1)
+    FLAGS   += -DUSE_ZSTD
+    LDFLAGS += -lzstd
+    SOURCES += io/rdwr/zstd_file_rdwr_stream.cc
+  endif
 endif
 
 ifneq ($(MULTI_THREAD),)
@@ -272,16 +335,22 @@ SOURCES += gui/ai_option_t.cc
 SOURCES += gui/banner.cc
 SOURCES += gui/baum_edit.cc
 SOURCES += gui/base_info.cc
+SOURCES += gui/building_info.cc
 SOURCES += gui/citybuilding_edit.cc
 SOURCES += gui/citylist_frame_t.cc
 SOURCES += gui/citylist_stats_t.cc
 SOURCES += gui/climates.cc
 SOURCES += gui/display_settings.cc
+SOURCES += gui/components/gui_aligned_container.cc
+SOURCES += gui/components/gui_building.cc
 SOURCES += gui/components/gui_button.cc
+SOURCES += gui/components/gui_button_to_chart.cc
 SOURCES += gui/components/gui_chart.cc
+SOURCES += gui/components/gui_colorbox.cc
 SOURCES += gui/components/gui_combobox.cc
 SOURCES += gui/components/gui_container.cc
 SOURCES += gui/components/gui_convoiinfo.cc
+SOURCES += gui/components/gui_divider.cc
 SOURCES += gui/components/gui_obj_view_t.cc
 SOURCES += gui/components/gui_factory_storage_info.cc
 SOURCES += gui/components/gui_halthandled_lines.cc
@@ -310,6 +379,7 @@ SOURCES += gui/curiosity_edit.cc
 SOURCES += gui/curiositylist_frame_t.cc
 SOURCES += gui/curiositylist_stats_t.cc
 SOURCES += gui/depot_frame.cc
+SOURCES += gui/depotlist_frame.cc
 SOURCES += gui/enlarge_map_frame_t.cc
 SOURCES += gui/extend_edit.cc
 SOURCES += gui/fabrik_info.cc
@@ -321,6 +391,7 @@ SOURCES += gui/schedule_gui.cc
 SOURCES += gui/goods_frame_t.cc
 SOURCES += gui/goods_stats_t.cc
 SOURCES += gui/ground_info.cc
+SOURCES += gui/groundobj_edit.cc
 SOURCES += gui/gui_frame.cc
 SOURCES += gui/gui_theme.cc
 SOURCES += gui/halt_detail.cc
@@ -328,9 +399,10 @@ SOURCES += gui/halt_info.cc
 SOURCES += gui/halt_list_filter_frame.cc
 SOURCES += gui/halt_list_frame.cc
 SOURCES += gui/halt_list_stats.cc
+SOURCES += gui/headquarter_info.cc
 SOURCES += gui/help_frame.cc
 SOURCES += gui/jump_frame.cc
-SOURCES += gui/karte.cc
+SOURCES += gui/minimap.cc
 SOURCES += gui/kennfarbe.cc
 SOURCES += gui/label_info.cc
 SOURCES += gui/labellist_frame_t.cc
@@ -339,6 +411,7 @@ SOURCES += gui/line_class_manager.cc
 SOURCES += gui/line_item.cc
 SOURCES += gui/line_management_gui.cc
 SOURCES += gui/load_relief_frame.cc
+SOURCES += gui/loadfont_frame.cc
 SOURCES += gui/loadsave_frame.cc
 SOURCES += gui/map_frame.cc
 SOURCES += gui/message_frame_t.cc
@@ -363,6 +436,7 @@ SOURCES += gui/settings_frame.cc
 SOURCES += gui/settings_stats.cc
 SOURCES += gui/signal_info.cc
 SOURCES += gui/signal_spacing.cc
+SOURCES += gui/signalboxlist_frame.cc
 SOURCES += gui/simwin.cc
 SOURCES += gui/sound_frame.cc
 SOURCES += gui/sprachen.cc
@@ -374,9 +448,15 @@ SOURCES += gui/station_building_select.cc
 SOURCES += gui/themeselector.cc
 SOURCES += gui/tool_selector
 SOURCES += gui/trafficlight_info.cc
+SOURCES += gui/vehiclelist_frame.cc
 SOURCES += gui/obj_info.cc
 SOURCES += gui/vehicle_class_manager.cc
 SOURCES += gui/welt.cc
+SOURCES += io/classify_file.cc
+SOURCES += io/rdwr/bzip2_file_rdwr_stream.cc
+SOURCES += io/rdwr/raw_file_rdwr_stream.cc
+SOURCES += io/rdwr/rdwr_stream.cc
+SOURCES += io/rdwr/zlib_file_rdwr_stream.cc
 SOURCES += network/checksum.cc
 SOURCES += network/memory_rw.cc
 SOURCES += network/network.cc
@@ -401,6 +481,7 @@ SOURCES += script/api_function.cc
 SOURCES += script/api_param.cc
 SOURCES += script/api/api_city.cc
 SOURCES += script/api/api_const.cc
+SOURCES += script/api/api_control.cc
 SOURCES += script/api/api_convoy.cc
 SOURCES += script/api/api_gui.cc
 SOURCES += script/api/api_factory.cc
@@ -487,7 +568,6 @@ SOURCES += simunits.cc
 SOURCES += convoy.cc
 SOURCES += utils/float32e8_t.cc
 SOURCES += path_explorer.cc
-SOURCES += gui/components/gui_component_table.cc
 SOURCES += gui/components/gui_table.cc
 SOURCES += gui/components/gui_convoy_assembler.cc
 SOURCES += gui/components/gui_convoy_label.cc

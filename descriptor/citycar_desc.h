@@ -14,12 +14,8 @@
 #include "../network/checksum.h"
 
 
-/*
- *  Autor:
- *      Volker Meyer
- *
- *  Description:
- *	Pedestrians
+/**
+ * Private city cars, not player owned. They automatically appear in cities.
  *
  *  Child nodes:
  *	0   Name
@@ -35,16 +31,16 @@ class citycar_desc_t : public obj_desc_timelined_t {
 	uint16 topspeed;
 
 public:
-	int get_image_id(ribi_t::dir dir) const
+	image_id get_image_id(ribi_t::dir dir) const
 	{
 		image_t const* const image = get_child<image_list_t>(2)->get_image(dir);
 		return image != NULL ? image->get_id() : IMG_EMPTY;
 	}
 
-	int get_distribution_weight() const { return distribution_weight; }
+	uint16 get_distribution_weight() const { return distribution_weight; }
 
 	/// topspeed in internal speed units !!! not km/h!!!
-	sint32 get_topspeed() const { return topspeed; }
+	uint16 get_topspeed() const { return topspeed; }
 
 	void calc_checksum(checksum_t *chk) const
 	{

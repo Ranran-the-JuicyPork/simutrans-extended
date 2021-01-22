@@ -22,7 +22,6 @@ class planquadrat_t;
 
 /**
  * Asynchronous or synchronous animations for buildings.
- * @author Hj. Malthaner
  */
 class gebaeude_t : public obj_t, sync_steppable
 {
@@ -31,27 +30,22 @@ private:
 
 	/**
 	 * Time control for animation progress.
-	 * @author Hj. Malthaner
 	 */
 	uint16 anim_time;
 
 	/**
 	 * Is this a sync animated object?
-	 * @author Hj. Malthaner
 	 */
 	uint8 sync:1;
 
 	/**
 	 * Boolean flag if a construction site or buildings image
 	 * shall be displayed.
-	 * @author Hj. Malthaner
 	 */
 	uint8 show_construction:1;
 
 	/**
 	 * if true, this ptr union contains a factory pointer
-	 * ? Surely, this cannot be right with an 8 bit integer? Out of date comment?
-	 * @author Hj. Malthaner
 	 */
 	uint8 is_factory:1;
 
@@ -68,7 +62,6 @@ private:
 
 	/**
 	* either point to a factory or a city
-	* @author Hj. Malthaner
 	*/
 	union {
 		fabrik_t  *fab;
@@ -77,7 +70,6 @@ private:
 
 	/**
 	 * Initializes all variables with safe, usable values
-	 * @author Hj. Malthaner
 	 */
 	void init();
 
@@ -184,13 +176,6 @@ public:
 	void set_fab(fabrik_t *fd);
 	void set_stadt(stadt_t *s);
 
-	/**
-	 * A building can belong to a factory.
-	 * @return a pointer of the factory to which the object belongs; or NULL,
-	 * if the object does not belong to a factory.
-	 *
-	 * @author Hj. Malthaner
-	 */
 	fabrik_t* get_fabrik() const { return is_factory ? ptr.fab : NULL; }
 	stadt_t* get_stadt() const;
 
@@ -210,7 +195,7 @@ public:
 	void mark_images_dirty() const;
 
 	image_id get_outline_image() const OVERRIDE;
-	PLAYER_COLOR_VAL get_outline_colour() const OVERRIDE;
+	FLAGGED_PIXVAL get_outline_colour() const OVERRIDE;
 
 	// caches image at height 0
 	void calc_image() OVERRIDE;
@@ -224,7 +209,6 @@ public:
 	/**
 	 * @return Building's own name, or factory name (if building
 	 * belongs to a factory)
-	 * @author Hj. Malthaner
 	 */
 	virtual const char *get_name() const OVERRIDE;
 	const char* get_individual_name() const;
@@ -243,13 +227,8 @@ public:
 
 	bool is_signalbox() const;
 
-	/**
-	 * @return A description string, as might be displayed in an infobox
-	 * @author Hj. Malthaner
-	 */
+	/// @copydoc obj_t::info
 	void info(cbuffer_t & buf) const OVERRIDE;
-
-	void get_class_percentage(cbuffer_t & buf) const;
 
 	void rdwr(loadsave_t *file) OVERRIDE;
 
@@ -269,6 +248,7 @@ public:
 
 	void cleanup(player_t *player) OVERRIDE;
 
+	/// @copydoc obj_t::finish_rd
 	void finish_rd() OVERRIDE;
 
 	// currently animated
@@ -282,6 +262,8 @@ public:
 	gebaeude_t* access_first_tile();
 
 
+	uint16 get_passengers_generated_visiting() const { return passengers_generated_visiting; }
+	uint16 get_passengers_generated_commuting() const { return passengers_generated_commuting; }
 	uint16 get_passengers_succeeded_visiting() const { return passengers_succeeded_visiting; }
 	uint16 get_passengers_succeeded_commuting() const { return passengers_succeeded_commuting; }
 
@@ -333,13 +315,16 @@ public:
 	void set_commute_trip(uint16 number);
 
 	uint16 get_adjusted_population() const;
+	uint16 get_adjusted_population_by_class(uint8 p_class) const;
 
 	uint16 get_visitor_demand() const;
 	uint16 get_adjusted_visitor_demand() const;
+	uint16 get_adjusted_visitor_demand_by_class(uint8 p_class) const;
 	inline void set_adjusted_visitor_demand(uint16 new_visitor_demand) { adjusted_people.visitor_demand = new_visitor_demand; }
 
 	inline uint16 get_jobs() const { return jobs; }
 	inline uint16 get_adjusted_jobs() const { return adjusted_jobs; }
+	uint16 get_adjusted_jobs_by_class(uint8 p_class) const;
 	inline void set_adjusted_jobs(uint16 new_jobs) { adjusted_jobs = new_jobs; }
 
 	inline uint16 get_mail_demand() const { return mail_demand; }

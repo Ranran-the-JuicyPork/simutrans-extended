@@ -11,11 +11,9 @@
 
 
 /**
- * Klasse für Schienen in Simutrans.
- * Auf den Schienen koennen Züge fahren.
- * Jede Schiene gehört zu einer Blockstrecke
- *
- * @author Hj. Malthaner
+ * Class for monorail tracks, derived from schiene.
+ * Monorail trains can drive on this tracks.
+ * Each track belongs to a section block
  */
 class monorail_t : public schiene_t
 {
@@ -26,13 +24,12 @@ public:
 
 	/**
 	 * File loading constructor.
-	 * @author prissi
 	 */
 	monorail_t(loadsave_t *file);
 
-	//virtual waytype_t get_waytype() const {return monorail_wt;}
+	//waytype_t get_waytype() const OVERRIDE {return monorail_wt;}
 
-	void rdwr(loadsave_t *file);
+	void rdwr(loadsave_t *file) OVERRIDE;
 };
 
 #endif

@@ -16,17 +16,14 @@
 
 class checksum_t;
 
-/*
- *  Autor:
- *      Volker Meyer
- *
+/**
  *  Child nodes:
  *	0   Name
  *	1   Copyright
  *	2   Image-list
  */
 class crossing_desc_t : public obj_desc_timelined_t {
-    friend class crossing_reader_t;
+	friend class crossing_reader_t;
 
 private:
 	waytype_t waytype1;

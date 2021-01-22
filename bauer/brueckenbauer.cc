@@ -22,7 +22,7 @@
 #include "../boden/wege/strasse.h"
 
 #include "../gui/tool_selector.h"
-#include "../gui/karte.h"
+#include "../gui/minimap.h"
 
 #include "../descriptor/bridge_desc.h"
 #include "../descriptor/building_desc.h"
@@ -44,36 +44,27 @@ karte_ptr_t bridge_builder_t::welt;
 
 
 /// All bridges hashed by name
-static stringhashtable_tpl<bridge_desc_t *> desc_table;
+static stringhashtable_tpl<bridge_desc_t *, N_BAGS_MEDIUM> desc_table;
 
 
 void bridge_builder_t::register_desc(bridge_desc_t *desc)
 {
 	// avoid duplicates with same name
-	if( const bridge_desc_t *old_desc = desc_table.get(desc->get_name()) ) {
-		dbg->warning( "bridge_builder_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
-		desc_table.remove(desc->get_name());
+	if(  const bridge_desc_t *old_desc = desc_table.remove(desc->get_name())  ) {
+		dbg->doubled( "bridge", desc->get_name() );
 		tool_t::general_tool.remove( old_desc->get_builder() );
 		delete old_desc->get_builder();
 		delete old_desc;
 	}
-	desc_table.put(desc->get_name(), desc);
-}
 
-// to allow overlaying, the tool must be registered here!
-bool bridge_builder_t::successfully_loaded()
-{
-	FOR( stringhashtable_tpl<bridge_desc_t*>, & i, desc_table ) {
-		// add the tool
-		bridge_desc_t * desc = (bridge_desc_t *)i.value;
-		tool_build_bridge_t *tool = new tool_build_bridge_t();
-		tool->set_icon( desc->get_cursor()->get_image_id(1) );
-		tool->cursor = desc->get_cursor()->get_image_id(0);
-		tool->set_default_param(desc->get_name());
-		tool_t::general_tool.append( tool );
-		desc->set_builder( tool );
-	}
-	return true;
+	// add the tool
+	tool_build_bridge_t *tool = new tool_build_bridge_t();
+	tool->set_icon( desc->get_cursor()->get_image_id(1) );
+	tool->cursor = desc->get_cursor()->get_image_id(0);
+	tool->set_default_param(desc->get_name());
+	tool_t::general_tool.append( tool );
+	desc->set_builder( tool );
+	desc_table.put(desc->get_name(), desc);
 }
 
 
@@ -89,7 +80,8 @@ bool bridge_builder_t::laden_erfolgreich()
 	bool strasse_da = false;
 	bool schiene_da = false;
 
-	FOR(stringhashtable_tpl<bridge_desc_t*>, const& i, desc_table) {
+
+	for(auto & i : desc_table) {
 		bridge_desc_t const* const desc = i.value;
 
 		if(desc && desc->get_waytype() == track_wt) {
@@ -112,20 +104,19 @@ bool bridge_builder_t::laden_erfolgreich()
 }
 
 
-stringhashtable_tpl<bridge_desc_t *> * bridge_builder_t::get_all_bridges()
+stringhashtable_tpl<bridge_desc_t *, N_BAGS_MEDIUM> * bridge_builder_t::get_all_bridges()
 {
 	return &desc_table;
 }
 
 /**
  * Find a matching bridge
- * @author Hj. Malthaner
  */
 const bridge_desc_t *bridge_builder_t::find_bridge(const waytype_t wtyp, const sint32 min_speed, const uint16 time, const uint16 max_weight)
 {
 	const bridge_desc_t *find_desc=NULL;
 
-	FOR(stringhashtable_tpl<bridge_desc_t*>, const& i, desc_table) {
+	for(auto const & i : desc_table) {
 		bridge_desc_t const* const desc = i.value;
 		if(  desc->get_waytype()==wtyp  &&  desc->is_available(time)  ) {
 			if(find_desc==NULL  ||
@@ -165,7 +156,7 @@ void bridge_builder_t::fill_menu(tool_selector_t *tool_selector, const waytype_t
 	vector_tpl<const bridge_desc_t*> matching(desc_table.get_count());
 
 	// list of matching types (sorted by speed)
-	FOR(stringhashtable_tpl<bridge_desc_t*>, const& i, desc_table) {
+	for(auto const & i : desc_table) {
 		bridge_desc_t const* const b = i.value;
 		if (  b->get_waytype()==wtyp  &&  b->is_available(time)  ) {
 			matching.insert_ordered( b, compare_bridges);
@@ -304,17 +295,14 @@ bool bridge_builder_t::is_blocked(koord3d pos, ribi_t::ribi check_ribi, player_t
 			}
 
 			weg_t *w = gr2->get_weg_nr(0);
-			const bool public_service = player ? player->is_public_service() : true;
-			const sint8 player_nr = player ? player->get_player_nr() : -1;
-			if (w
-				&& (w->get_max_speed() > 0 && w->get_max_axle_load() > 0
-
-				&& ((w->get_desc()->get_waytype() != road_wt
+			const bool public_service = player ? player->is_public_service() : false;
+			if ((gr2->is_water() && !public_service)
+				||	w && (((w->get_desc()->get_waytype() != road_wt
 					&& w->get_desc()->get_waytype() != tram_wt
 					&& w->get_desc()->get_waytype() != water_wt)
 
-					|| (w->get_player_nr() != player_nr && !public_service)
-					|| (w->is_public_right_of_way() && !w->is_disused()))))
+					|| (w->get_owner() != player && !public_service)
+					|| (w->is_public_right_of_way() && (!w->is_disused() || welt->get_city(gr2->get_pos().get_2d()))))))
 			{
 				error_msg = "Bridge blocked by way below or above.";
 				return true;
@@ -1191,7 +1179,7 @@ const char *bridge_builder_t::remove(player_t *player, koord3d pos_start, waytyp
 	do {
 		pos = tmp_list.remove_first();
 
-		// V.Meyer: weg_position_t changed to grund_t::get_neighbour()
+		// weg_position_t changed to grund_t::get_neighbour()
 		grund_t *from = welt->lookup(pos);
 		grund_t *to;
 		koord zv = koord::invalid;
@@ -1330,7 +1318,7 @@ const char *bridge_builder_t::remove(player_t *player, koord3d pos_start, waytyp
 			delete p;
 		}
 		// refresh map
-		reliefkarte_t::get_karte()->calc_map_pixel(pos.get_2d());
+		minimap_t::get_instance()->calc_map_pixel(pos.get_2d());
 	}
 
 	// finally delete the bridge ends (all are kartenboden)

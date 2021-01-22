@@ -16,10 +16,7 @@
  * inspired by the pathfinder of OTTD written by kuDr
  *
  * For information about Binary Heap algorithm,
- *   see: http://www.policyalmanac.org/games/binaryHeaps.htm *
- *
- * @date September 2006
- * @author prissi
+ *   see: http://www.policyalmanac.org/games/binaryHeaps.htm
  */
 
 #include "../simtypes.h"
@@ -36,9 +33,6 @@ public:
 
 	binary_heap_tpl()
 	{
-		// This is called far too often in Extended
-		// for debug messages to be useful.
-		//DBG_MESSAGE("binary_heap_tpl()","initialized");
 		nodes = MALLOCN(T, 4096);
 		node_size = 4096;
 		node_count = 0;
@@ -140,7 +134,6 @@ public:
 	/**
 	* Recycles all nodes. Doesn't delete the objects.
 	* Leaves the list empty.
-	* @author Hj. Malthaner
 	*/
 	void clear()
 	{

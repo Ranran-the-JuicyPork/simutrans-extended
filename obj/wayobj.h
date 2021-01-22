@@ -22,11 +22,7 @@ class koord;
 class grund_t;
 class tool_selector_t;
 
-/**
- * Overhead powelines for electrified tracks.
- *
- * @author Hj. Malthaner
- */
+/* wayobj enable various functionality of ways, most prominent are overhead power lines */
 class wayobj_t : public obj_no_info_t
 {
 private:
@@ -36,7 +32,10 @@ private:
 	uint8 hang:7;
 
 	// direction of this wayobj
-	ribi_t::ribi dir;
+	uint8 nw:1;
+	uint8 dir:7;
+
+	static const uint8 dir_unknown = 127;
 
 	ribi_t::ribi find_next_ribi(const grund_t *start, const ribi_t::ribi dir, const waytype_t wt) const;
 
@@ -53,32 +52,29 @@ public:
 	void rotate90() OVERRIDE;
 
 	/**
-	* the front image, drawn before vehicles
-	* @author V. Meyer
+	* the back image, drawn before vehicles
 	*/
 	image_id get_image() const OVERRIDE {
 		return hang ? desc->get_back_slope_image_id(hang) :
-			(diagonal ? desc->get_back_diagonal_image_id(dir) : desc->get_back_image_id(dir));
+			(dir>16 ? desc->get_crossing_image_id(dir,nw,false) :
+				(diagonal ? desc->get_back_diagonal_image_id(dir) : desc->get_back_image_id(dir))
+				);
 	}
 
 	/**
-	* the front image, drawn after everything else
-	* @author V. Meyer
-	*/
+	 * the front image, drawn after everything else
+	 */
 	image_id get_front_image() const OVERRIDE {
 		return hang ? desc->get_front_slope_image_id(hang) :
-			diagonal ? desc->get_front_diagonal_image_id(dir) : desc->get_front_image_id(dir);
+			(dir>16 ? desc->get_crossing_image_id(dir,nw,true) :
+				(diagonal ? desc->get_front_diagonal_image_id(dir) : desc->get_front_image_id(dir))
+				);
 	}
 
-	/**
-	* 'Jedes Ding braucht einen Typ.'
-	* @return the object type.
-	* @author Hj. Malthaner
-	*/
 
 #ifdef INLINE_OBJ_TYPE
 #else
-	typ get_typ() const { return wayobj; }
+	typ get_typ() const OVERRIDE { return wayobj; }
 #endif
 
 	/**
@@ -88,16 +84,8 @@ public:
 
 	void calc_image() OVERRIDE;
 
-	/**
-	* Speichert den Zustand des Objekts.
-	*
-	* @param file Zeigt auf die Datei, in die das Objekt geschrieben werden
-	* soll.
-	* @author Hj. Malthaner
-	*/
 	void rdwr(loadsave_t *file) OVERRIDE;
 
-	// subtracts cost
 	void cleanup(player_t *player) OVERRIDE;
 
 	const char*  is_deletable(const player_t *player) OVERRIDE;
@@ -105,10 +93,6 @@ public:
 		return get_desc()->is_noise_barrier();
 	}
 
-	/**
-	* calculate image after loading
-	* @author prissi
-	*/
 	void finish_rd() OVERRIDE;
 
 	// specific for wayobj
@@ -117,7 +101,7 @@ public:
 
 	/* the static routines */
 private:
-	static stringhashtable_tpl<way_obj_desc_t *> table;
+	static stringhashtable_tpl<way_obj_desc_t *, N_BAGS_MEDIUM> table;
 
 public:
 	static const way_obj_desc_t *default_oberleitung;
@@ -135,11 +119,10 @@ public:
 
 	/**
 	 * Fill menu with icons of given stops from the list
-	 * @author Hj. Malthaner
 	 */
 	static void fill_menu(tool_selector_t *tool_selector, waytype_t wtyp, sint16 sound_ok);
 
-	static stringhashtable_tpl<way_obj_desc_t *>* get_all_wayobjects() { return &table; }
+	static stringhashtable_tpl<way_obj_desc_t *, N_BAGS_MEDIUM>* get_all_wayobjects() { return &table; }
 };
 
 #endif

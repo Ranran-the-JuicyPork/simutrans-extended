@@ -10,10 +10,8 @@
 #include "../tpl/stringhashtable_tpl.h"
 #include "../tpl/weighted_vector_tpl.h"
 #include "../dataobj/koord3d.h"
+#include "../descriptor/factory_desc.h"
 
-class building_desc_t;
-class goods_desc_t;
-class factory_desc_t;
 class stadt_t;
 class karte_ptr_t;
 class player_t;
@@ -48,7 +46,7 @@ private:
 	};
 
 	/// Table of all factories that can be built
-	static stringhashtable_tpl<const factory_desc_t *> desc_table;
+	static stringhashtable_tpl<const factory_desc_t *, N_BAGS_MEDIUM> desc_table;
 
 	/// @returns the number of producers producing @p ware
 	static int count_producers(const goods_desc_t *ware, uint16 timeline);
@@ -61,7 +59,7 @@ private:
 
 public:
 	/// This is only for the set_scale function in simworld.cc
-	static stringhashtable_tpl<factory_desc_t *> modifiable_table;
+	static stringhashtable_tpl<factory_desc_t *, N_BAGS_MEDIUM> modifiable_table;
 
 	/// Registers the factory description so the factory can be built in-game.
 	static void register_desc(factory_desc_t *desc);
@@ -85,7 +83,7 @@ public:
 	static const factory_desc_t * get_desc(const char *fabtype);
 
 	/// @returns the table containing all factory descriptions
-	static const stringhashtable_tpl<const factory_desc_t*>& get_factory_table() { return desc_table; }
+	static const stringhashtable_tpl<const factory_desc_t*, N_BAGS_MEDIUM>& get_factory_table() { return desc_table; }
 
 	/**
 	 * @param electric true to limit search to electricity producers only
@@ -118,7 +116,7 @@ public:
 	 * Helper function for baue_hierachie(): builds the connections (chain) for one single product)
 	 * @returns number of factories built
 	 */
-	static int build_chain_link(const fabrik_t* our_fab, const factory_desc_t* info, int supplier_nr, player_t* player, bool no_new_industries = false);
+	static int build_chain_link(const fabrik_t* origin_fab, const factory_desc_t* info, int supplier_nr, player_t* player, bool no_new_industries = false);
 
 	/**
 	 * This function is called whenever it is time for industry growth.
@@ -139,14 +137,14 @@ private:
 	 * @param water true to search on water
 	 * @param cl allowed climates
 	 */
-	static bool check_construction_site(koord pos, koord size, bool water, bool is_fabrik, climate_bits cl, uint16 regions_allowed);
+	static bool check_construction_site(koord pos, koord size, factory_desc_t::site_t site, bool is_factory, climate_bits cl, uint16 regions_allowed);
 
 	/**
 	 * Find a random site to place a factory.
 	 * @param radius Radius of the search circle around @p pos
 	 * @param size size of the building site
 	 */
-	static koord3d find_random_construction_site(koord pos, int radius, koord size,bool on_water, const building_desc_t *desc, bool ignore_climates, uint32 max_iterations);
+	static koord3d find_random_construction_site(koord pos, int radius, koord size, factory_desc_t::site_t site, const building_desc_t *desc, bool ignore_climates, uint32 max_iterations);
 
 	/**
 	 * Checks if all factories in this factory tree can be rotated.

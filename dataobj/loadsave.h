@@ -11,53 +11,71 @@
 #include <string>
 
 #include "../simtypes.h"
+#include "../io/classify_file.h"
+#include "../io/rdwr/rdwr_stream.h"
+
 
 class plainstring;
 struct file_descriptors_t;
 
 /**
-* loadsave_t:
-*
-* This class replaces the FILE when loading and saving games.
-* <p>
-* Hj. Malthaner, 16-Feb-2002, added zlib compression support
-* </p>
-* Can now read and write 3 formats: text, binary and zipped
-* Input format is automatically detected.
-* Output format has a default, changeable with set_savemode, but can be
-* overwritten in wr_open.
-*
-* @author V. Meyer, Hj. Malthaner
-*/
+ * This class replaces the FILE when loading and saving games.
+ * Can now read and write 3 formats: text, binary and zipped
+ * Input format is automatically detected.
+ * Output format has a default, changeable with set_savemode, but can be
+ * overwritten in wr_open.
+ */
+class loadsave_t
+{
+private:
+	struct buf_t
+	{
+		size_t pos;
+		size_t len;
+		char *buf;
+	};
 
-
-class loadsave_t {
 public:
-	enum mode_t { text = 1, xml = 2, binary = 0, zipped = 4, xml_zipped = 6, bzip2 = 8, xml_bzip2 = 10 };
+	enum mode_t {
+		binary     = 0,
+		text       = 1 << 0,
+		xml        = 1 << 1,
+		zipped     = 1 << 2,
+		bzip2      = 1 << 3,
+		zstd       = 1 << 4,
+		xml_zipped = xml | zipped,
+		xml_bzip2  = xml | bzip2,
+		xml_zstd   = xml | zstd
+	};
+
+	enum file_status_t {
+		FILE_STATUS_OK = 0,
+		FILE_STATUS_ERR_NOT_EXISTING,
+		FILE_STATUS_ERR_CORRUPT,
+		FILE_STATUS_ERR_NO_VERSION,
+		FILE_STATUS_ERR_FUTURE_VERSION,
+		FILE_STATUS_ERR_UNSUPPORTED_COMPRESSION
+	};
 
 private:
-	int mode;
-	bool saving;
+	int mode; ///< See mode_t
 	bool buffered;
 	unsigned curr_buff;
-	unsigned buf_pos[2];
-	unsigned buf_len[2];
-	char* ls_buf[2];
-	uint32 version;
-	uint32 extended_version;
-	uint32 extended_revision; // Secondary saved game identifier for changing the save format without changing the major version.
-	int ident;		// only for XML formatting
-	char pak_extension[256];	// name of the pak folder during savetime
+	buf_t buff[2];
 
-	std::string filename;	// the current name ...
+	int ident;              // only for XML formatting
+	file_info_t finfo;
+
+	rdwr_stream_t *stream;
 
 	file_descriptors_t *fd;
 
-	// Hajo: putc got a name clash on my system
+	/// @sa putc
 	inline void lsputc(int c);
 
-	// Hajo: getc got a name clash on my system
+	/// @sa getc
 	inline int lsgetc();
+
 	size_t write(const void * buf, size_t len);
 	size_t read(void *buf, size_t len);
 
@@ -73,44 +91,54 @@ private:
 	* Reads into buffer number @p buf_num.
 	* @returns number of bytes read or -1 in case of error
 	*/
-	int fill_buffer(int buf_num);
+	size_t fill_buffer(int buf_num);
 
 	void flush_buffer(int buf_num);
 
-public:
-	struct combined_version { uint32 version; uint32 extended_version; uint32 extended_revision; };
+	bool is_xml() const { return mode&xml; }
 
-	static mode_t save_mode;	// default to use for saving
-	static mode_t autosave_mode; // default to use for autosaves and network mode client temp saves
-	static combined_version int_version(const char *version_text, int *mode, char *pak);
+public:
+	static mode_t save_mode;     ///< default to use for saving
+	static mode_t autosave_mode; ///< default to use for autosaves and network mode client temp saves
+	static int save_level;    ///< default to use for compression (various libraries allow for szie/speed settings)
+	static int autosave_level;
+
+	/**
+	 * Parses the version information from @p version_text to a version number.
+	 * @param[out] pak Pointer to a sufficiently large buffer (>= 64 chars); when the function returns,
+	 *                 @p pak contains the pakset extension string. May be NULL.
+	 * @retval 0   if an error occurred or the save cannot be loaded
+	 * @retval !=0 the save version; in this case we can read the save file.
+	 */
+	//static uint32 int_version(const char *version_text, char *pak);
+	static extended_version_t int_version(const char *version_text, char *pak);
 
 	loadsave_t();
 	~loadsave_t();
 
-	bool rd_open(const char *filename);
-	bool wr_open(const char *filename, mode_t mode, const char *pak_extension, const char *savegame_version, const char *savegame_version_ex, const char *savegame_revision_ex);
+	file_status_t rd_open(const char *filename);
+	file_status_t wr_open(const char *filename, mode_t mode, int level, const char *pak_extension, const char *savegame_version, const char *savegame_version_ex, const char *savegame_revision_ex);
 	const char *close();
 
 	static void set_savemode(mode_t mode) { save_mode = mode; }
 	static void set_autosavemode(mode_t mode) { autosave_mode = mode; }
+	static void set_savelevel(int level) { save_level = level;  }
+	static void set_autosavelevel(int level) { autosave_level = level;  }
 
 	/**
-	* Checks end-of-file
-	* @author Hj. Malthaner
-	*/
+	 * Checks end-of-file
+	 */
 	bool is_eof();
 
 	void set_buffered(bool enable);
-	unsigned get_buf_pos(int buf_num) const { return buf_pos[buf_num]; }
-	bool is_loading() const { return !saving; }
-	bool is_saving() const { return saving; }
-	bool is_zipped() const { return mode&zipped; }
-	bool is_bzip2() const { return mode&bzip2; }
-	bool is_xml() const { return mode&xml; }
-	uint32 get_version() const { return version; }
-	uint32 get_extended_version() const { return extended_version; }
-	uint32 get_extended_revision() const { return extended_revision; }
-	const char *get_pak_extension() const { return pak_extension; }
+	unsigned get_buf_pos(int buf_num) const { return buff[buf_num].pos; }
+	bool is_loading() const { return stream && !stream->is_writing(); }
+	bool is_saving() const { return stream && stream->is_writing(); }
+	const char *get_pak_extension() const { return finfo.pak_extension; }
+
+	uint32 get_version_int() const { return finfo.ext_version.version; }
+	uint32 get_extended_version() const { return finfo.ext_version.extended_version; }
+	uint32 get_extended_revision() const { return finfo.ext_version.extended_revision; }
 
 	void rdwr_byte(sint8 &c);
 	void rdwr_byte(uint8 &c);

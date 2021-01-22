@@ -18,7 +18,7 @@
 #include "../obj/tunnel.h"
 #include "../obj/zeiger.h"
 
-#include "../gui/karte.h"
+#include "../gui/minimap.h"
 #include "../simworld.h"
 #include "../gui/tool_selector.h"
 
@@ -55,7 +55,7 @@ vector_tpl<const building_desc_t *> hausbauer_t::unbuilt_monuments;
  * List of all registered house descriptors.
  * Allows searching for a desc by its name
  */
-static stringhashtable_tpl<building_desc_t *> desc_names;
+static stringhashtable_tpl<building_desc_t *, N_BAGS_MEDIUM> desc_names;
 
 const building_desc_t *hausbauer_t::elevated_foundation_desc = NULL;
 
@@ -141,7 +141,7 @@ static bool compare_station_desc(const building_desc_t* a, const building_desc_t
 
 bool hausbauer_t::successfully_loaded()
 {
-	FOR(stringhashtable_tpl<building_desc_t *>, & i, desc_names) {
+	for(auto const& i : desc_names) {
 		building_desc_t *const desc = i.value;
 
 		// now insert the besch into the correct list.
@@ -191,7 +191,7 @@ bool hausbauer_t::successfully_loaded()
 					elevated_foundation_desc = desc;
 					break;
 				}
-				// fallthrough
+				/* FALLTHROUGH */
 
 			default:
 				// obsolete object, usually such pak set will not load properly anyway (old objects should be caught before!)
@@ -257,19 +257,40 @@ bool hausbauer_t::register_desc(building_desc_t *desc)
 	const building_desc_t *old_desc = desc_names.get(desc->get_name());
 	if(old_desc) {
 		// do not overlay existing factories if the new one is not a factory
+		dbg->doubled( "building", desc->get_name() );
 		if (old_desc->is_factory()  &&  !desc->is_factory()) {
-			dbg->warning( "hausbauer_t::register_desc()", "Object %s could not be registered since it would overlay an existing factory building!", desc->get_name() );
+			dbg->error( "hausbauer_t::register_desc()", "Object %s could not be registered since it would overlay an existing factory building!", desc->get_name() );
 			delete desc;
 			return false;
 		}
-		dbg->warning( "hausbauer_t::register_desc()", "Object %s was overlaid by addon!", desc->get_name() );
 		desc_names.remove(desc->get_name());
 		tool_t::general_tool.remove( old_desc->get_builder() );
 		delete old_desc->get_builder();
 		delete old_desc;
 	}
 
-	desc->set_builder(NULL);
+	// probably needs a tool if it has a cursor
+	const skin_desc_t *sd = desc->get_cursor();
+	if(  sd  &&  sd->get_image_id(1)!=IMG_EMPTY) {
+		tool_t *tool;
+		if(  desc->get_type()==building_desc_t::depot  ) {
+			tool = new tool_build_depot_t();
+		}
+		else if(  desc->get_type()==building_desc_t::headquarters  ) {
+			tool = new tool_headquarter_t();
+		}
+		else {
+			tool = new tool_build_station_t();
+		}
+		tool->set_icon( desc->get_cursor()->get_image_id(1) );
+		tool->cursor = desc->get_cursor()->get_image_id(0),
+		tool->set_default_param(desc->get_name());
+		tool_t::general_tool.append( tool );
+		desc->set_builder( tool );
+	}
+	else {
+		desc->set_builder( NULL );
+	}
 	desc_names.put(desc->get_name(), desc);
 
 	return true;
@@ -482,8 +503,10 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 							ground_recalc = false;
 						}
 						else if(  new_hgt <= welt->get_water_hgt(newk)  &&  new_slope == slope_t::flat  ) {
-							welt->access(newk)->kartenboden_setzen( new wasser_t( koord3d( newk, new_hgt ) ) );
+							wasser_t* sea = new wasser_t( koord3d( newk, new_hgt) );
+							welt->access(newk)->kartenboden_setzen( sea );
 							welt->calc_climate( newk, true );
+							sea->recalc_water_neighbours();
 						}
 						else {
 							if(  gr->get_grund_hang() == new_slope  ) {
@@ -501,6 +524,9 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 								gr->calc_image();
 							}
 						}
+					}
+					else if (wasser_t* sea = dynamic_cast<wasser_t*>(gr)) {
+						sea->recalc_water_neighbours();
 					}
 				}
 			}
@@ -700,10 +726,14 @@ gebaeude_t* hausbauer_t::build(player_t* player, koord3d pos, int org_layout, co
 				if(  desc->get_type() == building_desc_t::dock  ||  desc->get_type() == building_desc_t::flat_dock  ) {
 					// it's a dock!
 					gb->set_yoff(0);
+
+					if (wasser_t* sea = dynamic_cast<wasser_t*>(gr)) {
+						sea->recalc_water_neighbours();
+					}
 				}
 			}
 			gr->calc_image();
-			reliefkarte_t::get_karte()->calc_map_pixel(gr->get_pos().get_2d());
+			minimap_t::get_instance()->calc_map_pixel(gr->get_pos().get_2d());
 		}
 	}
 	// remove only once ...
@@ -875,7 +905,7 @@ gebaeude_t *hausbauer_t::build_station_extension_depot(player_t *player, koord3d
 	}
 
 	// update minimap
-	reliefkarte_t::get_karte()->calc_map_pixel(gb->get_pos().get_2d());
+	minimap_t::get_instance()->calc_map_pixel(gb->get_pos().get_2d());
 
 	return gb;
 }

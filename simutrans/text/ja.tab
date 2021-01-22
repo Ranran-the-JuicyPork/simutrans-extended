@@ -49,6 +49,8 @@ cl_btn_sort_schedule
 次の停車駅
 cl_btn_sort_power
 出力
+cl_btn_sort_range
+航続距離
 clf_btn_alle
 全選択
 clf_btn_invers
@@ -557,8 +559,8 @@ AIRTOOLS
 航空機ツール
 All
 全て
-all convoi tooltips
-常に車両の状態を表示
+always show all
+全て
 Allow city growth
 街を発展させる
 Allow player change
@@ -811,8 +813,8 @@ contains the following doubled objects:</strong><p>
 以下のオブジェクトが重複しています:</strong><p/>
 convoi %d of %d
 入庫中の編成 %d / %d
-convoi error tooltips
-問題のある車両のみ状態を表示
+only error convoys
+問題のある車両のみ
 Convoi has been sent\nto the nearest depot\nof appropriate type.\n
 この編成は一番近い車庫に\n向かいました。\n
 Convoi is sold when all wagons are empty.
@@ -1333,8 +1335,6 @@ Max Boost (%)
 増産能力 (%)
 Max income:
 最大収益：
-Max. speed
-最高速度
 Max. speed:
 最高速度:
 Maximum 254 stops\nin a schedule!\n
@@ -1394,7 +1394,7 @@ BGMの音量:
 mute sound
 ミュート
 Name
-都市名
+名前
 Narrowgauge
 ナローゲージ
 Narrowgauge are not available yet!
@@ -1469,8 +1469,8 @@ Object
 原名
 Oct.
 10月
-Odometer: %s km
-積算距離： %skm
+Odometer:
+積算距離：
 Ok
 OK
 Oktober
@@ -1482,7 +1482,7 @@ Only city chains
 Only first %d differing paks reported. There are probably more.
 違いが多いため、%d個以上は表示を省略しています。
 Only full Unicode fonts
-Unicodeを網羅したフォントに限定する
+Unicode対応フォントに限定
 Only land chains
 発電所/郊外のチェーンを作成
 Only one transformer per factory!
@@ -1589,8 +1589,6 @@ Power
 電力
 Power:
 出力：
-Power: %4d kW\n
-出力: %4d kW\n
 Powerlines
 高圧線
 Price
@@ -1850,7 +1848,7 @@ Sound
 Sound settings
 サウンド設定
 Sound volume:
-効果音の音量:
+マスターボリューム
 special freight
 専用貨物
 Speedbonus\nroad %i km/h, rail %i km/h\nships %i km/h, planes %i km/h.
@@ -2207,10 +2205,6 @@ Zu nah am Kartenrand
 %1.2f$/月
  from %s
  (%sから)
- mins. travelling
-分所要
- mins. waiting)
-分待ち)
  via %s
 %s 経由
 brakes from max. speed in %i - %i m
@@ -2249,16 +2243,12 @@ brakes from max. speed in %i m
 \n必須:
 \nNetwork ID:
 \nネットワークID:
-\nNo postboxes within walking distance
-\n徒歩圏内に郵便ポスト/郵便局はありません。
 \nOrigin: %s\nDestination: %s
 \n出発地: %s\n目的地: %s
 %_stronger
 % 改善
 %_weaker
 % 悪化
-%i_more_stops,_max_walking_time:_%s
-その他に%iヵ所の停留所/駅があり、最も遠い停留所/駅へは%s掛かります。
 %s has built a new %s in %s.
 %sは新たに%sを%sに建設しました。
 %s has built a new %s near %s.
@@ -2315,8 +2305,12 @@ Airport too close to the edge
 滑走路がマップ端に近すぎます
 All hidden items (such as trees and buildings) will appear as transparent.
 樹木や建築物をシルエットとして表示します。
+All freight types
+全ての貨物タイプ
 All traction types
 全動力タイプ
+All regions
+全ての地域
 already_forged
 買収済
 alt_route
@@ -2937,8 +2931,6 @@ Next Month:
 来月:
 NO CONTROL TOWER
 空港管制塔なし
-No passenger stops within walking distance\n
-徒歩圏内に旅客駅/停留所はありません。\n
 No suitable depot found!\nYou need to send the\nconvoi to the depot\nmanually.\n%s\n
 適切な車庫が見つかりません。\手動でn車庫へ編成を送る必要があります。\n%s\n
 no_cargo_capacity
@@ -3009,14 +3001,6 @@ partly_forged
 一部買収済
 Passenger destinations
 旅客の目的地
-Passenger success rate last year (local):
-昨年の移動成功率(通勤):
-Passenger success rate last year (non-local):
-昨年の移動成功率(旅行):
-Passenger success rate this year (local):
-今年の移動成功率(通勤):
-Passenger success rate this year (non-local):
-今年の移動成功率(旅行):
 passenger_routing_packet_size
 旅客経路計算時のパケットサイズ
 passenger\ndistribution
@@ -3097,8 +3081,6 @@ Rail
 鉄道
 Range
 航続距離
-range
-連続走行/航行可能距離
 Re-route goods:
 経路の再探索:
 Read-only option : need to be set in simuconf.tab
@@ -3519,7 +3501,7 @@ Wait for time
 ダイヤを設定する
 Waiting for schedule. %s left
 発車時刻まで 残り%s
-waiting time unknown)
+waiting time unknown
 待ち時間不明)
 waiting\ntolerance\nmax. min
 最大許容待機時間(分)
@@ -3662,9 +3644,9 @@ helptxt_can_be_at_rear
 helptxt_intermediate
 中間車両
 %i month
-車齢 %iヶ月
+%iヶ月
 %i months
-車齢 %iヶ月
+%iヶ月
 Upgrade available
 アップグレードが可能です
 Upgrade is not available yet
@@ -3679,8 +3661,8 @@ switch the convoy nameplate display mode
 系統名表示モードの切り替え
 no convoy nameplate
 系統名非表示
-mouseover convoy name
-マウスオーバーで系統名表示
+mouseover
+マウスオーバーで表示
 active player's line name
 自社車両の系統名を常時表示
 always show convoy name
@@ -3735,12 +3717,6 @@ Selectable livery schemes
 選択可能な塗装スキーム
 Starting acceleration:
 起動加速度:
-; %i km/h @ %.2f sec
-，%i km/h @ %.2f 秒
-; %i km/h @ %.2f - %.2f sec
-，%i km/h @ %.2f - %.2f 秒
-; %i km/h @ %.2f sec -  %i km/h @ %.2f sec
-，%i km/h @ %.2f 秒 -  %i km/h @ %.2f 秒
 (%.*ft laden)
 (満載時 %.*ft)
 (%.*f-%.*ft laden)
@@ -3813,8 +3789,8 @@ production %.1f%s/month
 月生産 %.1f%s
 production %u%s/month
 月生産 %u%s
-own convoi tooltips
-所有車両の状態を表示
+only active player's
+所有編成のみ
 No service
 運行されている編成がありません
 Passengers/mail
@@ -3847,6 +3823,246 @@ do not change the mode for existing ways
 既存の制限を維持
 City growth is restrained
 「街を発展させる」オプションがオフにされています
+Select display font
+フォントの変更
+font size
+フォントサイズ
+Only full Unicode fonts
+Unicode対応フォントに限定
+Select a theme for display
+UIテーマの変更
+Theme selector
+テーマ選択
+vh_title
+車両一覧
+dp_title
+車庫一覧
+<h1>Error</h1><p><strong>
+<h1>Error:オブジェクトの重複</h1><p><strong>
+contains the following doubled objects:</strong><p>
+<br>オブジェクト名が重複しているため、一方が上書きされます。<br>※Onlineプレイでエラーを引き起こす可能性があります！</strong></p>
+Maximize height levels
+高さレベルを最大化する
+Show finances for transport type
+部門
+Copy to clipboard
+クリップボードにコピー
+Start this as a server
+サーバーモードで開始
+Map number: %d
+マップ番号： %d
+Hide/open all windows
+全てのウィンドウを隠す／開く
+Unsorted
+ソート無し
+Available:
+製造期間：
+Show future
+登場予定
+GUI settings
+GUI設定
+map view
+メイン画面設定
+Num pad keys always move map
+10キーでマップをスクロールする
+Simple drawing
+簡易描画
+transparencies
+透過表示設定
+traffic settings
+交通設定
+Convoi following mode
+編成追跡時のカメラ動作
+tooltip/coverage
+ツールチップ／有効範囲
+Grid
+タイル表示
+Brightness
+ブライトネス
+Map scroll
+マップのスクロール操作
+Station display
+駅関連の表示
+always show all
+全て
+only error convoys
+問題のある車両のみ
+only active player's
+所有編成のみ
+never show
+表示しない
+mouseover
+マウスオーバーで表示
+Convoy tooltips
+編成のツールチップ設定
+Nameplates
+路線名表示
+Loading bar
+積載率表示
+Tooltip
+ステータス表示
+Money message
+編成の収入表示
+The line name or convoy name is displayed above the convoy.
+編成の頭上に路線名または編成名を表示します。
+A loading rate bar is displayed above the convoy.
+編成の頭上に積載率を示すインジケーターを表示します。
+Income display displayed when convoy arrives at the stop.
+編成が駅に到着した時に収入を表示します。
+Divided by class
+クラス毎に分割表示
+Waiting bars are displayed separately for each class.
+待機バーを各クラス毎に分割して表示します。
+Unified
+全ての貨物をまとめて表示
+Divided by category
+「貨物カテゴリ」毎に分割
+Divided by goods
+「商品」毎に分割
+Select the behavior of the camera when the following convoy enters the tunnel.
+追跡中の編成がトンネルに入った時のカメラの挙動を選択することができます。
+do nothing
+何もしない
+sb_title
+信号扱所一覧
+sb_type
+種類
+sb_connected
+接続数
+by_region
+地域
+Allowed regions:
+建設可能地域:
+Trailers
+被牽引車
+<p>Continue by ESC, SPACE, or BACKSPACE.<br>
+<p>[ESC] [SPACE] [BACKSPACE]、いずれかのキーでゲームを開始します。<br>
+fl_btn_demand
+商品需要
+fl_btn_region
+所在地
+TOOL_SOUND
+ツール類の音量
+AMBIENT_SOUND
+環境音の音量
+CROSSING_SOUND
+踏切警報音の音量
+FACTORY_SOUND
+産業の稼働音の音量
+TRAFFIC_SOUND
+乗り物の音量
+CASH_SOUND
+キャッシュ音の音量
+Sound range:
+音の聞こえる範囲
+helptxt_filter_sb_has_vacant_slot
+信号機を追加接続可能な信号扱所のみを表示します
+Vacant slot
+追加接続可能
+own convoi tooltips
+所有車両の状態を表示
+%s mins. walking
+徒歩 %s分
+%s mins. travelling
+所要 %s分
+%s mins. waiting
+待ち時間 %s分
+Route_tab
+接続駅
+lb_served_goods_and_classes
+取扱い貨物品目分類
+Around passenger demands
+駅周辺の旅客需要
+Transportation status around this stop
+駅周辺の輸送状況
+hd_generated
+需要
+Success rate
+達成率
+Visiting trip
+訪問移動
+Commuting trip
+通勤移動
+hd_mailing
+郵送
+hd_btn_by_station
+目的地別
+hd_btn_by_category
+貨物品目分類別
+Return trip
+復路行程
+during the return trip of the mirror schedule
+往復スケジュールの復路行程
+Carrying out
+搬出中
+Undecided
+未定
+Line to
+運行系統（降車駅）
+Power: %4d kW\n
+出力: %4d kW\n
+cd_physics_tab
+性能曲線
+v-t graph
+v-tグラフ
+f-v graph
+f-vグラフ
+Acceleration(actual)
+加速度（リアルタイム）
+Acceleration(full load)
+加速度（満載時）
+Acceleration(empty)
+加速度（空車時）
+Running resistance
+走行抵抗
+time_to_top_speed:
+加速時間:
+distance_required_to_top_speed:
+加速距離:
+helptxt_starting_acceleration
+性能指標の1つで速度0km/hの時の加速度
+helptxt_actual_acceleration
+積載重量や勾配等の現在の状況を反映した加速グラフを表示します
+helptxt_v-t_graph
+横軸が時間（秒）、縦軸が速度を表します。
+helptxt_f-v_graph
+横軸が速度、縦軸が力（駆動力／走行抵抗）を表します。
+Acceleration graph when nothing is loaded on the convoy
+無積載時の平坦な直線における加速グラフを表示します
+helptxt_vt_graph_full_load
+最大積載時の平坦な直線における加速グラフを表示します
+helptxt_fv_graph_tractive_effort
+速度と牽引力（加速力）の関係を表すグラフを表示します
+Total force acting in the opposite direction of the convoy
+乗り物の進行方向と逆向きに働く力（空気抵抗や転がり抵抗）の合計
+helptxt_acceleration_time
+平坦な直線で最高速度に到達するまでに要する時間
+helptxt_acceleration_distance
+平坦な直線で最高速度に到達するまでに要する距離
+Unreachable
+N/A
+%.2f sec
+%.2f 秒
+Travel time and travel speed
+所要時間と表定速度
+Route average waiting time and speed evaluation
+平均待機時間。カッコ内は起点駅到着時からこの目的地までの平均移動時間を速度換算したもの
+Visitor arrivals
+訪問者到着数
+Commuter arrivals
+通勤者到着数
+Statistics
+統計データ
+Signalbox info.
+信号扱所情報
+Available at custom date
+任意の登場年月に変更
+Size (area)
+敷地面積
+Population/Visitor demand
+人口／訪問者需要
+Climate
+気候
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 Passengers %d %c, %d %c, %d no route\n\nCapacity: %i\n
@@ -3877,3 +4093,31 @@ Power (MW)
 #郵便事業が行われている範囲を表示
 #Show passenger coverage/passenger network
 #旅客事業が行われている範囲を表示
+# mins. travelling
+#分所要
+# mins. waiting)
+#分待ち)
+Power: %4d kW\n
+出力: %4d kW\n
+#Odometer: %s km
+#積算距離： %skm
+#; %i km/h @ %.2f sec
+#，%i km/h @ %.2f 秒
+#; %i km/h @ %.2f - %.2f sec
+#，%i km/h @ %.2f - %.2f 秒
+#; %i km/h @ %.2f sec -  %i km/h @ %.2f sec
+#，%i km/h @ %.2f 秒 -  %i km/h @ %.2f 秒
+#%i_more_stops,_max_walking_time:_%s
+#その他に%iヵ所の停留所/駅があり、最も遠い停留所/駅へは%s掛かります。
+#No passenger stops within walking distance\n
+#徒歩圏内に旅客駅/停留所はありません。\n
+#\nNo postboxes within walking distance
+#\n徒歩圏内に郵便ポスト/郵便局はありません。
+#Passenger success rate last year (local):
+#昨年の移動成功率(通勤):
+#Passenger success rate last year (non-local):
+#昨年の移動成功率(旅行):
+#Passenger success rate this year (local):
+#今年の移動成功率(通勤):
+#Passenger success rate this year (non-local):
+#今年の移動成功率(旅行):

@@ -8,81 +8,187 @@
 #include "../simworld.h"
 #include "../simevent.h"
 
+#include "../dataobj/environment.h"
 #include "../dataobj/translator.h"
+#include "../descriptor/ground_desc.h"
 
 #include "../player/simplay.h"
 
-#include "../utils/cbuffer_t.h"
-#include "../utils/simstring.h"
-
 #include "extend_edit.h"
 
+gui_rotation_item_t::gui_rotation_item_t(uint8 r) : gui_scrolled_list_t::const_text_scrollitem_t(NULL, SYSCOL_TEXT)
+{
+	rotation = r;
+	switch(rotation) {
+		case 0:         text = translator::translate("[0] south-facing");       break;
+		case 1:         text = translator::translate("[1] east-facing");        break;
+		case 2:         text = translator::translate("[2] north-facing");       break;
+		case 3:         text = translator::translate("[3] west-facing");        break;
+		case 4:         text = translator::translate("[4] southeast corner");   break;
+		case 5:         text = translator::translate("[5] northeast corner");   break;
+		case 6:         text = translator::translate("[6] northwest corner");   break;
+		case 7:         text = translator::translate("[7] southwest corner");   break;
+		case automatic: text = translator::translate("auto");               break;
+		case random:    text = translator::translate("random");             break;
+		default:        text = "";
+	}
+}
 
+gui_climates_item_t::gui_climates_item_t(uint8 c) : gui_scrolled_list_t::const_text_scrollitem_t(NULL, SYSCOL_TEXT)
+{
+	if(c<MAX_CLIMATES){
+		climate_ = 1<<c;
+		text = translator::translate(ground_desc_t::get_climate_name_from_bit((climate)c));
+	}
+	else{
+		climate_ = ALL_CLIMATES;
+		text = translator::translate("All");
+	}
+}
+
+gui_sorting_item_t::gui_sorting_item_t(uint8 s) : gui_scrolled_list_t::const_text_scrollitem_t(NULL, SYSCOL_TEXT)
+{
+	sorted_by=s;
+	switch(sorted_by) {
+		case BY_NAME_TRANSLATED:     text = translator::translate("Translation"); break;
+		case BY_NAME_OBJECT:         text = translator::translate("Object"); break;
+		case BY_LEVEL_PAX:           text = translator::translate("Level"); break;
+		case BY_VISITOR_DEMANDS:     text = translator::translate("Population/Visitor demand"); break;
+		case BY_JOBS:                text = translator::translate("Jobs"); break;
+		case BY_LEVEL_MAIL:          text = translator::translate("Mail demand/output"); break;
+		case BY_DATE_INTRO:          text = translator::translate("Intro. date"); break;
+		case BY_DATE_RETIRE:         text = translator::translate("Retire Date"); break;
+		case BY_SIZE:                text = translator::translate("Size (area)"); break;
+		case BY_COST:                text = translator::translate("Price"); break;
+		case BY_GOODS_NUMBER:        text = translator::translate("Goods"); break;
+		case BY_REMOVAL:             text = translator::translate("cost for removal"); break;
+		default:                     text = "";
+	}
+}
 
 
 extend_edit_gui_t::extend_edit_gui_t(const char *name, player_t* player_) :
 	gui_frame_t( name, player_ ),
 	player(player_),
-	info_text(&buf, COLUMN_WIDTH),
-	scrolly(&cont),
-	scl(gui_scrolled_list_t::listskin)
+	info_text(&buf, D_BUTTON_WIDTH*4),
+	scrolly(&cont_scrolly, true, true),
+	scl(gui_scrolled_list_t::listskin, gui_scrolled_list_t::scrollitem_t::compare)
 {
+	// layouting - where is which element?
+	set_table_layout(3,0);
+	set_force_equal_columns(false);
+	set_alignment(ALIGN_LEFT | ALIGN_TOP);
+	set_resizemode(diagonal_resize);
 
-	is_show_trans_name = true;
+	// left column
+	add_component(&cont_left);
+	cont_left.set_table_layout(1,0);
+	cont_left.set_size(get_min_size());
+	// cont_left.set_alignment(ALIGN_CENTER_H);
+	// add timeline settings
+	cont_left.add_component(&cont_timeline);
+	cont_timeline.set_table_layout(4,0);
+	// add filters
+	cont_left.add_component(&cont_filter);
+	cont_filter.set_table_layout(1,0);
+	//add list
+	cont_left.add_component(&scl);
+	// add stretcher element
+	cont_left.new_component<gui_fill_t>();
 
-	const sint16 image_width = get_base_tile_raster_width()*2;
-	tab_panel_width = ( image_width>COLUMN_WIDTH ? image_width : COLUMN_WIDTH );
+	// right column
+	add_component(&cont_right,2);
+	cont_right.set_table_layout(1,0);
+	// add object settings (rotations, ...)
+	cont_right.add_component(&cont_options);
+	cont_options.set_table_layout(1,0);
+	// add divider element
+	cont_right.new_component<gui_divider_t>();
+	// add scrollable element
+	cont_right.add_component(&scrolly);
+	cont_right.new_component<gui_fill_t>();
+	//cont scrolly is already in scrolly
+	cont_scrolly.set_table_layout(2,0);
+	cont_scrolly.set_margin( scr_size( 0, D_V_SPACE ), scr_size( 0, D_V_SPACE ) );
+	// add object description
+	cont_scrolly.add_component(&info_text,2);
+	// add object image
+	cont_scrolly.add_component(&building_image);
+	cont_scrolly.new_component<gui_fill_t>(true,false);
+	cont_scrolly.new_component_span<gui_fill_t>(false,true,2);
+	//end of layouting. Now fill elements
 
 	// init scrolled list
-	scl.set_size(scr_size(tab_panel_width, SCL_HEIGHT-14));
-	scl.set_pos(scr_coord(0,1));
-	scl.set_highlight_color(player->get_player_color1()+1);
+	scl.set_highlight_color(color_idx_to_rgb(player->get_player_color1()+1));
 	scl.set_selection(-1);
 	scl.add_listener(this);
+	scl.set_min_width( (D_DEFAULT_WIDTH-D_MARGIN_LEFT-D_MARGIN_RIGHT-2*D_H_SPACE)/2 );
 
-	// tab panel
-	tabs.set_pos(scr_coord(11,5));
-	tabs.set_size(scr_size(tab_panel_width, SCL_HEIGHT));
-	tabs.add_tab(&scl, translator::translate("Translation"));//land
-	tabs.add_tab(&scl, translator::translate("Object"));//city
-	tabs.add_listener(this);
-	add_component(&tabs);
-
-	bt_climates.init( button_t::square_state, "ignore climates", scr_coord(tab_panel_width+2*MARGIN, MARGIN) );
-	bt_climates.add_listener(this);
-	add_component(&bt_climates);
-
-	bt_timeline.init( button_t::square_state, "Use timeline start year", scr_coord(tab_panel_width+2*MARGIN, D_BUTTON_HEIGHT+MARGIN) );
+	// start filling cont_timeline---------------------------------------------------------------------------------------------
+	bt_timeline.init( button_t::square_state, "Use timeline start year");
 	bt_timeline.pressed = welt->get_settings().get_use_timeline()&1;
 	bt_timeline.add_listener(this);
-	add_component(&bt_timeline);
+	cont_timeline.add_component(&bt_timeline, 4);
 
-	bt_obsolete.init( button_t::square_state, "Show obsolete", scr_coord(tab_panel_width+2*MARGIN, 2*D_BUTTON_HEIGHT+MARGIN) );
-	bt_obsolete.add_listener(this);
-	add_component(&bt_obsolete);
+	bt_timeline_custom.init( button_t::square_state, "Available at custom date");
+	bt_timeline_custom.add_listener(this);
+	cont_timeline.add_component(&bt_timeline_custom, 4);
 
-	offset_of_comp = MARGIN+3*D_BUTTON_HEIGHT+4;
+	bool year_month_order = (env_t::show_month == env_t::DATE_FMT_JAPANESE || env_t::show_month == env_t::DATE_FMT_JAPANESE_NO_SEASON || env_t::show_month == env_t::DATE_FMT_INTERNAL_MINUTE || env_t::show_month == env_t::DATE_FMT_JAPANESE_INTERNAL_MINUTE);
 
-	// item list
-	info_text.set_pos(scr_coord(0, 10));
-	cont.add_component(&info_text);
-	cont.set_pos( scr_coord( 0, 0 ) );
-
-	scrolly.set_visible(true);
-	add_component(&scrolly);
-
-	// image placeholder
-	for(  sint16 i=3;  i>=0;  i--  ) {
-		img[i].set_image(IMG_EMPTY);
-		add_component( &img[i] );
+	if (!year_month_order) {
+		cont_timeline.new_component<gui_label_t>("Month");
+		cont_timeline.add_component(&ni_timeline_month);
 	}
+	cont_timeline.new_component<gui_label_t>("Year");
+	cont_timeline.add_component(&ni_timeline_year);
+	ni_timeline_month.init( (sint32)(welt->get_current_month()%12+1), 1, 12, 1, true );
+	ni_timeline_month.add_listener(this);
+	if (year_month_order) {
+		cont_timeline.new_component<gui_label_t>("Month");
+		cont_timeline.add_component(&ni_timeline_month);
+	}
+	ni_timeline_year.init( (sint32)(welt->get_current_month()/12), 0, 2999, 1, false );
+	ni_timeline_year.add_listener(this);
 
-	// resize button
-	set_min_windowsize(scr_size(tab_panel_width+COLUMN_WIDTH+3*MARGIN, D_TITLEBAR_HEIGHT+SCL_HEIGHT+(get_base_tile_raster_width()*3)/2+5*MARGIN));
-	set_resizemode(diagonal_resize);
-	resize(scr_coord(0,0));
+	bt_obsolete.init( button_t::square_state, "Show obsolete");
+	bt_obsolete.add_listener(this);
+	cont_timeline.add_component(&bt_obsolete, 4);
+	// end filling cont_timeline---------------------------------------------------------------------------------------------
+
+	// start filling cont_filter---------------------------------------------------------------------------------------------
+	// climate filter
+	gui_aligned_container_t *tbl_climate = cont_filter.add_table(2,0);
+	tbl_climate->new_component<gui_label_t>("Climate");
+	tbl_climate->add_component(&cb_climates);
+	cb_climates.add_listener(this);
+	cb_climates.new_component<gui_climates_item_t>(climate::MAX_CLIMATES);
+	for(uint8 i=climate::desert_climate; i<climate::MAX_CLIMATES; i++){
+		cb_climates.new_component<gui_climates_item_t>(i);
+	}
+	cb_climates.set_selection(0);
+	cont_filter.end_table();
+
+	// Sorting box
+	gui_aligned_container_t *tbl_sorting = cont_filter.add_table(2,0);
+	tbl_sorting->new_component<gui_label_t>("Sort by");
+	tbl_sorting->add_component(&cb_sortedby);
+	cb_sortedby.add_listener(this);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_NAME_TRANSLATED);
+	cb_sortedby.new_component<gui_sorting_item_t>(gui_sorting_item_t::BY_NAME_OBJECT);
+	cb_sortedby.set_selection(0);
+	cont_filter.end_table();
+	// end filling cont_filter---------------------------------------------------------------------------------------------
+
+	//filling cont_options
+	bt_climates.init( button_t::square_state, "ignore climates");
+	bt_climates.add_listener(this);
+	cont_options.add_component(&bt_climates);
+
+	//setting scrollable content box
+	scrolly.set_visible(true);	
+	scrolly.set_min_width( (D_DEFAULT_WIDTH-D_MARGIN_LEFT-D_MARGIN_RIGHT-2*D_H_SPACE)/2 );
 }
-
 
 
 /**
@@ -97,66 +203,75 @@ bool extend_edit_gui_t::infowin_event(const event_t *ev)
 }
 
 
-
-bool extend_edit_gui_t::action_triggered( gui_action_creator_t *comp,value_t /* */)           // 28-Dec-01    Markus Weber    Added
+// resize flowtext to avoid horizontal scrollbar
+void extend_edit_gui_t::set_windowsize( scr_size s )
 {
-	if (comp == &tabs) {
-		// switch list translation or object name
-		if (tabs.get_active_tab_index() == 0 && !is_show_trans_name) {
-			// show translation list
-			is_show_trans_name = true;
-			fill_list( is_show_trans_name );
-		}
-		else if (tabs.get_active_tab_index() == 1 && is_show_trans_name) {
-			// show object list
-			is_show_trans_name = false;
-			fill_list( is_show_trans_name );
-		}
-	}
-	else if (comp == &scl) {
+	gui_frame_t::set_windowsize( s );
+	info_text.set_width( scrolly.get_client().w );
+}
+
+
+bool extend_edit_gui_t::action_triggered( gui_action_creator_t *comp,value_t /* */)
+{
+	if (comp == &scl) {
 		// select an item of scroll list ?
 		change_item_info(scl.get_selection());
 	}
 	else if(  comp==&bt_obsolete  ) {
 		bt_obsolete.pressed ^= 1;
-		fill_list( is_show_trans_name );
+		fill_list();
 	}
 	else if(  comp==&bt_climates  ) {
 		bt_climates.pressed ^= 1;
-		fill_list( is_show_trans_name );
+		fill_list();
 	}
 	else if(  comp==&bt_timeline  ) {
+		bt_timeline_custom.pressed = false;
 		bt_timeline.pressed ^= 1;
-		fill_list( is_show_trans_name );
+		fill_list();
 	}
+	else if (  comp==&bt_timeline_custom  ) {
+		bt_timeline.pressed = false;
+		bt_timeline_custom.pressed ^= 1;
+		fill_list();
+	}
+	else if (  comp==&ni_timeline_year  &&  bt_timeline_custom.pressed) {
+		fill_list();
+	}
+	else if (  comp==&ni_timeline_month  &&  bt_timeline_custom.pressed) {
+		fill_list();
+	}
+	else if(  comp==&cb_climates  ) {
+		fill_list();
+		change_item_info(scl.get_selection());
+	}
+	else if(  comp==&cb_sortedby  ) {
+		fill_list();
+	}
+
 	return true;
 }
 
 
-
-/**
- * resize window in response to a resize event
- * @author Hj. Malthaner
- * @date   16-Oct-2003
- */
-void extend_edit_gui_t::resize(const scr_coord delta)
+uint8 extend_edit_gui_t::get_rotation() const
 {
-	gui_frame_t::resize(delta);
-
-	// text region
-	scr_size size = get_windowsize()-scr_coord( tab_panel_width+2*MARGIN, offset_of_comp+16 );
-	info_text.set_width(size.w - 20);
-	info_text.recalc_size();
-	cont.set_size( info_text.get_size() + scr_coord(0, 20) );
-	scrolly.set_size(size);
-	scrolly.set_pos( scr_coord( tab_panel_width+2*MARGIN, offset_of_comp ) );
-
-	// image placeholders
-	sint16 rw = get_base_tile_raster_width()/4;
-	static const scr_coord img_offsets[4]={ scr_coord(0,0), scr_coord(-2,1), scr_coord(2,1), scr_coord(0,2) };
-	for(  sint16 i=0;  i<4;  i++  ) {
-		scr_coord pos = scr_coord(((tab_panel_width-get_base_tile_raster_width())/2)+MARGIN, SCL_HEIGHT+3*MARGIN) + img_offsets[i]*rw;
-		img[i].set_pos( pos );
+	if (gui_rotation_item_t *item = dynamic_cast<gui_rotation_item_t*>( cb_rotation.get_selected_item() ) ) {
+		return item->get_rotation();
 	}
+	return 0;
+}
+uint8 extend_edit_gui_t::get_climate() const
+{
+	if (gui_climates_item_t *item = dynamic_cast<gui_climates_item_t*>( cb_climates.get_selected_item() ) ) {
+		return item->get_climate();
+	}
+	return ALL_CLIMATES;
+}
 
+uint8 extend_edit_gui_t::get_sortedby() const
+{
+	if (gui_sorting_item_t *item = dynamic_cast<gui_sorting_item_t*>( cb_sortedby.get_selected_item() ) ) {
+		return item->get_sortedby();
+	}
+	return ALL_CLIMATES;
 }

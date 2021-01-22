@@ -80,13 +80,8 @@ void tile_writer_t::write_obj(FILE* fp, obj_node_t& parent, int index, int seaso
 		imagelist2d_writer_t::instance()->write_obj(fp, node, frontkeys.at(i));
 	}
 
-	// Hajo: temp vars of appropriate size
-	uint16 v16;
-
-	// Set version data
-	v16 = 0x8002;
-
-	// Write version data
+	// write version data
+	uint16 v16 = 0x8002;
 	node.write_uint16(fp, v16, 0);
 
 	v16 = phases;
@@ -104,7 +99,7 @@ void tile_writer_t::write_obj(FILE* fp, obj_node_t& parent, int index, int seaso
 
 void building_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj)
 {
-	koord groesse(1, 1);
+	koord size(1, 1);
 	uint8 layouts = 0;
 
 	uint32 total_len = 0;
@@ -114,12 +109,15 @@ void building_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& ob
 	switch (ints[0]) {
 		default:
 		case 3: layouts   = ints[3]; /* FALLTHROUGH */
-		case 2: groesse.y = ints[2]; /* FALLTHROUGH */
-		case 1: groesse.x = ints[1]; /* FALLTHROUGH */
+		case 2: size.y = ints[2]; /* FALLTHROUGH */
+		case 1: size.x = ints[1]; /* FALLTHROUGH */
 		case 0: break;
 	}
 	if (layouts == 0) {
-		layouts = groesse.x == groesse.y ? 1 : 2;
+		layouts = size.x == size.y ? 1 : 2;
+	}
+	if (size.x*size.y == 0) {
+		dbg->fatal("building_writer_t::write_obj", "Cannot create a building with zero size (%i,%i)", size.x, size.y);
 	}
 	delete [] ints;
 
@@ -253,10 +251,10 @@ void building_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& ob
 		++level;
 	}
 
-	// Hajo: read dist_weight - default is 100% dist_weight to be built
+	// read chance - default is 100% chance to be built
 	uint8 const dist_weight = obj.get_int("chance", 100);
 
-	// prissi: timeline for buildings
+	// timeline for buildings
 	uint16 const intro_date =
 		obj.get_int("intro_year", DEFAULT_INTRO_DATE) * 12 +
 		obj.get_int("intro_month", 1) - 1;
@@ -265,7 +263,6 @@ void building_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& ob
 		obj.get_int("retire_year", DEFAULT_RETIRE_DATE) * 12 +
 		obj.get_int("retire_month", 1) - 1;
 
-	// @author: Kieron Green (ideas from extended code by jamespetts)
 	// capacity and price information.
 	// Stands in place of the "level" setting, but uses "level" data by default.
 
@@ -409,8 +406,8 @@ void building_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& ob
 	// scan for most number of seasons
 	int seasons = 1;
 	for (int l = 0; l < layouts; l++) { // each layout
-		int const h = l & 1 ? groesse.x : groesse.y;
-		int const w = l & 1 ? groesse.y : groesse.x;
+		int const h = l & 1 ? size.x : size.y;
+		int const w = l & 1 ? size.y : size.x;
 		for (int y = 0; y < h; ++y) {
 			for (int x = 0; x < w; ++x) { // each tile
 				for (int pos = 0; pos < 2; pos++) {
@@ -431,8 +428,8 @@ void building_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& ob
 
 	int tile_index = 0;
 	for (int l = 0; l < layouts; l++) { // each layout
-		int const h = l & 1 ? groesse.x : groesse.y;
-		int const w = l & 1 ? groesse.y : groesse.x;
+		int const h = l & 1 ? size.x : size.y;
+		int const w = l & 1 ? size.y : size.x;
 		for (int y = 0; y < h; ++y) {
 			for (int x = 0; x < w; ++x) { // each tile
 				slist_tpl<slist_tpl<slist_tpl<string> > > backkeys;
@@ -522,10 +519,10 @@ void building_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& ob
 	node.write_uint32(fp, extra_data, pos);
 	pos += sizeof(uint32);
 
-	node.write_uint16(fp, groesse.x, pos);
+	node.write_uint16(fp, size.x, pos);
 	pos += sizeof(uint16);
 
-	node.write_uint16(fp, groesse.y, pos);
+	node.write_uint16(fp, size.y, pos);
 	pos += sizeof(uint16);
 
 	node.write_uint8 (fp, layouts, pos);

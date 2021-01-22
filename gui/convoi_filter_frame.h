@@ -18,10 +18,8 @@ class convoi_frame_t;
 class player_t;
 class goods_desc_t;
 
-/*
+/**
  * Displays a filter settings dialog for the convoi list
- *
- * @author V. Meyer
  */
 class convoi_filter_frame_t : public gui_frame_t , private action_listener_t
 {
@@ -55,7 +53,7 @@ public:
 
 
 private:
-	uint32 filter_flags;
+	static uint32 filter_flags;
 
 	bool get_filter(convoi_filter_frame_t::filter_flag_t filter) { return (filter_flags & filter) != 0; }
 	void set_filter(convoi_filter_frame_t::filter_flag_t filter, bool on) { filter_flags = (on ? (filter_flags | filter) : (filter_flags & ~filter) ); }
@@ -78,19 +76,18 @@ private:
 
 		bool infowin_event(event_t const* const ev) OVERRIDE
 		{
-			bool b = button_t::infowin_event(ev);
-			if(IS_LEFTRELEASE(ev)) {
+			bool swallow = button_t::infowin_event(ev);
+			if(  IS_LEFTRELEASE(ev)  &&  swallow   ) {
 				pressed ^= 1;
 				parent->sort_list();
 			}
-			return b;
+			return swallow;
 		}
 	};
 
 	slist_tpl<ware_item_t *>all_ware;
 	static slist_tpl<const goods_desc_t *>active_ware;
 
-	static scr_coord filter_buttons_pos[FILTER_BUTTONS];
 	static filter_flag_t filter_buttons_types[FILTER_BUTTONS];
 	static const char *filter_buttons_text[FILTER_BUTTONS];
 
@@ -113,17 +110,16 @@ private:
 	button_t ware_keine;
 	button_t ware_invers;
 
+	gui_aligned_container_t  ware_cont;
 	gui_scrollpane_t ware_scrolly;
-	gui_container_t ware_cont;
 
 public:
 	void sort_list();
 
 	/**
 	 * Constructor. Generates all necessary Subcomponents.
-	 * @author V. Meyer
 	 */
-	convoi_filter_frame_t(player_t *player, convoi_frame_t *parent, uint32 initial_filters );
+	convoi_filter_frame_t(player_t *player, convoi_frame_t *parent);
 
 	/**
 	 * Does this window need a min size button in the title bar?
@@ -132,14 +128,8 @@ public:
 	bool has_min_sizer() const OVERRIDE {return true;}
 
 	/**
-	 * resize window in response to a resize event
-	 */
-	void resize(const scr_coord delta) OVERRIDE;
-
-	/**
 	 * Set the window associated helptext
 	 * @return the filename for the helptext, or NULL
-	 * @author V. Meyer
 	 */
 	const char *get_help_filename() const OVERRIDE {return "convoi_filter.txt"; }
 

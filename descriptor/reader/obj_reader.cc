@@ -36,9 +36,9 @@
 
 
 obj_reader_t::obj_map*                                         obj_reader_t::obj_reader;
-inthashtable_tpl<obj_type, stringhashtable_tpl<obj_desc_t*> > obj_reader_t::loaded;
+inthashtable_tpl<obj_type, stringhashtable_tpl<obj_desc_t*, N_BAGS_LARGE>, N_BAGS_LARGE> obj_reader_t::loaded;
 obj_reader_t::unresolved_map                                   obj_reader_t::unresolved;
-ptrhashtable_tpl<obj_desc_t**, int>                           obj_reader_t::fatals;
+ptrhashtable_tpl<obj_desc_t**, int, N_BAGS_SMALL>                           obj_reader_t::fatals;
 
 void obj_reader_t::register_reader()
 {
@@ -75,12 +75,12 @@ bool obj_reader_t::load(const char *path, const char *message)
 	searchfolder_t find;
 	std::string name = find.complete(path, "dat");
 	size_t i;
-	const bool drawing=is_display_init();
+	const bool drawing = is_display_init();
 
 	if(name.at(name.size() - 1) != '/') {
 		// very old style ... (I think unused by now)
 
-		if (FILE* const listfp = fopen(name.c_str(), "r")) {
+		if (FILE* const listfp = dr_fopen(name.c_str(), "r")) {
 			while(!feof(listfp)) {
 				char buf[256];
 
@@ -125,7 +125,7 @@ bool obj_reader_t::load(const char *path, const char *message)
 		step = (2<<step)-1;
 
 		if(drawing  &&  skinverwaltung_t::biglogosymbol==NULL) {
-			display_fillbox_wh( 0, 0, display_get_width(), display_get_height(), COL_BLACK, true );
+			display_fillbox_wh_rgb( 0, 0, display_get_width(), display_get_height(), color_idx_to_rgb(COL_BLACK), true );
 			read_file((name+"symbol.BigLogo.pak").c_str());
 DBG_MESSAGE("obj_reader_t::load()","big logo %p", skinverwaltung_t::biglogosymbol);
 		}
@@ -164,10 +164,10 @@ DBG_MESSAGE("obj_reader_t::load()", "reading from '%s'", name.c_str());
 
 void obj_reader_t::read_file(const char *name)
 {
-	// Hajo: added trace
+	// added trace
 	DBG_DEBUG("obj_reader_t::read_file()", "filename='%s'", name);
 
-	if (FILE* const fp = fopen(name, "rb")) {
+	if (FILE* const fp = dr_fopen(name, "rb")) {
 		sint32 n = 0;
 
 		// This is the normal header reading code
@@ -178,7 +178,6 @@ void obj_reader_t::read_file(const char *name)
 		} while(!feof(fp) && c != 0x1a);
 
 		if(feof(fp)) {
-			// Hajo: added error check
 			dbg->error("obj_reader_t::read_file()",	"unexpected end of file after %d bytes while reading '%s'!",n, name);
 		}
 		else {
@@ -205,7 +204,6 @@ void obj_reader_t::read_file(const char *name)
 		fclose(fp);
 	}
 	else {
-		// Hajo: added error check
 		dbg->error("obj_reader_t::read_file()", "reading '%s' failed!", name);
 	}
 }
@@ -279,11 +277,11 @@ void obj_reader_t::resolve_xrefs()
 {
 	slist_tpl<obj_desc_t *> xref_nodes;
 	FOR(unresolved_map, const& u, unresolved) {
-		FOR(stringhashtable_tpl<slist_tpl<obj_desc_t**> >, const& i, u.value) {
+		for(auto const& i: u.value) {
 			obj_desc_t *obj_loaded = NULL;
 
 			if (!strempty(i.key)) {
-				if (stringhashtable_tpl<obj_desc_t*>* const objtype_loaded = loaded.access(u.key)) {
+				if (auto const objtype_loaded = loaded.access(u.key)) {
 					obj_loaded = objtype_loaded->get(i.key);
 				}
 			}
@@ -315,7 +313,7 @@ void obj_reader_t::resolve_xrefs()
 
 void obj_reader_t::obj_for_xref(obj_type type, const char *name, obj_desc_t *data)
 {
-	stringhashtable_tpl<obj_desc_t *> *objtype_loaded = loaded.access(type);
+	auto *objtype_loaded = loaded.access(type);
 
 	if(!objtype_loaded) {
 		loaded.put(type);
@@ -328,7 +326,7 @@ void obj_reader_t::obj_for_xref(obj_type type, const char *name, obj_desc_t *dat
 
 void obj_reader_t::xref_to_resolve(obj_type type, const char *name, obj_desc_t **dest, bool fatal)
 {
-	stringhashtable_tpl< slist_tpl<obj_desc_t **> > *typeunresolved = unresolved.access(type);
+	auto *typeunresolved = unresolved.access(type);
 
 	if(!typeunresolved) {
 		unresolved.put(type);

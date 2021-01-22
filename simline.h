@@ -7,9 +7,10 @@
 #define SIMLINE_H
 
 
+#include "simtypes.h"
+#include "simcolor.h"
 #include "convoihandle_t.h"
 #include "linehandle_t.h"
-#include "simtypes.h"
 #include "simconvoi.h"
 
 #include "tpl/minivec_tpl.h"
@@ -69,24 +70,21 @@ private:
 	/**
 	 * Handle for ourselves. Can be used like the 'this' pointer
 	 * Initialized by constructors
-	 * @author Hj. Malthaner
 	 */
 	linehandle_t self;
 
-	/*
+	/**
 	 * the current state saved as color
 	 * Meanings are BLACK (ok), WHITE (no convois), YELLOW (no vehicle moved), RED (last month income minus), BLUE (at least one convoi vehicle is obsolete)
 	 */
-	uint8 state_color;
+	PIXVAL state_color;
 
-	/*
+	/**
 	 * a list of all convoys assigned to this line
-	 * @author hsiegeln
 	 */
 	vector_tpl<convoihandle_t> line_managed_convoys;
 
-	/*
-	 * @author hsiegeln
+	/**
 	 * a list of all catg_index, which can be transported by this line.
 	 */
 	minivec_tpl<uint8> goods_catg_index;
@@ -97,9 +95,8 @@ private:
 	vector_tpl<uint8> passenger_classes_carried;
 	vector_tpl<uint8> mail_classes_carried;
 
-	/*
+	/**
 	 * struct holds new financial history for line
-	 * @author hsiegeln
 	 */
 	sint64 financial_history[MAX_MONTHS][MAX_LINE_COST];
 
@@ -138,51 +135,44 @@ public:
 
 	linehandle_t get_handle() const { return self; }
 
-	/*
+	/**
 	 * add convoy to route
-	 * @author hsiegeln
 	 */
 	void add_convoy(convoihandle_t cnv, bool from_loading = false);
 
-	/*
+	/**
 	 * remove convoy from route
-	 * @author hsiegeln
 	 */
 	void remove_convoy(convoihandle_t cnv);
 
-	/*
+	/**
 	 * get convoy
-	 * @author hsiegeln
 	 */
 	convoihandle_t get_convoy(int i) const { return line_managed_convoys[i]; }
 
-	/*
+	/**
 	 * return number of manages convoys in this line
-	 * @author hsiegeln
 	 */
 	uint32 count_convoys() const { return line_managed_convoys.get_count(); }
 
 	vector_tpl<convoihandle_t> const& get_convoys() const { return line_managed_convoys; }
 
-	/*
+	/**
 	 * returns the state of the line
-	 * @author prissi
 	 */
-	uint8 get_state_color() const { return state_color; }
+	PIXVAL get_state_color() const { return state_color; }
 	// This has multiple flags
 	uint8 get_state() const { return state; }
 
-	/*
-	 * return schedule of line
-	 * @author hsiegeln
+	/**
+	 * return the schedule of the line
 	 */
 	schedule_t * get_schedule() const { return schedule; }
 
 	void set_schedule(schedule_t* schedule);
 
-	/*
+	/**
 	 * get name of line
-	 * @author hsiegeln
 	 */
 	char const* get_name() const { return name; }
 	void set_name(const char *str) { name = str; }
@@ -249,7 +239,13 @@ public:
 	void new_month();
 
 	linetype get_linetype() { return type; }
-	static linetype get_linetype( const waytype_t wt );
+
+	static waytype_t linetype_to_waytype(const linetype lt);
+	static linetype waytype_to_linetype(const waytype_t wt);
+	static const char *get_linetype_name(const linetype lt);
+	inline char const *get_linetype_name() const {
+		return schedule_type_text[type];
+	}
 
 	const minivec_tpl<uint8> &get_goods_catg_index() const { return goods_catg_index; }
 
@@ -286,6 +282,8 @@ public:
 
 	inline times_history_map& get_journey_times_history() { return journey_times_history; }
 
+	sint64 get_service_frequency();
+
 	image_id get_linetype_symbol() const
 	{
 		if (type == truckline && goods_catg_index.is_contained(goods_manager_t::INDEX_PAS)) {
@@ -294,10 +292,6 @@ public:
 		else {
 			return schedule->get_schedule_type_symbol();
 		}
-	}
-
-	inline char const *get_linetype_name() const {
-		return schedule_type_text[type];
 	}
 
 	sint64 calc_departures_scheduled();

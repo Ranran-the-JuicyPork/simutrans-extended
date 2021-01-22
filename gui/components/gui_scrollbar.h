@@ -16,8 +16,6 @@
 /**
  * Scrollbar class
  * scrollbar can be horizontal or vertical
- *
- * @author Niels Roest, additions by Hj. Malthaner
  */
 class scrollbar_t :
 	public gui_action_creator_t,
@@ -95,6 +93,10 @@ public:
 	bool infowin_event(event_t const*) OVERRIDE;
 
 	void draw(scr_coord pos) OVERRIDE;
+
+	scr_size get_min_size() const OVERRIDE;
+
+	scr_size get_max_size() const OVERRIDE;
 };
 
 #endif

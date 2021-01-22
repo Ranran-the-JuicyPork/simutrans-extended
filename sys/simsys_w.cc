@@ -15,19 +15,28 @@
 #include <wingdi.h>
 #include <mmsystem.h>
 #include <imm.h>
+#include <commdlg.h>
 
 #ifdef __CYGWIN__
 extern int __argc;
 extern char **__argv;
 #endif
 
-#include "../display/simgraph.h"
+#include "simsys_w32_png.h"
+#include "simsys.h"
+
+#include "../macros.h"
+#include "../simconst.h"
 #include "../simdebug.h"
+#include "../simmem.h"
+#include "../simversion.h"
+#include "../simevent.h"
+#include "../dataobj/environment.h"
+#include "../display/simgraph.h"
 #include "../gui/simwin.h"
 #include "../gui/gui_frame.h"
 #include "../gui/components/gui_component.h"
 #include "../gui/components/gui_textinput.h"
-
 
 // needed for wheel
 #ifndef WM_MOUSEWHEEL
@@ -37,16 +46,12 @@ extern char **__argv;
 #	define GET_WHEEL_DELTA_WPARAM(wparam) ((short)HIWORD(wparam))
 #endif
 
-// 16 Bit may be much slower than 15 unfortunately on some hardware
-#define USE_16BIT_DIB
 
-#include "../simmem.h"
-#include "simsys_w32_png.h"
-#include "simsys.h"
-#include "../simversion.h"
-#include "../simevent.h"
-#include "../macros.h"
 
+/*
+ * The class name used to configure the main window.
+ */
+static const LPCWSTR WINDOW_CLASS_NAME = L"Simu";
 
 static volatile HWND hwnd;
 static bool is_fullscreen = false;
@@ -56,7 +61,7 @@ static RECT WindowSize = { 0, 0, 0, 0 };
 static RECT MaxSize;
 static HINSTANCE hInstance;
 
-static BITMAPINFO* AllDib;
+static BITMAPINFO* AllDib = NULL;
 static PIXVAL*     AllDibData;
 
 volatile HDC hdc = NULL;
@@ -64,7 +69,7 @@ volatile HDC hdc = NULL;
 
 #ifdef MULTI_THREAD
 
-HANDLE	hFlushThread=0;
+HANDLE hFlushThread=0;
 CRITICAL_SECTION redraw_underway;
 
 // forward deceleration
@@ -126,23 +131,22 @@ static void create_window(DWORD const ex_style, DWORD const style, int const x, 
 	RECT r = { 0, 0, w, h };
 	AdjustWindowRectEx(&r, style, false, ex_style);
 
-#if 0
-	// Try with a wide character window; need the title with full width
-	WCHAR *wSIM_TITLE = new wchar_t[lengthof(SIM_TITLE)];
-	size_t convertedChars = 0;
-	mbstowcs( wSIM_TITLE, SIM_TITLE, lengthof(SIM_TITLE) );
-	hwnd = CreateWindowExW(ex_style, L"Simu", wSIM_TITLE, style, x, y, r.right - r.left, r.bottom - r.top, 0, 0, hInstance, 0);
-#else
-	hwnd = CreateWindowExA(ex_style, "Simu", SIM_TITLE, style, x, y, r.right - r.left, r.bottom - r.top, 0, 0, hInstance, 0);
-#endif
+	// Convert UTF-8 to UTF-16.
+	int const size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, SIM_TITLE, -1, NULL, 0);
+	LPWSTR const wSIM_TITLE = new WCHAR[size];
+	MultiByteToWideChar(CP_UTF8, 0, SIM_TITLE, -1, wSIM_TITLE, size);
+
+	hwnd = CreateWindowExW(ex_style, WINDOW_CLASS_NAME, wSIM_TITLE, style, x, y, r.right - r.left, r.bottom - r.top, 0, 0, hInstance, 0);
+
+	delete[] wSIM_TITLE;
 
 	ShowWindow(hwnd, SW_SHOW);
-	SetTimer( hwnd, 0, 1111, NULL );	// HACK: so windows thinks we are not dead when processing a timer every 1111 ms ...
+	SetTimer( hwnd, 0, 1111, NULL ); // HACK: so windows thinks we are not dead when processing a timer every 1111 ms ...
 }
 
 
 // open the window
-int dr_os_open(int const w, int const h, int fullscreen)
+int dr_os_open(int const w, int const h, bool fullscreen)
 {
 	MaxSize.right = ((w*x_scale)/32+15) & 0x7FF0;
 	MaxSize.bottom = (h*y_scale)/32;
@@ -258,20 +262,20 @@ int dr_textur_resize(unsigned short** const textur, int w, int const h)
 	int img_w = w;
 	int img_h = h;
 
-	if(  w > MaxSize.right  ||  h >= MaxSize.bottom  ) {
+	if(  w > (MaxSize.right/x_scale)*32  ||  h >= (MaxSize.bottom/y_scale)*32  ) {
 		// since the query routines that return the desktop data do not take into account a change of resolution
 		free(AllDibData);
 		AllDibData = NULL;
-		MaxSize.right = (w * 32) / x_scale;
-		MaxSize.bottom = ((h + 1) * 32) / y_scale;
+		MaxSize.right = (w*32)/x_scale;
+		MaxSize.bottom = ((h+1)*32)/y_scale;
 		AllDibData = MALLOCN(PIXVAL, img_w * img_h);
 		*textur = (unsigned short*)AllDibData;
 	}
 
 	AllDib->bmiHeader.biWidth  = img_w;
 	AllDib->bmiHeader.biHeight = img_h;
-	WindowSize.right = (w * 32) / x_scale;
-	WindowSize.bottom = (h * 32) / y_scale;
+	WindowSize.right           = (w*32)/x_scale;
+	WindowSize.bottom          = (h*32)/y_scale;
 
 #ifdef MULTI_THREAD
 	LeaveCriticalSection( &redraw_underway );
@@ -293,14 +297,13 @@ unsigned short *dr_textur_init()
 /**
  * Transform a 24 bit RGB color into the system format.
  * @return converted color value
- * @author Hj. Malthaner
  */
 unsigned int get_system_color(unsigned int r, unsigned int g, unsigned int b)
 {
-#ifdef USE_16BIT_DIB
-	return ((r & 0x00F8) << 8) | ((g & 0x00FC) << 3) | (b >> 3);
-#else
+#ifdef RGB555
 	return ((r & 0x00F8) << 7) | ((g & 0x00F8) << 2) | (b >> 3); // 15 Bit
+#else
+	return ((r & 0x00F8) << 8) | ((g & 0x00FC) << 3) | (b >> 3);
 #endif
 }
 
@@ -402,18 +405,17 @@ void set_pointer(int loading)
  * Some wrappers can save screenshots.
  * @return 1 on success, 0 if not implemented for a particular wrapper and -1
  *         in case of error.
- * @author Hj. Malthaner
  */
 int dr_screenshot(const char *filename, int x, int y, int w, int h)
 {
-#if defined USE_16BIT_DIB
-	int const bpp = COLOUR_DEPTH;
-#else
+#if defined RGB555
 	int const bpp = 15;
+#else
+	int const bpp = COLOUR_DEPTH;
 #endif
 	if (!dr_screenshot_png(filename, w, h, AllDib->bmiHeader.biWidth, (unsigned short*)AllDibData+x+y*AllDib->bmiHeader.biWidth, bpp)) {
 		// not successful => save full screen as BMP
-		if (FILE* const fBmp = fopen(filename, "wb")) {
+		if (FILE* const fBmp = dr_fopen(filename, "wb")) {
 			BITMAPFILEHEADER bf;
 
 			// since the number of drawn pixel can be smaller than the actual width => only use the drawn pixel for bitmap
@@ -465,9 +467,9 @@ LRESULT WINAPI WindowProc(HWND this_hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 	static utf8 *u8buf = NULL;
 	static size_t u8bufsize;
 
-	static int last_mb = 0;	// last mouse button state
+	static int last_mb = 0; // last mouse button state
 	switch (msg) {
-		case WM_TIMER:	// dummy timer even to keep windows thinking we are still active
+		case WM_TIMER: // dummy timer even to keep windows thinking we are still active
 			return 0;
 
 		case WM_ACTIVATE: // may check, if we have to restore color depth
@@ -490,10 +492,10 @@ LRESULT WINAPI WindowProc(HWND this_hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 					MEMZERO(settings);
 					settings.dmSize = sizeof(settings);
 					settings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-#if defined USE_16BIT_DIB
-					settings.dmBitsPerPel = COLOUR_DEPTH;
-#else
+#ifdef RGB555
 					settings.dmBitsPerPel = 15;
+#else
+					settings.dmBitsPerPel = COLOUR_DEPTH;
 #endif
 					settings.dmPelsWidth  = MaxSize.right;
 					settings.dmPelsHeight = MaxSize.bottom;
@@ -600,58 +602,64 @@ LRESULT WINAPI WindowProc(HWND this_hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 				sys_event.type = SIM_SYSTEM;
 				sys_event.code = SYSTEM_RESIZE;
 
-				sys_event.mx = (LOWORD(lParam)*32)/x_scale;
-				if (sys_event.mx <= 0) {
-					sys_event.mx = 4;
+				sys_event.new_window_size.w = (LOWORD(lParam)*32)/x_scale;
+				if (sys_event.new_window_size.w <= 0) {
+					sys_event.new_window_size.w = 4;
 				}
 
-				sys_event.my = (HIWORD(lParam)*32)/y_scale;
-				if (sys_event.my <= 1) {
-					sys_event.my = 64;
+				sys_event.new_window_size.h = (HIWORD(lParam)*32)/y_scale;
+				if (sys_event.new_window_size.h <= 1) {
+					sys_event.new_window_size.h = 64;
 				}
 			}
 			break;
 
 		case WM_PAINT: {
-			PAINTSTRUCT ps;
-			HDC hdcp;
+			if (AllDib != NULL) {
+				PAINTSTRUCT ps;
+				HDC hdcp;
 
-			hdcp = BeginPaint(hwnd, &ps);
-			AllDib->bmiHeader.biHeight = (WindowSize.bottom*32)/y_scale;
-			StretchDIBits(hdcp, 0, 0, WindowSize.right, WindowSize.bottom, 0, AllDib->bmiHeader.biHeight + 1, AllDib->bmiHeader.biWidth, -AllDib->bmiHeader.biHeight, AllDibData, AllDib, DIB_RGB_COLORS, SRCCOPY);
-			EndPaint(this_hwnd, &ps);
+				hdcp = BeginPaint(hwnd, &ps);
+				AllDib->bmiHeader.biHeight = (WindowSize.bottom*32)/y_scale;
+				StretchDIBits(hdcp, 0, 0, WindowSize.right, WindowSize.bottom, 0, AllDib->bmiHeader.biHeight + 1, AllDib->bmiHeader.biWidth, -AllDib->bmiHeader.biHeight, AllDibData, AllDib, DIB_RGB_COLORS, SRCCOPY);
+				EndPaint(this_hwnd, &ps);
+			}
 			break;
 		}
 
 		case WM_KEYDOWN: { /* originally KeyPress */
 			// check for not numlock!
-			int numlock = (GetKeyState(VK_NUMLOCK) & 1) == 0;
-
 			sys_event.type = SIM_KEYBOARD;
 			sys_event.code = 0;
 			sys_event.key_mod = ModifierKeys();
 
-			if (numlock) {
-				// do low level special stuff here
-				switch (wParam) {
-					case VK_NUMPAD0:   sys_event.code = '0';           break;
-					case VK_NUMPAD1:   sys_event.code = '1';           break;
-					case VK_NUMPAD3:   sys_event.code = '3';           break;
-					case VK_NUMPAD7:   sys_event.code = '7';           break;
-					case VK_NUMPAD9:   sys_event.code = '9';           break;
-					case VK_NUMPAD2:   sys_event.code = SIM_KEY_DOWN;  break;
-					case VK_NUMPAD4:   sys_event.code = SIM_KEY_LEFT;  break;
-					case VK_NUMPAD6:   sys_event.code = SIM_KEY_RIGHT; break;
-					case VK_NUMPAD8:   sys_event.code = SIM_KEY_UP;    break;
-					case VK_PAUSE:     sys_event.code = 16;            break;	// Pause -> ^P
-					case VK_SEPARATOR: sys_event.code = 127;           break;	// delete
+			sint16 code = lParam >> 16;
+			if(  code >= 0x47  &&  code <= 0x52  &&  code != 0x4A  &&  code != 0x4e  ) {
+				if(  env_t::numpad_always_moves_map  ||  (GetKeyState( VK_NUMLOCK ) & 1) == 0  ) { // numlock off?
+					switch( code ) {
+						case 0x47: code = SIM_KEY_UPLEFT; break;
+						case 0x48: code = SIM_KEY_UP; break;
+						case 0x49: code = SIM_KEY_UPRIGHT; break;
+						case 0x4B: code = SIM_KEY_LEFT; break;
+						case 0x4C: code = SIM_KEY_CENTER; break;
+						case 0x4D: code = SIM_KEY_RIGHT; break;
+						case 0x4F: code = SIM_KEY_DOWNLEFT; break;
+						case 0x50: code = SIM_KEY_DOWN; break;
+						case 0x51: code = SIM_KEY_DOWNRIGHT; break;
+						case 0x52: code = SIM_KEY_NUMPAD_BASE; break;
+					}
+					if(  code>=SIM_KEY_NUMPAD_BASE  ) {
+						// ok found something
+						sys_event.code = code;
+						break;
+					}
 				}
-				// check for numlock!
-				if (sys_event.code != 0) break;
 			}
 
 			// do low level special stuff here
 			switch (wParam) {
+				case VK_SCROLL: sys_event.code = SIM_KEY_SCROLLLOCK; break;
+				case VK_PAUSE:  sys_event.code = SIM_KEY_PAUSE; break;
 				case VK_LEFT:   sys_event.code = SIM_KEY_LEFT;  break;
 				case VK_RIGHT:  sys_event.code = SIM_KEY_RIGHT; break;
 				case VK_UP:     sys_event.code = SIM_KEY_UP;    break;
@@ -675,13 +683,27 @@ LRESULT WINAPI WindowProc(HWND this_hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 		}
 
 		case WM_CHAR: /* originally KeyPress */
+		{
+			sint16 code = lParam >> 16;
+			if(  code >= 0x47  &&  code <= 0x52  &&  code != 0x4A  &&  code != 0x4e  ) {
+				if(  env_t::numpad_always_moves_map  ||  (GetKeyState( VK_NUMLOCK ) & 1) == 0  ) { // numlock off?
+					// we handled numpad keys already above ...
+					sys_event.type = SIM_NOEVENT;
+					sys_event.code = 0;
+					break;
+				}
+			}
 			sys_event.type = SIM_KEYBOARD;
 			sys_event.code = wParam;
 			sys_event.key_mod = ModifierKeys();
 			break;
+		}
 
 		case WM_IME_SETCONTEXT:
-			return DefWindowProc( this_hwnd, msg, wParam, lParam&~ISC_SHOWUICOMPOSITIONWINDOW );
+			// attempt to avoid crash at windows 1809> just not call DefWinodwsProc seems to work for SDL2 ...
+//			DefWindowProc( this_hwnd, msg, wParam, lParam&~ISC_SHOWUICOMPOSITIONWINDOW );
+			lParam = 0;
+			return 0;
 
 		case WM_IME_STARTCOMPOSITION:
 			break;
@@ -995,7 +1017,6 @@ int CALLBACK WinMain(HINSTANCE const hInstance, HINSTANCE, LPSTR, int)
 	WNDCLASSW wc;
 	bool timer_is_set = false;
 
-	wc.lpszClassName = L"Simu";
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindowProc;
 	wc.cbClsExtra = 0;
@@ -1005,6 +1026,7 @@ int CALLBACK WinMain(HINSTANCE const hInstance, HINSTANCE, LPSTR, int)
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH) (COLOR_BACKGROUND + 1);
 	wc.lpszMenuName = NULL;
+	wc.lpszClassName = WINDOW_CLASS_NAME;
 	RegisterClassW(&wc);
 
 	GetWindowRect(GetDesktopWindow(), &MaxSize);
@@ -1025,7 +1047,7 @@ int CALLBACK WinMain(HINSTANCE const hInstance, HINSTANCE, LPSTR, int)
 	}
 
 #ifdef MULTI_THREAD
-	if(	hFlushThread ) {
+	if(  hFlushThread ) {
 		TerminateThread( hFlushThread, 0 );
 	}
 #endif

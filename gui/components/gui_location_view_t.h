@@ -12,7 +12,6 @@
 
 /**
  * Displays a location on the world
- * @author Hj. Malthaner
  */
 class location_view_t : public world_view_t
 {
@@ -28,9 +27,9 @@ public:
 
 	void map_rotate90(sint16 const new_ysize) { location.rotate90(new_ysize); }
 
-	void draw(scr_coord offset) { internal_draw(offset, 0); }
+	void draw(scr_coord offset) OVERRIDE { internal_draw(offset, 0); }
 
-	koord3d get_location() { return location; }
+	koord3d get_location() OVERRIDE { return location; }
 };
 
 
