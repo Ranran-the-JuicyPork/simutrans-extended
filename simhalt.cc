@@ -2611,7 +2611,16 @@ bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *goo
 						wait_for_faster_convoy = false;
 					}
 
-					if(!bound_for_next_transfer && !wait_for_faster_convoy)
+					// If the vehicle is empty with minimum loading set and mixed load prohibited,
+					// check the loading level of after loading, otherwise convoy may not be able to depart forever
+					if (mixed_load_prohibition && goods_restriction == goods_manager_t::INDEX_NONE
+						&& cnv->get_schedule()->get_current_entry().minimum_loading > 0
+						&& cnv->get_schedule()->get_current_entry().minimum_loading > cnv->get_loading_level() /* FIXME */
+						&& requested_amount > next_to_load->menge)
+					{
+						break;
+					}
+					else if(!bound_for_next_transfer && !wait_for_faster_convoy)
 					{
 						// The direct route is faster than the planned route:
 						// update the next transfer to reflect this.
@@ -2662,12 +2671,11 @@ bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *goo
 
 					if (mixed_load_prohibition) {
 						// this vehicle only load with the same kind of goods initially loaded
-						if (goods_restriction == goods_manager_t::INDEX_NONE) {
-							goods_restriction = next_to_load->get_index();
+						if (goods_restriction != goods_manager_t::INDEX_NONE && goods_restriction != next_to_load->get_index()) {
+							break;
 						}
-						if (next_to_load->get_index() != goods_restriction) {
-							schedule->increment_index(&index, &reverse);
-							continue;
+						if (goods_restriction == goods_manager_t::INDEX_NONE && next_to_load->menge) {
+							goods_restriction = next_to_load->get_index();
 						}
 					}
 
