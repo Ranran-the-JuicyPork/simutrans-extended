@@ -2615,7 +2615,7 @@ bool haltestelle_t::fetch_goods(slist_tpl<ware_t> &load, const goods_desc_t *goo
 					// check the loading level of after loading, otherwise convoy may not be able to depart forever
 					if (mixed_load_prohibition && goods_restriction == goods_manager_t::INDEX_NONE
 						&& cnv->get_schedule()->get_current_entry().minimum_loading > 0
-						&& cnv->get_schedule()->get_current_entry().minimum_loading > cnv->get_loading_level() /* FIXME */
+						&& cnv->get_schedule()->get_current_entry().minimum_loading > (cnv->get_total_cargo() + next_to_load->menge) * 100 / cnv->get_cargo_max() + cnv->get_overcrowded_capacity()
 						&& requested_amount > next_to_load->menge)
 					{
 						break;
