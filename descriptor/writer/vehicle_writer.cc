@@ -1158,14 +1158,14 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	node.write_uint8(fp, override_way_speed, pos);
 	pos += sizeof(override_way_speed);
 
-	node.write_sint8(fp, front_group_count, pos);
-	pos += sizeof(sint8);
-	node.write_sint8(fp, rear_group_count, pos);
-	pos += sizeof(sint8);
-	node.write_sint8(fp, leader_group_count, pos);
-	pos += sizeof(sint8);
-	node.write_sint8(fp, trailer_group_count, pos);
-	pos += sizeof(sint8);
+	node.write_uint8(fp, front_group_count, pos);
+	pos += sizeof(front_group_count);
+	node.write_uint8(fp, rear_group_count, pos);
+	pos += sizeof(rear_group_count);
+	node.write_uint8(fp, leader_group_count, pos);
+	pos += sizeof(leader_group_count);
+	node.write_uint8(fp, trailer_group_count, pos);
+	pos += sizeof(trailer_group_count);
 
 	sint8 sound_str_len = sound_str.size();
 	if (sound_str_len > 0) {
