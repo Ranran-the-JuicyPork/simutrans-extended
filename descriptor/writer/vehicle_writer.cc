@@ -176,8 +176,8 @@ void vehicle_writer_t::write_obj(FILE* fp, obj_node_t& parent, tabfileobj_t& obj
 	// Standard 11, 0x400 - 16-bit sound
 	// Standard 11, 0x500 - classes
 	// Standard 11, 0x600 - prev=any, cab_setting
-	// Standard 11, 0x700 - prev=any, cab_setting
-	version += 0x700;
+	// Standard 11, 0x700 - override_way_speed
+	version += 0x800;
 
 	node.write_uint16(fp, version, pos);
 

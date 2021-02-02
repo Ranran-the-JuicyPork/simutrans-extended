@@ -556,10 +556,6 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 				else
 				{
 					desc->mixed_load_prohibition = false;
-					desc->front_group_count = 0;
-					desc->rear_group_count = 0;
-					desc->leader_group_count = 0;
-					desc->trailer_group_count = 0;
 				}
 				if (extended && extended_version >= 6)
 				{
@@ -568,6 +564,20 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 				else
 				{
 					desc->override_way_speed = false;
+				}
+				if (extended && extended_version >= 7)
+				{
+					desc->front_group_count = decode_uint8(p);
+					desc->rear_group_count = decode_uint8(p);
+					desc->leader_group_count = decode_uint8(p);
+					desc->trailer_group_count = decode_uint8(p);
+				}
+				else
+				{
+					desc->front_group_count = 0;
+					desc->rear_group_count = 0;
+					desc->leader_group_count = 0;
+					desc->trailer_group_count = 0;
 				}
 			}
 			else
