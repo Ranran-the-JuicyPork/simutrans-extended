@@ -471,7 +471,7 @@ obj_desc_t *vehicle_reader_t::read_node(FILE *fp, obj_node_info_t &node)
 		desc->freight_image_type = decode_uint8(p);
 		if(extended)
 		{
-			if(extended_version < 7)
+			if(extended_version < 8)
 			{
 				// NOTE: Extended version reset to 1 with incrementing of
 				// Standard version to 10.
