@@ -587,7 +587,7 @@ public:
 			else if (!veh) {
 				// Vehicles do not match => Check if the group matches
 				const char *group = get_child<text_desc_t>(get_add_to_node() + leader_count + i)->get_text();
-				// if next veh is revered => check rear side of bext veh
+				// if next vehicle is revered => check rear side of next vehicle
 				if (group != '\0' && next_veh->match_group(group, next_veh_reversed)) {
 					return true;
 				}
@@ -626,7 +626,7 @@ public:
 			else if (!veh) {
 				// Vehicles do not match => Check if the group matches
 				const char *group = get_child<text_desc_t>(get_add_to_node() + i)->get_text();
-				// if prev veh is revered => check front side of bext veh
+				// if prev vehicle is revered => check front side of prev vehicle
 				if (group != '\0' && prev_veh->match_group(group, !prev_veh_reversed)) {
 					return true;
 				}
