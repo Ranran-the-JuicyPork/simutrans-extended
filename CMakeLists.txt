@@ -436,6 +436,7 @@ add_executable(simutrans-extended
 	squirrel/squirrel/sqvm.cc
 	unicode.cc
 	utils/cbuffer_t.cc
+	utils/checklist.cc
 	utils/csv.cc
 	utils/float32e8_t.cc
 	utils/log.cc

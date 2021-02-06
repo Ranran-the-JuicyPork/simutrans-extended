@@ -553,6 +553,7 @@ SOURCES += simworld.cc
 SOURCES += sys/simsys.cc
 SOURCES += unicode.cc
 SOURCES += utils/cbuffer_t.cc
+SOURCES += utils/checklist.cc
 SOURCES += utils/csv.cc
 SOURCES += utils/log.cc
 SOURCES += utils/searchfolder.cc

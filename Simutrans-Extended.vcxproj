@@ -2249,6 +2249,7 @@
     <ClCompile Include="squirrel\squirrel\sqvm.cc" />
     <ClCompile Include="squirrel\sq_extensions.cc" />
     <ClCompile Include="utils\cbuffer_t.cc" />
+    <ClCompile Include="utils\checklist.cc" />
     <ClCompile Include="gui\citybuilding_edit.cc" />
     <ClCompile Include="descriptor\reader\citycar_reader.cc" />
     <ClCompile Include="gui\citylist_frame_t.cc" />
@@ -2701,6 +2702,7 @@
     <ClInclude Include="descriptor\reader\building_reader.h" />
     <ClInclude Include="descriptor\writer\building_writer.h" />
     <ClInclude Include="utils\cbuffer_t.h" />
+    <ClInclude Include="utils\checklist.h" />
     <ClInclude Include="gui\citybuilding_edit.h" />
     <ClInclude Include="descriptor\reader\citycar_reader.h" />
     <ClInclude Include="descriptor\writer\citycar_writer.h" />
