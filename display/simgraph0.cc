@@ -110,8 +110,9 @@ void register_image(image_t* image)
 	image->imageid = 1;
 }
 
-void display_snapshot(int, int, int, int)
+bool display_snapshot(const scr_rect &)
 {
+	return false;
 }
 
 void display_get_image_offset(image_id image, scr_coord_val *xoff, scr_coord_val *yoff, scr_coord_val *xw, scr_coord_val *yw)

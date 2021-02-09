@@ -50,7 +50,6 @@ else
           LIBS += -lmingw32
         endif
       endif
-      SOURCES += sys/simsys_w32_png.cc
       CFLAGS  += -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DWINVER=0x0501 -D_WIN32_IE=0x0500
       LIBS    += -lgdi32 -lwinmm -lws2_32 -limm32
       # Disable the console on Windows unless WIN32_CONSOLE is set or graphics are disabled
@@ -91,7 +90,7 @@ ifeq ($(OSTYPE),openbsd)
   CXXFLAGS +=  -std=c++11
 endif
 
-LIBS += -lbz2 -lz
+LIBS += -lbz2 -lz -lpng
 
 CXXFLAGS +=  -std=gnu++11
 
@@ -488,6 +487,10 @@ SOURCES += gui/obj_info.cc
 SOURCES += gui/vehicle_class_manager.cc
 SOURCES += gui/welt.cc
 SOURCES += io/classify_file.cc
+SOURCES += io/raw_image.cc
+SOURCES += io/raw_image_bmp.cc
+SOURCES += io/raw_image_png.cc
+SOURCES += io/raw_image_ppm.cc
 SOURCES += io/rdwr/bzip2_file_rdwr_stream.cc
 SOURCES += io/rdwr/raw_file_rdwr_stream.cc
 SOURCES += io/rdwr/rdwr_stream.cc
