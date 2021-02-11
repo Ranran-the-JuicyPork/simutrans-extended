@@ -7,6 +7,8 @@
 
 #include "convoi_detail_t.h"
 #include "components/gui_chart.h"
+#include "components/gui_image.h"
+#include "components/gui_colorbox.h"
 
 #include "../simconvoi.h"
 #include "../vehicle/simvehicle.h"
@@ -243,6 +245,169 @@ void gui_acceleration_dist_label_t::draw(scr_coord offset)
 }
 
 
+gui_convoy_spec_table_t::gui_convoy_spec_table_t(convoihandle_t c)
+{
+	cnv = c;
+	set_table_layout(1,0);
+	//set_margin();
+	set_spacing(scr_size(D_H_SPACE, D_V_SPACE/2));
+	//set_alignment(ALIGN_LEFT|ALIGN_TOP);
+}
+
+// TODO: replace this to MAX_SPECS
+#define L_SPECS_TABLE_COLS 7
+void gui_convoy_spec_table_t::draw(scr_coord offset)
+{
+	remove_all();
+	add_table(cnv->get_vehicle_count()+2,0)->set_alignment(ALIGN_TOP | ALIGN_CENTER_H); // ALIGN_CENTER_H for gui_image_t
+
+	for (uint8 i = 0; i < L_SPECS_TABLE_COLS; i++) {
+		for (uint8 j = 0; j < cnv->get_vehicle_count()+2; j++) {
+			// Row label
+			if (j == 0) {
+				// TODO: Replace with [MAX_SPECS] array
+				switch (i) {
+					case SPECS_CAR_NUMBER:
+						new_component<gui_label_t>("Car no."); break;
+					case SPECS_ROLE:
+						new_component<gui_margin_t>(5);
+						break;
+					//case SPECS_ENGINE_TYPE:
+					case SPECS_POWER:
+						new_component<gui_label_t>("Power:"); break;
+					case SPECS_SPEED:
+						new_component<gui_label_t>("Max. speed:"); 	break;
+					case SPECS_WEIGHT:
+						new_component<gui_label_t>("Weight:"); break;
+					case SPECS_AXLE_LOAD:
+						new_component<gui_label_t>("Axle load:"); break;
+					case SPECS_FREIGHT_TYPE:
+						new_component<gui_label_t>("Freight"); break;
+					case SPECS_PAYLOADS:
+						new_component<gui_label_t>("Payload"); break;
+					case SPECS_COMFORT:
+						new_component<gui_label_t>("Comfort"); break;
+					case SPECS_RANGE:
+						new_component<gui_label_t>("Range"); break;
+					case SPECS_RUNNING_COST:
+						new_component<gui_label_t>("Runnning cost"); break;
+					case SPECS_AGE:
+						new_component<gui_label_t>("Age"); break;
+					case SPECS_FIXED_COST:
+					//case SPECS_VALUE:
+					default:
+						new_component<gui_empty_t>();
+						break;
+				}
+				continue;
+			}
+
+			buf.clear();
+			// Convoy total value
+			if (j == cnv->get_vehicle_count() + 1) {
+				switch (i) {
+					case SPECS_CAR_NUMBER:
+						buf.append("convoy_value"); break;
+					case SPECS_POWER:
+						buf.printf("%u kW",   cnv->get_sum_power()/1000   ); break;
+					case SPECS_SPEED:
+						buf.printf("%i km/h", speed_to_kmh(cnv->get_min_top_speed())); break;
+					case SPECS_WEIGHT:
+						buf.printf("%.1f t",  cnv->get_sum_weight()/1000.0); break;
+					case SPECS_AXLE_LOAD:
+						buf.printf("%u t",    cnv->get_highest_axle_load()); break;
+					case SPECS_FREIGHT_TYPE:
+					default:
+						break;
+				}
+				new_component<gui_label_buf_t>()->buf().append(buf);
+				continue;
+			}
+
+			const vehicle_desc_t *veh = cnv->get_vehicle(j-1)->get_desc();
+			const bool reversed = cnv->get_vehicle(j-1)->is_reversed();
+
+			// Whether the cell component is in buf text format or not?
+			if (i == SPECS_ROLE) {
+				const uint16 month_now = world()->get_timeline_year_month();
+				PIXVAL veh_bar_color = (veh->is_future(month_now) || veh->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
+				if (veh->is_obsolete( month_now )) {
+					veh_bar_color = COL_OBSOLETE;
+				}
+
+				new_component<gui_vehicle_bar_t>(veh_bar_color)->set_flags(veh->get_basic_constraint_prev(reversed), veh->get_basic_constraint_next(reversed), veh->get_interactivity());
+			}
+			else if (i == SPECS_FREIGHT_TYPE) {
+				new_component<gui_image_t>()->set_image(veh->get_freight_type()->get_catg_symbol(), true);
+			}
+			else {
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+
+				switch(i) {
+					case SPECS_CAR_NUMBER:
+					{
+						const sint8 car_number = cnv->get_car_numbering(j-1);
+						if (car_number < 0) {
+							lb->buf().printf("%.2s%d", translator::translate("LOCO_SYM"), abs(car_number));
+						}
+						else {
+							lb->buf().append(car_number, 0);
+						}
+						break;
+					}
+					case SPECS_POWER:
+						if (!veh->get_power()) {
+							lb->buf().append("-");
+							lb->set_color(SYSCOL_TEXT_INACTIVE);
+						}
+						else {
+							//add_table(1,2)->set_spacing(scr_size(D_H_SPACE, 2));
+							//{
+								lb->buf().printf("%u kW", veh->get_power());
+								//lb->buf().printf("%u kN", veh->get_tractive_effort());
+							//}
+							//end_table();
+						}
+						break;
+					case SPECS_SPEED:
+						lb->buf().printf("%i km/h", veh->get_topspeed());
+						lb->set_color(veh->get_topspeed() > cnv->get_min_top_speed() ? SYSCOL_TEXT_INACTIVE : SYSCOL_TEXT);
+						break;
+					case SPECS_WEIGHT:
+						lb->buf().printf("%.1f t", veh->get_weight()/1000.0);
+						break;
+					case SPECS_AXLE_LOAD:
+						lb->buf().printf("%u t", veh->get_axle_load());
+						lb->set_color(veh->get_axle_load() < cnv->get_highest_axle_load() ? SYSCOL_TEXT_INACTIVE : SYSCOL_TEXT);
+						break;
+					case SPECS_FREIGHT_TYPE:
+					case SPECS_PAYLOADS:
+					case SPECS_COMFORT:
+					case SPECS_RANGE:
+						if (veh->get_range() == 0) {
+							lb->buf().append(translator::translate("unlimited"));
+						}
+						else {
+							lb->buf().printf("%u km", veh->get_range());
+						}
+						break;
+					case SPECS_RUNNING_COST:
+					case SPECS_AGE:
+					default:
+						lb->buf().append("-");
+						break;
+				}
+				lb->update();
+			}
+		}
+	}
+	end_table();
+	
+	set_size(get_size());
+	gui_aligned_container_t::draw(offset);
+}
+
+
 // main class
 convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	gui_frame_t(""),
@@ -250,10 +415,12 @@ convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	veh_info(cnv),
 	payload_info(cnv),
 	maintenance(cnv),
+	cont_spec(cnv),
 	scrolly_formation(&formation),
 	scrolly(&veh_info),
 	scrolly_payload_info(&payload_info),
-	scrolly_maintenance(&maintenance)
+	scrolly_maintenance(&maintenance),
+	scroll_spec(&cont_spec)
 {
 	if (cnv.is_bound()) {
 		init(cnv);
@@ -304,11 +471,15 @@ void convoi_detail_t::init(convoihandle_t cnv)
 
 	new_component<gui_margin_t>(0, D_V_SPACE);
 
+	scroll_spec.set_show_scroll_x(true);
+	scroll_spec.set_show_scroll_y(true);
+
 	add_component(&tabs);
 	tabs.add_tab(&scrolly, translator::translate("cd_spec_tab"));
 	tabs.add_tab(&cont_payload, translator::translate("cd_payload_tab"));
 	tabs.add_tab(&cont_maintenance,  translator::translate("cd_maintenance_tab"));
 	tabs.add_tab(&container_chart, translator::translate("cd_physics_tab"));
+	tabs.add_tab(&scroll_spec, translator::translate("cd_spec_table"));
 	tabs.add_listener(this);
 
 	// content of payload info tab

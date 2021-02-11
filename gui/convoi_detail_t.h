@@ -127,6 +127,44 @@ public:
 	void draw(scr_coord offset);
 };
 
+class gui_convoy_spec_table_t : public gui_aligned_container_t
+{
+	enum {
+		SPECS_CAR_NUMBER = 0,
+		SPECS_ROLE,
+		//SPECS_ENGINE_TYPE,
+		SPECS_POWER,
+		SPECS_SPEED,
+		SPECS_WEIGHT,
+		SPECS_AXLE_LOAD,
+		//SPECS_BRAKE_FORCE,
+		// good
+		SPECS_FREIGHT_TYPE,
+		SPECS_PAYLOADS,
+		SPECS_COMFORT,
+		//SPECS_CATERING
+
+		SPECS_RANGE,
+
+		//--- maintenance values ---
+		SPECS_RUNNING_COST,
+		SPECS_FIXED_COST,
+		//SPECS_VALUE,
+		SPECS_AGE,
+
+		//MAX_SPECS
+	};
+
+	convoihandle_t cnv;
+	cbuffer_t buf;
+public:
+	gui_convoy_spec_table_t(convoihandle_t cnv);
+
+	void set_cnv(convoihandle_t c) { cnv = c; }
+
+	void draw(scr_coord offset) OVERRIDE;
+};
+
 /**
  * Displays an information window for a convoi
  */
@@ -151,12 +189,14 @@ private:
 	gui_convoy_payload_info_t payload_info;
 	gui_convoy_maintenance_info_t maintenance;
 	gui_aligned_container_t cont_accel, cont_force;
+	gui_convoy_spec_table_t cont_spec;
 	gui_chart_t accel_chart, force_chart;
 
 	gui_scrollpane_t scrolly_formation;
 	gui_scrollpane_t scrolly;
 	gui_scrollpane_t scrolly_payload_info;
 	gui_scrollpane_t scrolly_maintenance;
+	gui_scrollpane_t scroll_spec;
 
 	gui_tab_panel_t switch_chart;
 	gui_tab_panel_t tabs;
