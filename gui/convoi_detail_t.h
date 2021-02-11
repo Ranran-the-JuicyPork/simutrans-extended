@@ -134,6 +134,7 @@ class gui_convoy_spec_table_t : public gui_aligned_container_t
 		SPECS_ROLE,
 		//SPECS_ENGINE_TYPE,
 		SPECS_POWER,
+		SPECS_TRACTIVE_FORCE,
 		SPECS_SPEED,
 		SPECS_WEIGHT,
 		SPECS_AXLE_LOAD,

@@ -255,7 +255,7 @@ gui_convoy_spec_table_t::gui_convoy_spec_table_t(convoihandle_t c)
 }
 
 // TODO: replace this to MAX_SPECS
-#define L_SPECS_TABLE_COLS 7
+#define L_SPECS_TABLE_COLS 8
 void gui_convoy_spec_table_t::draw(scr_coord offset)
 {
 	remove_all();
@@ -275,6 +275,8 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 					//case SPECS_ENGINE_TYPE:
 					case SPECS_POWER:
 						new_component<gui_label_t>("Power:"); break;
+					case SPECS_TRACTIVE_FORCE:
+						new_component<gui_label_t>("Tractive force:"); break;
 					case SPECS_SPEED:
 						new_component<gui_label_t>("Max. speed:"); 	break;
 					case SPECS_WEIGHT:
@@ -309,7 +311,11 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 					case SPECS_CAR_NUMBER:
 						buf.append("convoy_value"); break;
 					case SPECS_POWER:
+						// FIXME: this is multiplied by "gear"
 						buf.printf("%u kW",   cnv->get_sum_power()/1000   ); break;
+					case SPECS_TRACTIVE_FORCE:
+						// FIXME: this is multiplied by "gear"
+						buf.printf("%u kN",   cnv->get_starting_force().to_sint32()/1000 ); break;
 					case SPECS_SPEED:
 						buf.printf("%i km/h", speed_to_kmh(cnv->get_min_top_speed())); break;
 					case SPECS_WEIGHT:
@@ -361,12 +367,12 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 							lb->set_color(SYSCOL_TEXT_INACTIVE);
 						}
 						else {
-							//add_table(1,2)->set_spacing(scr_size(D_H_SPACE, 2));
-							//{
-								lb->buf().printf("%u kW", veh->get_power());
-								//lb->buf().printf("%u kN", veh->get_tractive_effort());
-							//}
-							//end_table();
+							lb->buf().printf("%u kW", veh->get_power());
+						}
+						break;
+					case SPECS_TRACTIVE_FORCE:
+						if (veh->get_power()) {
+							lb->buf().printf("%u kN", veh->get_tractive_effort());
 						}
 						break;
 					case SPECS_SPEED:
