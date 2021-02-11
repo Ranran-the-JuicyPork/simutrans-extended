@@ -306,27 +306,32 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 
 			buf.clear();
 			// Convoy total value
-			if (j == cnv->get_vehicle_count() + 1) {
-				switch (i) {
-					case SPECS_CAR_NUMBER:
-						buf.append("convoy_value"); break;
-					case SPECS_POWER:
-						// FIXME: this is multiplied by "gear"
-						buf.printf("%u kW",   cnv->get_sum_power()/1000   ); break;
-					case SPECS_TRACTIVE_FORCE:
-						// FIXME: this is multiplied by "gear"
-						buf.printf("%u kN",   cnv->get_starting_force().to_sint32()/1000 ); break;
-					case SPECS_SPEED:
-						buf.printf("%i km/h", speed_to_kmh(cnv->get_min_top_speed())); break;
-					case SPECS_WEIGHT:
-						buf.printf("%.1f t",  cnv->get_sum_weight()/1000.0); break;
-					case SPECS_AXLE_LOAD:
-						buf.printf("%u t",    cnv->get_highest_axle_load()); break;
-					case SPECS_FREIGHT_TYPE:
-					default:
-						break;
+			if( j == cnv->get_vehicle_count()+1 ) {
+				if( cnv->get_vehicle_count()==1 ) {
+					new_component<gui_fill_t>();
 				}
-				new_component<gui_label_buf_t>()->buf().append(buf);
+				else {
+					switch (i) {
+						case SPECS_CAR_NUMBER:
+							buf.append("convoy_value"); break;
+						case SPECS_POWER:
+							// FIXME: this is multiplied by "gear"
+							buf.printf("%u kW",   cnv->get_sum_power()/1000   ); break;
+						case SPECS_TRACTIVE_FORCE:
+							// FIXME: this is multiplied by "gear"
+							buf.printf("%u kN",   cnv->get_starting_force().to_sint32()/1000 ); break;
+						case SPECS_SPEED:
+							buf.printf("%i km/h", speed_to_kmh(cnv->get_min_top_speed())); break;
+						case SPECS_WEIGHT:
+							buf.printf("%.1f t",  cnv->get_sum_weight()/1000.0); break;
+						case SPECS_AXLE_LOAD:
+							buf.printf("%u t",    cnv->get_highest_axle_load()); break;
+						case SPECS_FREIGHT_TYPE:
+						default:
+							break;
+					}
+					new_component<gui_label_buf_t>()->buf().append(buf);
+				}
 				continue;
 			}
 
