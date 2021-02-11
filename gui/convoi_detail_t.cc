@@ -338,7 +338,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 				new_component<gui_vehicle_bar_t>(veh_bar_color)->set_flags(veh->get_basic_constraint_prev(reversed), veh->get_basic_constraint_next(reversed), veh->get_interactivity());
 			}
 			else if (i == SPECS_FREIGHT_TYPE) {
-				new_component<gui_image_t>()->set_image(veh->get_freight_type()->get_catg_symbol(), true);
+				new_component<gui_image_t>()->set_image((veh->get_total_capacity() || veh->get_overcrowded_capacity()) ? veh->get_freight_type()->get_catg_symbol() : IMG_EMPTY, true);
 			}
 			else {
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
@@ -402,7 +402,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 		}
 	}
 	end_table();
-	
+
 	set_size(get_size());
 	gui_aligned_container_t::draw(offset);
 }
