@@ -132,32 +132,38 @@ class gui_convoy_spec_table_t : public gui_aligned_container_t
 	enum {
 		SPECS_CAR_NUMBER = 0,
 		SPECS_ROLE,
-		//SPECS_ENGINE_TYPE,
+		SPECS_ENGINE_TYPE,
 		SPECS_POWER,
 		SPECS_TRACTIVE_FORCE,
 		SPECS_SPEED,
-		SPECS_WEIGHT,
+		SPECS_TARE_WEIGHT,
+		SPECS_MAX_GROSS_WIGHT,
 		SPECS_AXLE_LOAD,
-		//SPECS_BRAKE_FORCE,
+		SPECS_LENGTH,          // for debug
+		SPECS_BRAKE_FORCE,
 		// good
 		SPECS_FREIGHT_TYPE,
-		SPECS_PAYLOADS,
-		SPECS_COMFORT,
+		//SPECS_PAYLOADS,
+		//SPECS_COMFORT,
 		//SPECS_CATERING
+		//SPECS_MIN_LOADING_TIME
+		//SPECS_MAX_LOADING_TIME
 
 		SPECS_RANGE,
 
 		//--- maintenance values ---
+		//SPECS_INCOME
 		SPECS_RUNNING_COST,
 		SPECS_FIXED_COST,
-		//SPECS_VALUE,
+		SPECS_VALUE,
 		SPECS_AGE,
 
-		//MAX_SPECS
+		MAX_SPECS
 	};
 
 	convoihandle_t cnv;
 	cbuffer_t buf;
+
 public:
 	gui_convoy_spec_table_t(convoihandle_t cnv);
 
