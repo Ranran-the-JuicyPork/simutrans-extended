@@ -132,6 +132,7 @@ class gui_convoy_spec_table_t : public gui_aligned_container_t
 	enum {
 		SPECS_CAR_NUMBER = 0,
 		SPECS_ROLE,
+		SPECS_FREIGHT_TYPE,
 		SPECS_ENGINE_TYPE,
 		SPECS_POWER,
 		SPECS_TRACTIVE_FORCE,
@@ -142,12 +143,6 @@ class gui_convoy_spec_table_t : public gui_aligned_container_t
 		SPECS_LENGTH,          // for debug
 		SPECS_BRAKE_FORCE,
 		// good
-		SPECS_FREIGHT_TYPE,
-		//SPECS_PAYLOADS,
-		//SPECS_COMFORT,
-		//SPECS_CATERING
-		//SPECS_MIN_LOADING_TIME
-		//SPECS_MAX_LOADING_TIME
 
 		SPECS_RANGE,
 
@@ -160,16 +155,31 @@ class gui_convoy_spec_table_t : public gui_aligned_container_t
 
 		MAX_SPECS
 	};
+	enum {
+		SPECS_DETAIL_START = SPECS_FREIGHT_TYPE
+		//SPECS_PAYLOADS,
+		//SPECS_COMFORT,
+		//SPECS_CATERING
+		//SPECS_MIN_LOADING_TIME
+		//SPECS_MAX_LOADING_TIME
+		//MAX_PAYLOAD_ROW
+	};
 
 	convoihandle_t cnv;
 	cbuffer_t buf;
 
+	// Insert rows that make up the spec table
+	void insert_spec_rows();
+	void insert_payload_rows();
 public:
 	gui_convoy_spec_table_t(convoihandle_t cnv);
 
 	void set_cnv(convoihandle_t c) { cnv = c; }
 
 	void draw(scr_coord offset) OVERRIDE;
+
+	using gui_aligned_container_t::get_min_size;
+	using gui_aligned_container_t::get_max_size;
 };
 
 /**
@@ -187,7 +197,7 @@ public:
 	};
 
 private:
-	gui_aligned_container_t cont_maintenance, cont_payload;
+	gui_aligned_container_t cont_maintenance, cont_payload, cont_spec;
 
 	convoihandle_t cnv;
 
@@ -196,7 +206,7 @@ private:
 	gui_convoy_payload_info_t payload_info;
 	gui_convoy_maintenance_info_t maintenance;
 	gui_aligned_container_t cont_accel, cont_force;
-	gui_convoy_spec_table_t cont_spec;
+	gui_convoy_spec_table_t spec_table;
 	gui_chart_t accel_chart, force_chart;
 
 	gui_scrollpane_t scrolly_formation;
@@ -214,6 +224,7 @@ private:
 	button_t retire_button;
 	button_t class_management_button;
 	button_t display_detail_button;
+	button_t bt_spec_table, bt_payload_table;
 
 	gui_combobox_t overview_selctor;
 	gui_label_buf_t
