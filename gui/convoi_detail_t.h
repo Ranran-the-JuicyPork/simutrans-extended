@@ -152,6 +152,7 @@ class gui_convoy_spec_table_t : public gui_aligned_container_t
 		SPECS_FIXED_COST,
 		SPECS_VALUE,
 		SPECS_AGE,
+		SPECS_TILTING,
 
 		MAX_SPECS
 	};

@@ -107,7 +107,8 @@ static char const* const spec_table_first_col_text[] =
 	"Runnning cost/km",
 	"maintenance/month",
 	"Restwert:",
-	"Age"
+	"Age",
+	"tilting_vehicle_equipment"
 };
 
 static KOORD_VAL spec_table_first_col_width = 75;
@@ -289,6 +290,9 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 			continue;
 		}
 #endif
+		if (i == SPECS_TILTING && !cnv->has_tilting_vehicles()) {
+			continue;
+		}
 		for (uint8 j=0; j < cnv->get_vehicle_count()+2; j++) {
 			// Row label
 			if (j == 0) {
@@ -343,6 +347,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 						buf.printf("%u%s", cnv->get_average_age(),
 							cnv->get_average_age() > 1 ? translator::translate("months") : translator::translate("month"));
 						break;
+					case SPECS_TILTING:
 					case SPECS_FREIGHT_TYPE:
 					default:
 						break;
@@ -366,8 +371,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 				case SPECS_ENGINE_TYPE:
 					if (veh->get_engine_type() == vehicle_desc_t::unknown) {
 						lb->buf().append("-");
-						lb->set_align(gui_label_t::centered);
-						lb->set_color(SYSCOL_TEXT_INACTIVE);
+						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
 					}
 					else {
 						lb->buf().printf("%s", translator::translate(vehicle_desc_t::get_engine_type((vehicle_desc_t::engine_t)veh->get_engine_type())));
@@ -376,8 +380,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 				case SPECS_POWER:
 					if (!veh->get_power()) {
 						lb->buf().append("-");
-						lb->set_align(gui_label_t::centered);
-						lb->set_color(SYSCOL_TEXT_INACTIVE);
+						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
 					}
 					else {
 						lb->buf().printf("%u kW", veh->get_power());
@@ -414,8 +417,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 					}
 					else {
 						lb->buf().append("-");
-						lb->set_align(gui_label_t::centered);
-						lb->set_color(SYSCOL_TEXT_INACTIVE);
+						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
 					}
 					break;
 				case SPECS_RANGE:
@@ -441,6 +443,11 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 					lb->buf().append(age_in_month, 0);
 					break;
 				}
+				case SPECS_TILTING:
+					if (veh->get_tilting()) {
+						lb->buf().append(translator::translate("*"));
+					}
+					break;
 				default:
 					lb->buf().append("-");
 					lb->set_align(gui_label_t::centered);
@@ -531,7 +538,7 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 					}
 					else {
 						lb->buf().append("-");
-						lb->set_color(SYSCOL_TEXT_INACTIVE);
+						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
 					}
 				}
 			}
