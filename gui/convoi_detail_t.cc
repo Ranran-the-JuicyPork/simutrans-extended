@@ -1744,13 +1744,19 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 		for (uint8 veh = 0; veh < vehicle_count; veh++) {
 			vehicle_t *v = cnv->get_vehicle(veh);
 			const uint8 upgradable_state = v->get_desc()->has_available_upgrade(month_now);
+			extra_w = D_H_SPACE;
 
+			// first image
+			scr_coord_val x, y, w, h;
+			const image_id image = v->get_loaded_image();
+			display_get_base_image_offset(image, &x, &y, &w, &h);
+			display_base_img(image, 11 - x + pos.x + offset.x, pos.y + offset.y + total_height - y + 2 + LINESPACE, cnv->get_owner()->get_player_nr(), false, true);
+			w = max(40, w + 4) + 11;
+
+			// now add the other info
 			int extra_y = 0;
-			const uint8 grid_width = D_BUTTON_WIDTH / 3;
-			extra_w = grid_width;
 
 			// cars number in this convoy
-			PIXVAL veh_bar_color;
 			sint8 car_number = cnv->get_car_numbering(veh);
 			buf.clear();
 			if (car_number < 0) {
@@ -1759,21 +1765,16 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 			else {
 				buf.append(car_number);
 			}
-			display_proportional_clip_rgb(pos.x + offset.x + 1, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2) , true);
+			display_proportional_clip_rgb(pos.x + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2), true);
 			buf.clear();
 
-			// vehicle color bar
-			veh_bar_color = v->get_desc()->is_future(month_now) || v->get_desc()->is_retired(month_now) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
-			if (v->get_desc()->is_obsolete(month_now)) {
-				veh_bar_color = COL_OBSOLETE;
+			// upgradable symbol
+			if (upgradable_state && skinverwaltung_t::upgradable) {
+				if (welt->get_settings().get_show_future_vehicle_info() || (!welt->get_settings().get_show_future_vehicle_info() && v->get_desc()->is_future(month_now) != 2)) {
+					display_color_img(skinverwaltung_t::upgradable->get_image_id(upgradable_state - 1), pos.x + w + offset.x - D_FIXED_SYMBOL_WIDTH, pos.y + offset.y + total_height + extra_y + h + LINESPACE, 0, false, false);
+				}
 			}
-			display_veh_form_wh_clip_rgb(pos.x + offset.x+1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_next() : v->get_desc()->get_basic_constraint_prev(), v->get_desc()->get_interactivity(), false);
-			display_veh_form_wh_clip_rgb(pos.x + offset.x + (grid_width-6)/2 + 1, pos.y + offset.y + total_height + extra_y + LINESPACE, (grid_width-6)/2, veh_bar_color, true, v->is_reversed() ? v->get_desc()->get_basic_constraint_prev() : v->get_desc()->get_basic_constraint_next(), v->get_desc()->get_interactivity(), true);
-
-			// goods category symbol
-			if (v->get_desc()->get_total_capacity() || v->get_desc()->get_overcrowded_capacity()) {
-				display_color_img(v->get_cargo_type()->get_catg_symbol(), pos.x + offset.x + grid_width / 2 - 5, pos.y + offset.y + total_height + extra_y + LINESPACE * 2, 0, false, false);
-			}
+			extra_w = w+D_H_SPACE;
 
 			// name of this
 			//display_multiline_text(pos.x + offset.x, pos.y + offset.y + total_height + extra_y, translator::translate(v->get_desc()->get_name()), SYSCOL_TEXT, true);
@@ -1934,7 +1935,7 @@ void gui_convoy_maintenance_info_t::draw(scr_coord offset)
 						money_to_string(number, desc->get_upgrade_price() / 100);
 						buf.printf("%s %s,  ", translator::translate("Upgrade price:"), number);
 						buf.printf(translator::translate("Maintenance: %1.2f$/km, %1.2f$/month\n"), desc->get_running_cost() / 100.0, desc->get_adjusted_monthly_fixed_cost() / 100.0);
-						display_proportional_clip_rgb(pos.x + extra_w + offset.x + D_MARGIN_LEFT + grid_width, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
+						display_proportional_clip_rgb(pos.x + extra_w + offset.x + D_MARGIN_LEFT + VEHICLE_BAR_HEIGHT*4, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
 						extra_y += LINESPACE + 2;
 					}
 				}
