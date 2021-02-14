@@ -594,7 +594,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 					veh_bar_color = COL_OBSOLETE;
 				}
 
-				new_component<gui_vehicle_bar_t>(veh_bar_color)->set_flags(veh->get_basic_constraint_prev(reversed), veh->get_basic_constraint_next(reversed), veh->get_interactivity());
+				new_component<gui_vehicle_bar_t>(veh_bar_color, scr_size(D_LABEL_HEIGHT*4, D_LABEL_HEIGHT-2))->set_flags(veh->get_basic_constraint_prev(reversed), veh->get_basic_constraint_next(reversed), veh->get_interactivity());
 			}
 			else {
 				// text type cells
