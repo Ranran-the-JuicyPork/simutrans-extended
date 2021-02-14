@@ -517,7 +517,7 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 						buf.append(cnv->get_overcrowded_capacity(), 0);
 					}
 					else {
-						buf.append(cnv->get_unique_fare_capacity(freight_type_idx, g_class), 0);
+						buf.printf("%u %s", cnv->get_unique_fare_capacity(freight_type_idx, g_class), translator::translate(goods_manager_t::get_info_catg_index(freight_type_idx)->get_mass()));
 					}
 					new_component<gui_label_buf_t>()->buf().append(buf);
 				}
