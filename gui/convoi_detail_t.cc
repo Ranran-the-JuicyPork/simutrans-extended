@@ -454,18 +454,42 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 
 void gui_convoy_spec_table_t::insert_payload_rows()
 {
-	for (uint8 i=0; i < goods_manager_t::get_max_catg_index(); i++) {
-		if (!cnv->get_goods_catg_index().is_contained(i)) {
+	const uint8 pas_and_mail_rows = goods_manager_t::passengers->get_number_of_classes() + goods_manager_t::passengers->get_number_of_classes() + 1/* overcrowd capacity*/;
+	const uint8 payload_rows = goods_manager_t::get_max_catg_index() + pas_and_mail_rows;
+
+	for (uint8 i = 0; i < payload_rows; i++) {
+		const uint8 freight_type_idx = i <= goods_manager_t::passengers->get_number_of_classes() ? goods_manager_t::INDEX_PAS :
+			i < pas_and_mail_rows ? goods_manager_t::INDEX_MAIL : i - pas_and_mail_rows;
+		if (!cnv->get_goods_catg_index().is_contained(freight_type_idx)) {
 			continue;
 		}
-		for (uint8 j=0; j < cnv->get_vehicle_count()+2; j++) {
-			//buf.clear();
+		for (uint8 j = 0; j < cnv->get_vehicle_count() + 2; j++) {
+			const uint8 g_class = freight_type_idx == goods_manager_t::INDEX_PAS ? i :
+				freight_type_idx == goods_manager_t::INDEX_MAIL ? i - goods_manager_t::passengers->get_number_of_classes() - 1 :
+				0;
+			const bool is_overcrowded_capacity = i == goods_manager_t::passengers->get_number_of_classes();
+			// convoy does not have the capacity of this freight type (class) => skip a row
+			if (is_overcrowded_capacity) {
+				if (!cnv->get_overcrowded_capacity()) {
+					break;
+				}
+			}
+			else if(cnv->get_unique_fare_capacity(freight_type_idx, g_class) == 0) {
+				break;
+			}
+
 			if (j == 0) {
 				// symbol+catg_nmame
 				add_table(2,1);
 				{
-					new_component<gui_image_t>()->set_image(goods_manager_t::get_info_catg_index(i)->get_catg_symbol(),true);
-					new_component<gui_label_t>(goods_manager_t::get_info_catg_index(i)->get_catg_name());
+					if (is_overcrowded_capacity) {
+						new_component<gui_image_t>()->set_image(skinverwaltung_t::pax_evaluation_icons ? skinverwaltung_t::pax_evaluation_icons->get_image_id(1) : IMG_EMPTY, true);
+						new_component<gui_label_t>("overcrowded_capacity");
+					}
+					else {
+						new_component<gui_image_t>()->set_image(goods_manager_t::get_info_catg_index(freight_type_idx)->get_catg_symbol(), true);
+						new_component<gui_label_t>(goods_manager_t::get_info_catg_index(freight_type_idx)->get_catg_name());
+					}
 				}
 				end_table();
 				continue;
@@ -476,7 +500,14 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 					new_component<gui_empty_t>();
 				}
 				else {
-					new_component<gui_empty_t>(); // still dummy
+					buf.clear();
+					if (is_overcrowded_capacity) {
+						buf.append(cnv->get_overcrowded_capacity(), 0);
+					}
+					else {
+						buf.append(cnv->get_unique_fare_capacity(freight_type_idx, g_class), 0);
+					}
+					new_component<gui_label_buf_t>()->buf().append(buf);
 				}
 				continue;
 			}
@@ -490,12 +521,21 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
 			// catg check
-			if (veh->get_freight_type()->get_catg_index() == i) {
-				lb->buf().append(veh->get_total_capacity(), 0);
+			if (veh->get_freight_type()->get_catg_index() == freight_type_idx) {
+				if (is_overcrowded_capacity) {
+					lb->buf().append(veh->get_overcrowded_capacity(), 0);
+				}
+				else {
+					if (veh->get_capacity(g_class)) {
+						lb->buf().append(veh->get_capacity(g_class), 0);
+					}
+					else {
+						lb->buf().append("-");
+						lb->set_color(SYSCOL_TEXT_INACTIVE);
+					}
+				}
 			}
-			else {
-				//;
-			}
+			lb->set_align(gui_label_t::centered);
 			lb->update();
 		}
 	}
