@@ -486,7 +486,7 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 			}
 
 			if (j == 0) {
-				// symbol+catg_nmame
+				// symbol with freight type(class) nmame
 				add_table(2,1);
 				{
 					if (is_overcrowded_capacity) {
@@ -495,7 +495,12 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 					}
 					else {
 						new_component<gui_image_t>()->set_image(goods_manager_t::get_info_catg_index(freight_type_idx)->get_catg_symbol(), true);
-						new_component<gui_label_t>(goods_manager_t::get_info_catg_index(freight_type_idx)->get_catg_name());
+						if (freight_type_idx == goods_manager_t::INDEX_PAS || freight_type_idx == goods_manager_t::INDEX_MAIL) {
+							new_component<gui_label_buf_t>()->buf().append(goods_manager_t::get_translated_wealth_name(freight_type_idx, g_class));
+						}
+						else {
+							new_component<gui_label_t>(goods_manager_t::get_info_catg_index(freight_type_idx)->get_catg_name());
+						}
 					}
 				}
 				end_table();
@@ -522,9 +527,7 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 			const vehicle_desc_t *veh = cnv->get_vehicle(j-1)->get_desc();
 
 			// TODO:
-			// add classes
-			// add comfort(=pas), overcrowded
-
+			// add comfort display for passenger classes
 
 			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
 			// catg check
