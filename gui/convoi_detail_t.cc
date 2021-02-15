@@ -112,7 +112,6 @@ static char const* const spec_table_first_col_text[] =
 };
 
 static KOORD_VAL spec_table_first_col_width = 75;
-static bool display_payload_table = false;
 
 
 // helper class
@@ -707,8 +706,8 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	cont_spec.add_table(3,0)->set_spacing(scr_size(0,0));
 	{
 		cont_spec.new_component<gui_fill_t>();
-		bt_spec_table.pressed = !display_payload_table;
-		bt_payload_table.pressed = display_payload_table;
+		bt_spec_table.pressed    = !spec_table.display_payload_table;
+		bt_payload_table.pressed =  spec_table.display_payload_table;
 		bt_spec_table.init(button_t::roundbox_state, "principal_spec", scr_coord(0, 0), D_BUTTON_SIZE);
 		bt_payload_table.init(button_t::roundbox_state, "payload_spec", scr_coord(0, 0), D_BUTTON_SIZE);
 		bt_spec_table.add_listener(this);
@@ -1140,9 +1139,9 @@ bool convoi_detail_t::action_triggered(gui_action_creator_t *comp, value_t)
 			return true;
 		}
 		else if (comp == &bt_spec_table || comp == &bt_payload_table) {
-			display_payload_table    = !display_payload_table;
-			bt_spec_table.pressed    = !display_payload_table;
-			bt_payload_table.pressed = display_payload_table;
+			spec_table.display_payload_table = !spec_table.display_payload_table;
+			bt_spec_table.pressed            = !spec_table.display_payload_table;
+			bt_payload_table.pressed         = spec_table.display_payload_table;
 			return true;
 		}
 	}

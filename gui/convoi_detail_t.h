@@ -179,6 +179,8 @@ public:
 
 	void draw(scr_coord offset) OVERRIDE;
 
+	bool display_payload_table = false;
+
 	using gui_aligned_container_t::get_min_size;
 	using gui_aligned_container_t::get_max_size;
 };
