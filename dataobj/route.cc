@@ -548,11 +548,6 @@ bool route_t::find_route(karte_t *welt, const koord3d start, test_driver_t *tdri
 				tmp = original_tmp;
 
 			}
-			else
-			{
-				uint32 a = 1 + 1;
-			}
-
 		}
 
 		// testing all four possible directions

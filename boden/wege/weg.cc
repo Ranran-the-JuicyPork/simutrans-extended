@@ -579,6 +579,11 @@ void weg_t::rdwr(loadsave_t *file)
 									private_car_routes[i][j].insert_unique(dest);
 								}
 							}
+
+							if(file->is_version_ex_less(14,39)) {
+								// Correct for nsew->nesw change
+								std::swap(private_car_routes[i][1],private_car_routes[i][2]);
+							}
 						}
 					}
 				}

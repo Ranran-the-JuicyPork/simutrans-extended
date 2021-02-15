@@ -274,27 +274,6 @@ void convoi_info_t::init(convoihandle_t cnv)
 
 	switch_mode.add_tab(&container_stats, translator::translate("Chart"));
 
-	/*
-#ifdef ACCELERATION_BUTTON
-	//Bernd Gabriel, Sep, 24 2009: acceleration curve:
-
-	for (int i = 0; i < MAX_MONTHS; i++)
-	{
-		physics_curves[i][0] = 0;
-	}
-
-	chart.add_curve(color_idx_to_rgb(cost_type_color[btn]), (sint64*)physics_curves, 1,0, MAX_MONTHS, cost_type_money[btn], false, true, cost_type_money[btn]*2);
-	filterButtons[btn].init(button_t::box_state, cost_type[btn],
-			scr_coord(BUTTON1_X+(D_BUTTON_WIDTH+D_H_SPACE)*(btn%4), view.get_size().h+174+(D_BUTTON_HEIGHT+D_H_SPACE)*(btn/4)),
-			D_BUTTON_SIZE);
-	filterButtons[btn].add_listener(this);
-	filterButtons[btn].background_color = color_idx_to_rgb(cost_type_color[btn]);
-	filterButtons[btn].set_visible(false);
-	filterButtons[btn].pressed = false;
-	add_component(filterButtons + btn);
-#endif
-*/
-
 	container_stats.set_table_layout(1,0);
 
 	chart.set_dimension(12, 10000);
@@ -609,28 +588,6 @@ void convoi_info_t::draw(scr_coord pos, scr_size size)
 	{
 		destroy_win(this);
 	}
-
-		//Bernd Gabriel, Dec, 02 2009: common existing_convoy_t for acceleration curve and weight/speed info.
-		//convoi_t &convoy = *cnv.get_rep();
-/*
-#ifdef ACCELERATION_BUTTON
-		//Bernd Gabriel, Sep, 24 2009: acceleration curve:
-		if (filterButtons[ACCELERATION_BUTTON].is_visible() && filterButtons[ACCELERATION_BUTTON].pressed)
-		{
-			const int akt_speed_soll = kmh_to_speed(convoy.calc_max_speed(convoy.get_weight_summary()));
-			float32e8_t akt_v = 0;
-			sint32 akt_speed = 0;
-			sint32 sp_soll = 0;
-			int i = MAX_MONTHS;
-			physics_curves[--i][0] = akt_speed;
-			while (i > 0)
-			{
-				convoy.calc_move(welt->get_settings(), 15 * 64, akt_speed_soll, akt_speed_soll, SINT32_MAX_VALUE, SINT32_MAX_VALUE, akt_speed, sp_soll, akt_v);
-				physics_curves[--i][0] = speed_to_kmh(akt_speed);
-			}
-		}
-#endif
-*/
 
 	// make titlebar dirty to display the correct coordinates
 	if(cnv->get_owner()==welt->get_active_player()  &&  !welt->get_active_player()->is_locked()) {
