@@ -364,13 +364,13 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 				new_component<gui_image_t>()->set_image((veh->get_total_capacity() || veh->get_overcrowded_capacity()) ? veh->get_freight_type()->get_catg_symbol() : IMG_EMPTY, true);
 			}
 			else {
-				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered);
 
 				switch (i) {
 				case SPECS_ENGINE_TYPE:
 					if (veh->get_engine_type() == vehicle_desc_t::unknown) {
 						lb->buf().append("-");
-						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
+						lb->set_color(SYSCOL_TEXT_INACTIVE);
 					}
 					else {
 						lb->buf().printf("%s", translator::translate(vehicle_desc_t::get_engine_type((vehicle_desc_t::engine_t)veh->get_engine_type())));
@@ -379,7 +379,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 				case SPECS_POWER:
 					if (!veh->get_power()) {
 						lb->buf().append("-");
-						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
+						lb->set_color(SYSCOL_TEXT_INACTIVE);
 					}
 					else {
 						lb->buf().printf("%u kW", veh->get_power());
@@ -416,7 +416,7 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 					}
 					else {
 						lb->buf().append("-");
-						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
+						lb->set_color(SYSCOL_TEXT_INACTIVE);
 					}
 					break;
 				case SPECS_RANGE:
@@ -449,7 +449,6 @@ void gui_convoy_spec_table_t::insert_spec_rows()
 					break;
 				default:
 					lb->buf().append("-");
-					lb->set_align(gui_label_t::centered);
 					break;
 				}
 				lb->update();
@@ -528,7 +527,7 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 			// TODO:
 			// add comfort display for passenger classes
 
-			gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+			gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered);
 			// catg check
 			if (veh->get_freight_type()->get_catg_index() == freight_type_idx) {
 				if (is_overcrowded_capacity) {
@@ -540,11 +539,10 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 					}
 					else {
 						lb->buf().append("-");
-						lb->init(SYSCOL_TEXT_INACTIVE, gui_label_t::centered);
+						lb->set_color(SYSCOL_TEXT_INACTIVE);
 					}
 				}
 			}
-			lb->set_align(gui_label_t::centered);
 			lb->update();
 		}
 	}
@@ -600,7 +598,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 			}
 			else {
 				// text type cells
-				gui_label_buf_t *lb = new_component<gui_label_buf_t>();
+				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered);
 
 				switch(i) {
 					case SPECS_CAR_NUMBER:
