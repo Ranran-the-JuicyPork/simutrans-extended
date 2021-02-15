@@ -536,8 +536,8 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 					lb->buf().append(veh->get_overcrowded_capacity(), 0);
 				}
 				else {
-					if (veh->get_capacity(g_class)) {
-						lb->buf().append(veh->get_capacity(g_class), 0);
+					if (cnv->get_vehicle(j-1)->get_fare_capacity(g_class)) {
+						lb->buf().append(cnv->get_vehicle(j-1)->get_fare_capacity(g_class), 0);
 					}
 					else {
 						lb->buf().append("-");
