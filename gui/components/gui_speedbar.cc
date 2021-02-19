@@ -230,12 +230,12 @@ void gui_bandgraph_t::add_color_value(const sint32 *value, PIXVAL color)
 
 scr_size gui_bandgraph_t::get_min_size() const
 {
-	return D_INDICATOR_SIZE;
+	return size;
 }
 
 scr_size gui_bandgraph_t::get_max_size() const
 {
-	return scr_size(scr_size::inf.w, D_INDICATOR_HEIGHT);
+	return scr_size(size_fixed ? get_min_size().w : scr_size::inf.w, size.h);
 }
 
 void gui_bandgraph_t::draw(scr_coord offset)
