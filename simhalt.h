@@ -144,7 +144,7 @@ private:
 	 */
 	void init_financial_history();
 
-	PIXVAL status_color, last_status_color;
+	PIXVAL status_color, last_status_color, status_color_freight;
 	sint16 last_bar_count;
 	vector_tpl<KOORD_VAL> last_bar_height; // caches the last height of the station bar for each good type drawn in display_status(). used for dirty tile management
 	uint32 capacity[3]; // passenger, mail, goods
@@ -554,6 +554,7 @@ public:
 	 * Calculates a status color for status bars
 	 */
 	PIXVAL get_status_farbe() const { return status_color; }
+	PIXVAL get_status_color(uint8 typ) const;
 
 	/**
 	 * Draws some nice colored bars giving some status information
@@ -690,6 +691,8 @@ public:
 
 	// true, if this station is overcrowded for this category
 	bool is_overcrowded( const uint8 idx ) const { return (overcrowded[idx/8] & (1<<(idx%8)))!=0; }
+
+	sint64 get_overcrowded_proporion(uint8 typ) const;
 
 	/// @returns total amount of the good waiting at this halt.
 	uint32 get_ware_summe(const goods_desc_t *warentyp) const;

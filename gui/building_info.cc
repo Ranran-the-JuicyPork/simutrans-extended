@@ -370,28 +370,13 @@ void building_info_t::update_near_by_halt()
 
 		// Service operation indicator
 		if (halt->is_enabled(goods_manager_t::passengers)) {
-			if (halt->gibt_ab(goods_manager_t::get_info(goods_manager_t::INDEX_PAS))) {
-				any_operating_stops_passengers = true;
-				// If it is crowded, display the overcrowding color
-				cont_near_by_halt.new_component<gui_colorbox_t>()->init(halt->is_overcrowded(goods_manager_t::INDEX_PAS) ? color_idx_to_rgb(COL_OVERCROWD) : color_idx_to_rgb(COL_GREEN), scr_size(10,D_INDICATOR_HEIGHT), true, false);
-			}
-			else {
-				// there is an attribute but the service does not provide it
-				cont_near_by_halt.new_component<gui_colorbox_t>()->init(COL_INACTIVE, scr_size(10, D_INDICATOR_HEIGHT), true, false);
-			}
+			cont_near_by_halt.new_component<gui_colorbox_t>()->init(halt->get_status_color(0), scr_size(10, D_INDICATOR_HEIGHT), true, false);
 		}
 		else {
 			cont_near_by_halt.new_component<gui_margin_t>(8);
 		}
 		if (halt->is_enabled(goods_manager_t::mail)) {
-			if (halt->gibt_ab(goods_manager_t::get_info(goods_manager_t::INDEX_MAIL))) {
-				any_operating_stops_mail = true;
-				cont_near_by_halt.new_component<gui_colorbox_t>()->init(halt->is_overcrowded(goods_manager_t::INDEX_MAIL) ? color_idx_to_rgb(COL_OVERCROWD) : color_idx_to_rgb(COL_GREEN), scr_size(10, D_INDICATOR_HEIGHT), true, false);
-			}
-			else {
-				// there is an attribute but the service does not provide it
-				cont_near_by_halt.new_component<gui_colorbox_t>()->init(COL_INACTIVE, scr_size(10, D_INDICATOR_HEIGHT), true, false);
-			}
+			cont_near_by_halt.new_component<gui_colorbox_t>()->init(halt->get_status_color(1), scr_size(10, D_INDICATOR_HEIGHT), true, false);
 		}
 		else {
 			cont_near_by_halt.new_component<gui_margin_t>(8);

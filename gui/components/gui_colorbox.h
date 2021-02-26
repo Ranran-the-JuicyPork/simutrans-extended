@@ -17,8 +17,8 @@ class gui_colorbox_t : public gui_component_t
 {
 	PIXVAL color;
 
-	uint8 height = D_INDICATOR_HEIGHT;
-	uint8 width = D_INDICATOR_WIDTH;
+	KOORD_VAL height = D_INDICATOR_HEIGHT;
+	KOORD_VAL width = D_INDICATOR_WIDTH;
 	bool size_fixed = false;
 	bool show_frame = true;
 

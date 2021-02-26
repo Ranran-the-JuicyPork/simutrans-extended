@@ -614,26 +614,7 @@ void gui_factory_nearby_halt_info_t::draw(scr_coord offset)
 			}
 
 			// [status bar]
-			// get_status_farbe() may not fit for freight station. so a dedicated alert display
-			// This can be separated as a function of simhalt if used elsewhere.
-			//if (halt->is_overcrowded(2)) { col = COL_RED; } // This may be extremely lagging
-			if (!has_active_freight_connection) {
-				col_val = COL_INACTIVE; // seems that the freight convoy is not running here
-			}
-			else if (wainting_sum + transship_sum > halt->get_capacity(2)) {
-				col_val = COL_DANGER;
-			}
-			else if (wainting_sum + transship_sum > halt->get_capacity(2)*0.9) {
-				col_val = COL_WARNING;
-			}
-			else if (!wainting_sum && !transship_sum) {
-				// Still have to consider
-				col_val = COL_CAUTION;
-			}
-			else {
-				col_val = COL_CLEAR;
-			}
-			display_fillbox_wh_clip_rgb(offset.x + D_V_SPACE + 1, offset.y + yoff + GOODS_COLOR_BOX_YOFF + 3, D_INDICATOR_WIDTH * 2 / 3, D_INDICATOR_HEIGHT + 1, col_val, true);
+			display_fillbox_wh_clip_rgb(offset.x + D_V_SPACE + 1, offset.y + yoff + D_GET_CENTER_ALIGN_OFFSET(D_INDICATOR_HEIGHT+1, LINESPACE), D_INDICATOR_WIDTH * 2/3, D_INDICATOR_HEIGHT+1, halt->get_status_color(2), true);
 
 			if (win_get_magic(magic_halt_info + halt.get_id())) {
 				display_blend_wh_rgb(offset.x, offset.y + yoff, size.w, LINESPACE, SYSCOL_TEXT, 20);

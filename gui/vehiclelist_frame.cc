@@ -24,7 +24,7 @@
 #include "../utils/simstring.h"
 
 
-enum sort_mode_t { best, by_intro, by_retire, by_power, by_capacity, by_name, SORT_MODES };
+enum sort_mode_t { best, by_name, by_value, by_running_cost, by_capacity, by_speed, by_power, by_tractive_force, by_axle_load, by_intro, by_retire, SORT_MODES };
 
 int vehiclelist_stats_t::sort_mode = by_intro;
 bool vehiclelist_stats_t::reverse = false;
@@ -90,7 +90,11 @@ vehiclelist_stats_t::vehiclelist_stats_t(const vehicle_desc_t *v)
 
 	// column 2
 	part2.clear();
-	part2.printf( "%s %4.1ft\n", translator::translate( "Weight:" ), veh->get_weight() / 1000.0 );
+	part2.printf( "%s %4.1ft", translator::translate( "Weight:" ), veh->get_weight() / 1000.0 );
+	if (veh->get_waytype() != water_wt) {
+		part2.printf( ", %s %it", translator::translate( "Axle load:" ), veh->get_axle_load() );
+	}
+	part2.append("\n");
 	part2.printf( "%s %s - ", translator::translate( "Available:" ), translator::get_short_date( veh->get_intro_year_month() / 12, veh->get_intro_year_month() % 12 ) );
 	if (veh->get_retire_year_month() != DEFAULT_RETIRE_DATE * 12 &&
 		(((!world()->get_settings().get_show_future_vehicle_info() && veh->will_end_prodection_soon(world()->get_timeline_year_month()))
@@ -200,12 +204,48 @@ bool vehiclelist_stats_t::compare(const gui_component_t *aa, const gui_component
 		}
 		break;
 
+	case by_value:
+		cmp = a->get_value() - b->get_value();
+		break;
+
+	case by_running_cost:
+		cmp = a->get_running_cost(world()) - b->get_running_cost(world());
+		break;
+
+	case by_speed:
+		cmp = a->get_topspeed() - b->get_topspeed();
+		break;
+
 	case by_power:
 		cmp = a->get_power() - b->get_power();
+		if (cmp == 0) {
+			cmp = a->get_tractive_effort() - b->get_tractive_effort();
+		}
 		break;
+
+	case by_tractive_force:
+		cmp = a->get_tractive_effort() - b->get_tractive_effort();
+		if (cmp == 0) {
+			cmp = a->get_power() - b->get_power();
+		}
+		break;
+
+	case by_axle_load:
+	{
+		const uint16 a_axle_load = a->get_waytype() == water_wt ? 0 : a->get_axle_load();
+		const uint16 b_axle_load = b->get_waytype() == water_wt ? 0 : b->get_axle_load();
+		cmp = a_axle_load - b_axle_load;
+		if (cmp == 0) {
+			cmp = a->get_weight() - b->get_weight();
+		}
+		break;
+	}
 
 	case by_capacity:
 		cmp = a->get_total_capacity() - b->get_total_capacity();
+		if (cmp == 0) {
+			cmp = a->get_overcrowded_capacity() - b->get_overcrowded_capacity();
+		}
 		break;
 
 	case by_name:
@@ -222,11 +262,16 @@ bool vehiclelist_stats_t::compare(const gui_component_t *aa, const gui_component
 
 static const char *sort_text[SORT_MODES] = {
 	"Unsorted",
-	"Intro. date:",
-	"Retire. date:",
-	"Power:",
+	"Name",
+	"Price",
+	"Maintenance:",
 	"Capacity:",
-	"Name"
+	"Max. speed:",
+	"Power:",
+	"Tractive Force:",
+	"Axle load:",
+	"Intro. date:",
+	"Retire. date:"
 };
 
 vehiclelist_frame_t::vehiclelist_frame_t() :

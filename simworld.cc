@@ -5420,7 +5420,7 @@ void karte_t::new_year()
 
 	cbuffer_t buf;
 	buf.printf( translator::translate("Year %i has started."), last_year );
-	msg->add_message(buf,koord::invalid,message_t::general,color_idx_to_rgb(COL_BLACK),skinverwaltung_t::neujahrsymbol->get_image_id(0));
+	msg->add_message(buf,koord::invalid,message_t::general,SYSCOL_TEXT,skinverwaltung_t::neujahrsymbol->get_image_id(0));
 
 	FOR(vector_tpl<convoihandle_t>, const cnv, convoi_array) {
 		cnv->new_year();
@@ -5532,7 +5532,7 @@ void karte_t::recalc_average_speed(bool skip_messages)
 					{
 						cbuffer_t buf;
 						buf.printf(translator::translate("The following %s has become obsolete:\n%s\n"), vehicle_type, translator::translate(info->get_name()));
-						msg->add_message(buf, koord::invalid, message_t::new_vehicle, color_idx_to_rgb(COL_DARK_BLUE), info->get_base_image());
+						msg->add_message(buf, koord::invalid, message_t::new_vehicle, COL_OBSOLETE, info->get_base_image());
 					}
 				}
 			}

@@ -221,6 +221,14 @@ bool depotlist_stats_t::compare(const gui_component_t *aa, const gui_component_t
 
 	case by_region:
 		cmp = welt->get_region(a->get_pos().get_2d()) - welt->get_region(b->get_pos().get_2d());
+		if (cmp == 0) {
+			const koord a_city_koord = welt->get_city(a->get_pos().get_2d()) ? welt->get_city(a->get_pos().get_2d())->get_pos() : koord(0, 0);
+			const koord b_city_koord = welt->get_city(b->get_pos().get_2d()) ? welt->get_city(b->get_pos().get_2d())->get_pos() : koord(0, 0);
+			cmp = a_city_koord.x - b_city_koord.x;
+			if (cmp == 0) {
+				cmp = a_city_koord.y - b_city_koord.y;
+			}
+		}
 		break;
 
 	case by_waytype:

@@ -4822,8 +4822,8 @@ void display_heading_rgb(KOORD_VAL xp, KOORD_VAL yp, KOORD_VAL w, KOORD_VAL h, P
 			padding_left = border_left_width*2;
 			break;
 		case 3:
-			display_right_triangle_rgb(xp+1, yp + (h-LINEASCENT*2/3)/2+1, (uint8)(LINEASCENT*2/3), SYSCOL_TEXT_SHADOW, dirty);
-			display_right_triangle_rgb(xp,   yp + (h-LINEASCENT*2/3)/2,   (uint8)(LINEASCENT*2/3), frame_color, dirty);
+			display_right_triangle_rgb(xp+1, yp + (h-LINEASCENT*2/3)/2+1, (LINEASCENT*2/3), SYSCOL_TEXT_SHADOW, dirty);
+			display_right_triangle_rgb(xp,   yp + (h-LINEASCENT*2/3)/2,   (LINEASCENT*2/3), frame_color, dirty);
 			padding_left = (uint8)(h-LINEASCENT*2/3) + D_V_SPACE;
 			break;
 		default:
@@ -5082,7 +5082,7 @@ void display_filled_circle_rgb( KOORD_VAL x0, KOORD_VAL  y0, int radius, const P
 
 // Currently, only right-facing equilateral triangles are supported. Can be expanded if needed to accommodate another direction.
 // The horizontal size is sqrt(3) times the height. - Ranran
-void display_right_triangle_rgb(KOORD_VAL x, KOORD_VAL y, uint8 height, const PIXVAL colval, const bool dirty)
+void display_right_triangle_rgb(KOORD_VAL x, KOORD_VAL y, KOORD_VAL height, const PIXVAL colval, const bool dirty)
 {
 	double sqrt3 = sqrt(3);
 	for (uint16 x0 = 0; x0 <= (uint16)(0.99 + height * (sqrt3)); x0++)
@@ -5375,13 +5375,11 @@ void simgraph_init(scr_size window_size, bool full_screen)
 		// init, load, and check fonts
 		if(  !display_load_font(env_t::fontname.c_str())  &&  !display_load_font(FONT_PATH_X "prop.fnt") ) {
 			dr_fatal_notify( "No fonts found!" );
-			fprintf(stderr, "Error: No fonts found!");
 			exit(-1);
 		}
 	}
 	else {
-		dr_fatal_notify( "Error: can't open window!" );
-		fprintf(stderr, "Error: can't open window!");
+		dr_fatal_notify( "Cannot open window!" );
 		exit(-1);
 	}
 

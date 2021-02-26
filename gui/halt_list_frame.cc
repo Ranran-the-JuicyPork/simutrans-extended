@@ -297,7 +297,7 @@ halt_list_frame_t::halt_list_frame_t(player_t *player) :
 
 		filter_on.init(button_t::square_state, "cl_txt_filter");
 		filter_on.set_tooltip(translator::translate("cl_btn_filter_tooltip"));
-		filter_on.pressed = filter_is_on;
+		filter_on.pressed = get_filter(any_filter);
 		filter_on.add_listener(this);
 		add_component(&filter_on);
 
@@ -395,8 +395,7 @@ bool halt_list_frame_t::action_triggered( gui_action_creator_t *comp,value_t /* 
 {
 	if (comp == &filter_on) {
 		set_filter(any_filter, !get_filter(any_filter));
-		filter_is_on = !filter_is_on;
-		filter_on.pressed = filter_is_on;
+		filter_on.pressed = get_filter(any_filter);
 		sort_list();
 	}
 	else if (comp == &sortedby) {

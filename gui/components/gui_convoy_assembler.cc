@@ -2142,25 +2142,25 @@ void gui_convoy_assembler_t::draw_vehicle_info_text(const scr_coord& pos)
 		new_vehicle_length = new_vehicle_length_sb_force_zero ? 0 : veh_type->get_length();
 		uint8 auto_addition_length = 0;
 		if (!new_vehicle_length_sb_force_zero) {
-			auto_addition_length = veh_action == va_insert ? veh_type->calc_auto_connection_length(false) : veh_type->calc_auto_connection_length(true);
-			vehicle_fluctuation += veh_action == va_insert ? veh_type->get_auto_connection_vehicle_count(false) : veh_type->get_auto_connection_vehicle_count(true);
+			auto_addition_length = veh_type->calc_auto_connection_length(!(veh_action == va_insert));
+			vehicle_fluctuation += veh_type->get_auto_connection_vehicle_count(!(veh_action == va_insert));
 			vehicle_fluctuation++;
 			lb_convoi_count.set_visible(true);
 		}
-		tile_occupancy.set_new_veh_length(new_vehicle_length + auto_addition_length, veh_action == va_insert ? true : false, new_vehicle_length_sb_force_zero ? 0xFFu : new_vehicle_length);
+		tile_occupancy.set_new_veh_length(new_vehicle_length + auto_addition_length, (veh_action == va_insert), new_vehicle_length_sb_force_zero ? 0xFFu : new_vehicle_length);
 		if (!new_vehicle_length_sb_force_zero) {
 			if (veh_action == va_append && auto_addition_length == 0) {
-				tile_occupancy.set_assembling_incomplete(vec[sel_index]->rcolor == COL_YELLOW ? true : false);
+				tile_occupancy.set_assembling_incomplete(vec[sel_index]->rcolor == COL_YELLOW);
 			}
 			else if (veh_action == va_insert && auto_addition_length == 0) {
-				tile_occupancy.set_assembling_incomplete(vec[sel_index]->lcolor == COL_YELLOW ? true : false);
+				tile_occupancy.set_assembling_incomplete(vec[sel_index]->lcolor == COL_YELLOW);
 			}
 			else {
 				tile_occupancy.set_assembling_incomplete(false);
 			}
 		}
 		else if(convoi_pics.get_count()){
-			tile_occupancy.set_assembling_incomplete((convoi_pics[0]->lcolor == COL_YELLOW || convoi_pics[convoi_pics.get_count() - 1]->rcolor == COL_YELLOW) ? true : false);
+			tile_occupancy.set_assembling_incomplete((convoi_pics[0]->lcolor == COL_YELLOW || convoi_pics[convoi_pics.get_count() - 1]->rcolor == COL_YELLOW));
 		}
 
 		// Search and focus on upgrade targets in convoy
