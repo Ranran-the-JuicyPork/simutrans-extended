@@ -179,7 +179,7 @@ void convoi_info_t::init(convoihandle_t cnv)
 					container_line.new_component<gui_empty_t>();
 				}
 				// goto line button
-				line_button.init( button_t::posbutton, NULL);
+				line_button.init( button_t::arrowright, NULL );
 				line_button.set_targetpos3d( koord3d::invalid );
 				line_button.add_listener( this );
 				line_bound = false;

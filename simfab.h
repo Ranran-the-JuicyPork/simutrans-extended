@@ -496,16 +496,16 @@ public:
 	 * Adds a new delivery goal
 	 */
 	void add_consumer(koord ziel);
-	void remove_consumer(koord pos);
+	void remove_consumer(koord consumer_pos);
 
-	bool disconnect_consumer(koord pos);
-	bool disconnect_supplier(koord pos);
+	bool disconnect_consumer(koord consumer_pos);
+	bool disconnect_supplier(koord supplier_pos);
 
 	/**
 	 * adds a supplier
 	 */
 	void  add_supplier(koord pos);
-	void  remove_supplier(koord pos);
+	void  remove_supplier(koord supplier_pos);
 
 	/**
 	 * @return menge der ware typ ("quantity of the goods type")

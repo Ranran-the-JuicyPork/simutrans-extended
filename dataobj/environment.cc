@@ -73,6 +73,8 @@ sint16 env_t::global_volume = 127;
 uint32 env_t::sound_distance_scaling;
 sint16 env_t::midi_volume = 127;
 uint16 env_t::specific_volume[MAX_SOUND_TYPES];
+
+std::string env_t::soundfont_filename = "";
 bool env_t::global_mute_sound = false;
 bool env_t::mute_midi = false;
 bool env_t::shuffle_midi = true;
@@ -171,6 +173,7 @@ sint8 env_t::show_money_message;
 
 uint8 env_t::gui_player_color_dark = 1;
 uint8 env_t::gui_player_color_bright = 4;
+uint8 env_t::gui_titlebar_player_color_background_brightness;
 
 std::string env_t::fontname = FONT_PATH_X "prop.fnt";
 uint8 env_t::fontsize = 11;
@@ -582,7 +585,16 @@ void env_t::rdwr(loadsave_t *file)
 		file->rdwr_bool(classes_waiting_bar);
 		file->rdwr_long(sound_distance_scaling);
 	}
-
+	if( file->is_version_atleast( 122, 1 ) ) {
+		plainstring str = soundfont_filename.c_str();
+		file->rdwr_str( str );
+		if(  file->is_loading()  ) {
+			soundfont_filename = str ? str.c_str() : "";
+		}
+	}
+	if( file->is_version_ex_atleast(14, 40) ) {
+		file->rdwr_byte(gui_titlebar_player_color_background_brightness);
+	}
 
 	// server settings are not saved, since they are server specific
 	// and could be different on different servers on the same computers

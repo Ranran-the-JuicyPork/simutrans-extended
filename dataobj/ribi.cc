@@ -340,7 +340,7 @@ bool ribi_t::is_perpendicular(ribi x, ribi y)
 {
 	// for straight direction x use doppelr lookup table
 	if(is_straight(x)) {
-		return (doppelr[x] | doppelr[y]) == all;
+		return (doubles(x) | doubles(y)) == all;
 	}
 	// now diagonals (more tricky)
 	if(x!=y) {

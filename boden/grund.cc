@@ -2567,7 +2567,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 						}
 						else if (to->get_neighbour(to_check, w->get_waytype(), ribi_t::nesw[n]))
 						{
-							if (to_check == from)
+							if (to_check == from || to_check == this)
 							{
 								continue;
 							}

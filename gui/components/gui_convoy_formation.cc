@@ -115,7 +115,7 @@ scr_size gui_convoy_formation_t::draw_formation(scr_coord offset) const
 			buf.append(car_number);
 		}
 
-		int left = display_proportional_clip_rgb(offset.x + 2, offset.y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2), true);
+		int left = display_proportional_clip_rgb(offset.x + 2, offset.y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 #ifdef DEBUG
 		if (v->is_reversed()) {
 			display_proportional_clip_rgb(offset.x + 2 + left, offset.y - 2, "*", ALIGN_LEFT, COL_CAUTION, true);

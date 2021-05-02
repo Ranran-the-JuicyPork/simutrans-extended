@@ -5317,8 +5317,8 @@ void convoi_t::laden() //"load" (Babelfish)
 
 	if(!this_halt.is_bound())
 	{
-		state = CAN_START;
-		dbg->warning("void convoi_t::laden()", "%s trying to load at %s when not at a halt", get_name(), halt.is_bound() ? halt->get_name() : "none");
+		suche_neue_route();
+		dbg->warning("void convoi_t::laden()", "%s trying to load at %s when not at a halt; rerouting", get_name(), halt.is_bound() ? halt->get_name() : "none");
 		return;
 	}
 

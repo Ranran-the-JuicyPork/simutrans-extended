@@ -2612,7 +2612,7 @@ void karte_t::create_beaches(  int xoff, int yoff  )
 			if(  gr->is_water()  &&  gr->get_hoehe()==groundwater  &&  gr->kann_alle_obj_entfernen(NULL)==NULL) {
 				koord k( ix, iy );
 				uint8 neighbour_water = 0;
-				bool water[8];
+				bool water[8] = {};
 				// check whether nearby tiles are water
 				for(  int i = 0;  i < 8;  i++  ) {
 					grund_t *gr2 = lookup_kartenboden( k + koord::neighbours[i] );
@@ -2756,14 +2756,14 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 
 	intr_disable();
 
-	bool minimap_was_visible = minimap_t::is_visible;
+	bool minimap_was_visible = minimap_t::get_instance()->is_visible;
 
 	uint32 max_display_progress;
 
 	// If this is not called by karte_t::init
 	if(  old_x != 0  ) {
 		mute_sound(true);
-		minimap_t::is_visible = false;
+		minimap_t::get_instance()->is_visible = false;
 
 		if(is_display_init()) {
 			display_show_pointer(false);
@@ -3074,8 +3074,8 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 		}
 		mute_sound(false);
 
-		minimap_t::is_visible = minimap_was_visible;
 		minimap_t::get_instance()->init();
+		minimap_t::get_instance()->is_visible = minimap_was_visible;
 		minimap_t::get_instance()->calc_map();
 		minimap_t::get_instance()->set_display_mode( minimap_t::get_instance()->get_display_mode() );
 
@@ -4643,7 +4643,7 @@ DBG_MESSAGE( "karte_t::rotate90()", "called" );
 	factory_builder_t::new_world();
 
 	// update minimap
-	if(minimap_t::is_visible) {
+	if(minimap_t::get_instance()->is_visible) {
 		minimap_t::get_instance()->set_display_mode( minimap_t::get_instance()->get_display_mode() );
 	}
 

@@ -13,6 +13,7 @@
 
 #include "../simworld.h"
 #include "../player/simplay.h"
+#include "../player/finance.h"
 #include "../simtool.h"
 
 #include "../descriptor/tunnel_desc.h"
@@ -374,7 +375,7 @@ const char *tunnel_builder_t::build( player_t *player, koord pos, const tunnel_d
 	if (end_gr) {
 		if (weg_t *weg_end = end_gr->get_weg(waytyp)) {
 			if (weg_end->is_deletable(player)!=NULL) {
-				return "Das Feld gehoert\neinem anderen Spieler\n";
+				return NOTICE_OWNED_BY_OTHER_PLAYER;
 			}
 			if(  full_tunnel  &&  end_gr->get_typ() == grund_t::tunnelboden  ) {
 				full_tunnel = false;

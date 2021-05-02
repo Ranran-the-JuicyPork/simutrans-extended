@@ -59,6 +59,9 @@
 #include "themeselector.h"
 #include "goods_frame_t.h"
 #include "loadfont_frame.h"
+#ifdef USE_FLUIDSYNTH_MIDI
+#include "loadsoundfont_frame.h"
+#endif
 #include "scenario_info.h"
 #include "depotlist_frame.h"
 
@@ -317,13 +320,15 @@ static void win_draw_window_title(const scr_coord pos, const scr_size size,
 	PIXVAL lighter = display_blend_colors(title_color, color_idx_to_rgb(COL_WHITE), 25);
 	PIXVAL darker  = display_blend_colors(title_color, color_idx_to_rgb(COL_BLACK), 25);
 
+	// fill title bar with color
 	display_fillbox_wh_clip_rgb(pos.x, pos.y, size.w, D_TITLEBAR_HEIGHT, title_color, false);
 
-	display_fillbox_wh_clip_rgb( pos.x + 1, pos.y,                         size.w - 2, 1, lighter, false );
-	display_fillbox_wh_clip_rgb( pos.x + 1, pos.y + D_TITLEBAR_HEIGHT - 1, size.w - 2, 1, darker,  false );
+	// border of title bar
+	display_fillbox_wh_clip_rgb( pos.x + 1, pos.y,                         size.w - 2, 1, lighter, false ); // top
+	display_fillbox_wh_clip_rgb( pos.x + 1, pos.y + D_TITLEBAR_HEIGHT - 1, size.w - 2, 1, darker,  false ); // bottom
 
-	display_vline_wh_clip_rgb( pos.x,              pos.y, D_TITLEBAR_HEIGHT, lighter, false );
-	display_vline_wh_clip_rgb( pos.x + size.w - 1, pos.y, D_TITLEBAR_HEIGHT, darker,  false );
+	display_vline_wh_clip_rgb( pos.x,              pos.y, D_TITLEBAR_HEIGHT, lighter, false ); // left
+	display_vline_wh_clip_rgb( pos.x + size.w - 1, pos.y, D_TITLEBAR_HEIGHT, darker,  false ); // right
 
 	// Draw the gadgets and then move left and draw text.
 	flags.gotopos = (welt_pos != koord3d::invalid);
@@ -504,9 +509,18 @@ bool win_is_textinput()
 }
 
 
-int win_get_open_count()
+uint32 win_get_open_count()
 {
 	return wins.get_count();
+}
+
+
+gui_frame_t* win_get_index(uint32 i)
+{
+	if (i < wins.get_count()) {
+		return wins[i].gui;
+	}
+	return NULL;
 }
 
 
@@ -583,6 +597,9 @@ void rdwr_all_win(loadsave_t *file)
 					case magic_factory_info:   w = new fabrik_info_t(); break;
 					case magic_goodslist:      w = new goods_frame_t(); break;
 					case magic_font:           w = new loadfont_frame_t(); break;
+#ifdef USE_FLUIDSYNTH_MIDI
+					case magic_soundfont:      w = new loadsoundfont_frame_t(); break;
+#endif
 					case magic_scenario_info:  w = new scenario_info_t(); break;
 
 					default:
@@ -665,7 +682,23 @@ int create_win(int x, int y, gui_frame_t* const gui, wintype const wt, ptrdiff_t
 			y = k->y;
 		}
 	}
-
+	// make sure window is on screen
+	if(  x < -1  ||  x+gui->get_windowsize().w > display_get_width()  ) {
+		if(gui->get_windowsize().w > display_get_width()) {
+			x = 0;
+		}
+		else {
+			x = clamp(x, 0, display_get_width()-gui->get_windowsize().w);
+		}
+	}
+	if(  y<-1  ||  y + gui->get_windowsize().h>display_get_height()  ) {
+		if (gui->get_windowsize().h > display_get_height()-env_t::iconsize.h) {
+			x = 0;
+		}
+		else {
+			y = clamp(y, env_t::iconsize.h, display_get_width() - gui->get_windowsize().h);
+		}
+	}
 	/* if there are too many handles (likely in large games)
 	 * we search for any error/news message at the bottom of the stack and delete it
 	 * => newer information might be more important ...
@@ -809,8 +842,10 @@ int create_win(int x, int y, gui_frame_t* const gui, wintype const wt, ptrdiff_t
 static void process_kill_list()
 {
 	FOR(vector_tpl<simwin_t>, & i, kill_list) {
-		wins.remove(i);
-		destroy_framed_win(&i);
+		if (inside_event_handling != i.gui) {
+			wins.remove(i);
+			destroy_framed_win(&i);
+		}
 	}
 	kill_list.clear();
 }
@@ -1052,12 +1087,11 @@ void display_win(int win)
 	}
 	// mark top window, if requested
 	if(env_t::window_frame_active  &&  (unsigned)win==wins.get_count()-1) {
-		const int y_off = wins[win].flags.title ? 0 : D_TITLEBAR_HEIGHT;
 		if(!wins[win].rollup) {
-			display_ddd_box_clip_rgb( wins[win].pos.x-1, wins[win].pos.y-1 + y_off, size.w+2, size.h+2 - y_off, title_color, title_color); //, wins[win].dirty | wins[win].gui->is_dirty() );
+			display_ddd_box_clip_rgb( wins[win].pos.x-1, wins[win].pos.y-1, size.w+2, size.h+2, title_color, title_color);
 		}
 		else {
-			display_ddd_box_clip_rgb( wins[win].pos.x-1, wins[win].pos.y-1 + y_off, size.w+2, D_TITLEBAR_HEIGHT + 2 - y_off, title_color, title_color); //, wins[win].dirty | wins[win].gui->is_dirty() );
+			display_ddd_box_clip_rgb( wins[win].pos.x-1, wins[win].pos.y-1, size.w+2, D_TITLEBAR_HEIGHT + 2, title_color, title_color);
 		}
 	}
 	if(!wins[win].rollup) {
@@ -1734,11 +1768,11 @@ void win_display_flush(double konto)
 	char const *time = tick_to_string( wl->get_ticks(), true );
 
 	// statusbar background
-	KOORD_VAL const status_bar_height = win_get_statusbar_height();
-	KOORD_VAL const status_bar_y = disp_height - status_bar_height;
-	KOORD_VAL const status_bar_text_y = status_bar_y + (status_bar_height - LINESPACE) / 2;
-	KOORD_VAL const status_bar_icon_y = status_bar_y + (status_bar_height - 15) / 2;
-	display_set_clip_wh( 0, 0, disp_width, disp_height );
+	scr_coord_val const status_bar_height = win_get_statusbar_height();
+	scr_coord_val const status_bar_y = disp_height - status_bar_height;
+	scr_coord_val const status_bar_text_y = status_bar_y + (status_bar_height - LINESPACE) / 2;
+	scr_coord_val const status_bar_icon_y = status_bar_y + (status_bar_height - 15) / 2;
+	display_set_clip_wh(0, 0, disp_width, disp_height);
 	display_fillbox_wh_rgb(0, status_bar_y - 1, disp_width, 1, SYSCOL_STATUSBAR_DIVIDER, false);
 	display_fillbox_wh_rgb(0, status_bar_y, disp_width, status_bar_height, SYSCOL_STATUSBAR_BACKGROUND, false);
 

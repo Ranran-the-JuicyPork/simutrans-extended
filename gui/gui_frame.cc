@@ -123,7 +123,7 @@ void gui_frame_t::reset_min_windowsize()
  */
 FLAGGED_PIXVAL gui_frame_t::get_titlecolor() const
 {
-	return owner ? PLAYER_FLAG|color_idx_to_rgb(owner->get_player_color1()+env_t::gui_player_color_dark) : env_t::default_window_title_color;
+	return owner ? PLAYER_FLAG|color_idx_to_rgb(owner->get_player_color1()+env_t::gui_titlebar_player_color_background_brightness) : env_t::default_window_title_color;
 }
 
 

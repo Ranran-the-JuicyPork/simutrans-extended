@@ -109,7 +109,7 @@ public:
 	void set_show_detail(bool yesno) { show_detail = yesno; } // Currently not in use
 
 	void draw(scr_coord offset);
-	void display_loading_bar(KOORD_VAL xp, KOORD_VAL yp, KOORD_VAL w, KOORD_VAL h, PIXVAL color, uint16 loading, uint16 capacity, uint16 overcrowd_capacity);
+	void display_loading_bar(scr_coord_val xp, scr_coord_val yp, scr_coord_val w, scr_coord_val h, PIXVAL color, uint16 loading, uint16 capacity, uint16 overcrowd_capacity);
 };
 
 // content of maintenance info tab

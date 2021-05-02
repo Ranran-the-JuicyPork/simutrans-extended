@@ -37,6 +37,11 @@ char const *const NOTICE_NO_TREES = "Trees disabled!";
 char const *const NOTICE_UNSUITABLE_GROUND = "No suitable ground!";
 
 /**
+* Message returned when a tool fails because the target is owned by another player and access is not granted.
+*/
+char const *const NOTICE_OWNED_BY_OTHER_PLAYER = "Das Feld gehoert\neinem anderen Spieler\n";
+
+/**
 * Message returned when a depot cannot be placed.
 */
 char const *const NOTICE_DEPOT_BAD_POS = "Cannot built depot here!";

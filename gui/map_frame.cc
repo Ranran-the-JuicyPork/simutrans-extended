@@ -276,7 +276,7 @@ map_frame_t::map_frame_t() :
 	viewed_player_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All"), SYSCOL_TEXT);
 	viewable_players[ 0 ] = -1;
 	for(  int np = 0, count = 1;  np < MAX_PLAYER_COUNT;  np++  ) {
-		if(  welt->get_player( np )  &&  welt->get_player( np )->get_finance()->has_convoi()) {
+		if(  welt->get_player( np )  /*&&  welt->get_player( np )->get_finance()->has_convoi()*/) { //player does not need any convoy, might be a pure infrastructure company
 			viewed_player_c.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(welt->get_player( np )->get_name(), color_idx_to_rgb(welt->get_player( np )->get_player_color1()+env_t::gui_player_color_dark));
 			viewable_players[ count++ ] = np;
 		}
@@ -396,6 +396,51 @@ void map_frame_t::update_buttons()
 }
 
 
+
+static bool compare_factories(const factory_desc_t* const a, const factory_desc_t* const b)
+{
+	if (a->get_supplier_count() == 0) {
+		// a source
+		if (b->get_supplier_count() > 0) {
+			return true;
+		}
+		else {
+			// both producer, sort by name
+			return strcmp(translator::translate(a->get_name()), translator::translate(b->get_name())) < 0;
+		}
+	}
+	else {
+		// a not source
+		if (b->get_supplier_count() == 0) {
+			// b source, in front
+			return false;
+		}
+		else {
+			if (a->get_product_count() == 0) {
+				// a consumer
+				if (b->get_product_count() > 0) {
+					// b factory, in front
+					return false;
+				}
+				else {
+					// both consumer, sort by name
+					return strcmp(translator::translate(a->get_name()), translator::translate(b->get_name())) < 0;
+				}
+			}
+			else {
+				// a factory
+				if (b->get_product_count() == 0) {
+					// b producer to end
+					return true;
+				}
+			}
+		}
+	}
+	// both factory, sort by name
+	return strcmp(translator::translate(a->get_name()), translator::translate(b->get_name())) < 0;
+}
+
+
 void map_frame_t::update_factory_legend()
 {
 	directory_container.remove_all();
@@ -407,7 +452,7 @@ void map_frame_t::update_factory_legend()
 		if(  filter_factory_list  ) {
 			FOR(vector_tpl<fabrik_t*>, const f, welt->get_fab_list()) {
 				if(  f->get_desc()->get_distribution_weight() > 0  ) {
-					factory_types.append_unique(f->get_desc());
+					factory_types.insert_unique_ordered(f->get_desc(), compare_factories);
 				}
 			}
 		}
@@ -415,10 +460,12 @@ void map_frame_t::update_factory_legend()
 			for(auto i : factory_builder_t::get_factory_table()) {
 				factory_desc_t const* const d = i.value;
 				if (d->get_distribution_weight() > 0) {
-					factory_types.append_unique(d);
+					factory_types.insert_unique_ordered(d, compare_factories);
 				}
 			}
 		}
+		// now sort
+
 		// add corresponding legend entries
 		FOR(vector_tpl<const factory_desc_t*>, f, factory_types) {
 			directory_container.new_component<legend_entry_t>(f->get_name(), f->get_color());

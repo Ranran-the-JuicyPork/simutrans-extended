@@ -40,6 +40,7 @@ public:
 		square = 1,
 		box,
 		roundbox,
+		imagebox,
 		arrowleft,
 		arrowright,
 		arrowup,
@@ -53,12 +54,14 @@ public:
 		square_state     = square     | state,
 		box_state        = box        | state,
 		roundbox_state   = roundbox   | state,
+		imagebox_state   = imagebox   | state,
 		arrowright_state = arrowright | state,
 		arrowup_state    = arrowup    | state,
 		arrowdown_state  = arrowdown  | state,
 		automatic = 256,
 		square_automatic    = square_state | automatic,
 		box_state_automatic = box_state    | automatic,
+		imagebox_automatic  = imagebox     | automatic,
 		posbutton_automatic = posbutton    | automatic,
 
 		flexible = 1 << 9
@@ -90,10 +93,11 @@ private:
 	 * direct access provided to avoid translations
 	 */
 	const char *text;
-
 	const char *translated_text;
 
 	koord3d targetpos;
+	image_id img;
+
 	// any click will go to this world
 	static karte_ptr_t welt;
 
@@ -102,8 +106,6 @@ private:
 	// Hide these
 	button_t(const button_t&);        // forbidden
 	void operator =(const button_t&); // forbidden
-
-	image_id image;
 
 public:
 	PIXVAL background_color;
@@ -135,6 +137,9 @@ public:
 	void set_targetpos( const koord k ); // assuming this is on map ground
 	void set_targetpos3d( const koord3d k ) { targetpos = k; }
 
+	// only relevant for imagebox
+	void set_image(image_id id) { img = id; }
+
 	/**
 	 * Set the displayed text of the button when not to translate
 	 */
@@ -144,8 +149,6 @@ public:
 	 * Sets the tooltip of this button
 	 */
 	void set_tooltip(const char * tooltip);
-
-	void set_image(image_id b) { image = b; };
 
 	/**
 	 * @return true when x, y is within button area, i.e. the button was clicked

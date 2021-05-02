@@ -100,6 +100,9 @@ buildOSX()
 	else
 		# assume MacOS
 		mkdir -p "simutrans-extended.app/Contents/Frameworks/"
+		# add those paths if you want to ship fluidsynth
+			#"/usr/local/opt/glib/lib/libgthread-2.0.0.dylib" \
+			#"/usr/local/opt/fluid-synth/lib/libfluidsynth.2.dylib" \
 		cp "/usr/local/opt/freetype/lib/libfreetype.6.dylib" \
 			"/usr/local/opt/libpng/lib/libpng16.16.dylib" \
 			"/usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib" \
@@ -108,6 +111,9 @@ buildOSX()
 		install_name_tool -change "/usr/local/opt/libpng/lib/libpng16.16.dylib" "@executable_path/../Frameworks/libpng16.16.dylib" "simutrans-extended.app/Contents/MacOS/$simexe_name"
 		sudo install_name_tool -change "/usr/local/opt/libpng/lib/libpng16.16.dylib" "@executable_path/../Frameworks/libpng16.16.dylib" "simutrans-extended.app/Contents/MacOS/$simexe_name"
 		install_name_tool -change "/usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib" "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "simutrans-extended.app/Contents/MacOS/$simexe_name"
+		#uncomment for fluidsynth
+		#install_name_tool -change "/usr/local/opt/glib/lib/libgthread-2.0.0.dylib" "@executable_path/../Frameworks/libgthread-2.0.0.dylib" "simutrans.app/Contents/MacOS/simutrans"
+		#install_name_tool -change "/usr/local/opt/fluid-synth/lib/libfluidsynth.2.dylib" "@executable_path/../Frameworks/libfluidsynth.2.dylib" "simutrans.app/Contents/MacOS/simutrans"
 	fi
 	echo "APPL????" > "simutrans-extended.app/Contents/PkgInfo"
 	sh ../OSX/plistgen.sh "simutrans-extended.app" "$simexe_name"
