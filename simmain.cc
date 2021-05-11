@@ -1165,7 +1165,10 @@ int simu_main(int argc, char** argv)
 
 	// loading all objects in the pak
 	dbg->message("simu_main()","Reading object data from %s...", env_t::objfilename.c_str());
-	obj_reader_t::load( env_t::objfilename.c_str(), translator::translate("Loading paks ...") );
+	if (!obj_reader_t::load( env_t::objfilename.c_str(), translator::translate("Loading paks ...") )) {
+		dbg->fatal("simu_main()", "Failed to load pakset. Please re-download or select another pakset.");
+	}
+
 	std::string overlaid_warning; // more prominent handling of double objects
 	if(  dbg->had_overlaid()  ) {
 		overlaid_warning = translator::translate("<h1>Error</h1><p><strong>");
@@ -1186,7 +1189,11 @@ int simu_main(int argc, char** argv)
 			dbg->clear_overlaid();
 		}
 	}
-	obj_reader_t::finish_rd();
+
+	if (!obj_reader_t::finish_rd()) {
+		dbg->fatal("simu_main()", "Failed to load pakset. Please re-download or select another pakset.");
+	}
+
 	pakset_info_t::calculate_checksum();
 	pakset_info_t::debug();
 
