@@ -142,9 +142,9 @@ goods_frame_t::goods_frame_t() :
 		new_component_span<gui_label_t>("hl_txt_sort", 3);
 		add_table(3,1)->set_spacing(scr_size(0,0));
 		{
-			mode_switcher[0].init(button_t::roundbox_state, "gl_normal");
-			mode_switcher[1].init(button_t::roundbox_state, NULL);
-			mode_switcher[2].init(button_t::roundbox_state, NULL);
+			mode_switcher[0].init(button_t::roundbox_left_state, "gl_normal");
+			mode_switcher[1].init(button_t::roundbox_middle_state, NULL);
+			mode_switcher[2].init(button_t::roundbox_right_state, NULL);
 			if (skinverwaltung_t::input_output) {
 				mode_switcher[1].set_image(skinverwaltung_t::input_output->get_image_id(1));
 				mode_switcher[2].set_image(skinverwaltung_t::input_output->get_image_id(0));
