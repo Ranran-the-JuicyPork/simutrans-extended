@@ -116,6 +116,9 @@ scr_coord_val gui_theme_t::gui_filelist_vspace;
 stretch_map_t gui_theme_t::button_tiles[3];
 stretch_map_t gui_theme_t::button_color_tiles[2];
 stretch_map_t gui_theme_t::round_button_tiles[3];
+stretch_map_t gui_theme_t::round_button_left_tiles[3];
+stretch_map_t gui_theme_t::round_button_middle_tiles[3];
+stretch_map_t gui_theme_t::round_button_right_tiles[3];
 stretch_map_t gui_theme_t::h_scroll_back_tiles;
 stretch_map_t gui_theme_t::h_scroll_knob_tiles;
 stretch_map_t gui_theme_t::v_scroll_back_tiles;
@@ -300,7 +303,37 @@ void gui_theme_t::init_gui_from_images()
 	// Round buttons
 	for(  int i=0;  i<3;  i++  ) {
 		for(  int j=0;  j<9;  j++  ) {
-			round_button_tiles[i][j%3][j/3] = skinverwaltung_t::round_button->get_image_id( i*9+j );
+			const int n = i*9+j;
+			round_button_tiles[i][j%3][j/3] = skinverwaltung_t::round_button->get_image_id( n );
+			if (j%9==0 && skinverwaltung_t::round_button->get_image_id(27+i*4) != IMG_EMPTY) {
+				// upper left
+				round_button_left_tiles[i][j%3][j/3]   = skinverwaltung_t::round_button->get_image_id( n );
+				round_button_middle_tiles[i][j%3][j/3] = skinverwaltung_t::round_button->get_image_id( 27+i*4 );
+				round_button_right_tiles[i][j%3][j/3]  = skinverwaltung_t::round_button->get_image_id( 27+i*4 );
+			}
+			else if (j%9==2 && skinverwaltung_t::round_button->get_image_id(27+i*4+1) != IMG_EMPTY) {
+				// upper right
+				round_button_left_tiles[i][j%3][j/3]   = skinverwaltung_t::round_button->get_image_id( 27+i*4+1 );
+				round_button_middle_tiles[i][j%3][j/3] = skinverwaltung_t::round_button->get_image_id( 27+i*4+1 );
+				round_button_right_tiles[i][j%3][j/3]  = skinverwaltung_t::round_button->get_image_id( n );
+			}
+			else if (j%9==6 && skinverwaltung_t::round_button->get_image_id(27+i*4+2) != IMG_EMPTY) {
+				// lower left
+				round_button_left_tiles[i][j%3][j/3]   = skinverwaltung_t::round_button->get_image_id( n );
+				round_button_middle_tiles[i][j%3][j/3] = skinverwaltung_t::round_button->get_image_id( 27+i*4+2 );
+				round_button_right_tiles[i][j%3][j/3]  = skinverwaltung_t::round_button->get_image_id( 27+i*4+2 );
+			}
+			else if (j%9==8 && skinverwaltung_t::round_button->get_image_id(27+i*4+3) != IMG_EMPTY) {
+				// lower right
+				round_button_left_tiles[i][j%3][j/3]   = skinverwaltung_t::round_button->get_image_id( 27+i*4+3 );
+				round_button_middle_tiles[i][j%3][j/3] = skinverwaltung_t::round_button->get_image_id( 27+i*4+3 );
+				round_button_right_tiles[i][j%3][j/3]  = skinverwaltung_t::round_button->get_image_id( n );
+			}
+			else {
+				round_button_left_tiles[i][j%3][j/3]   = skinverwaltung_t::round_button->get_image_id( n );
+				round_button_middle_tiles[i][j%3][j/3] = skinverwaltung_t::round_button->get_image_id( n );
+				round_button_right_tiles[i][j%3][j/3]  = skinverwaltung_t::round_button->get_image_id( n );
+			}
 		}
 	}
 

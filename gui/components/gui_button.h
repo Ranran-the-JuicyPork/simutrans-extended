@@ -40,6 +40,9 @@ public:
 		square = 1,
 		box,
 		roundbox,
+		roundbox_left,
+		roundbox_middle,
+		roundbox_right,
 		imagebox,
 		sortarrow,
 		arrowleft,
@@ -55,6 +58,9 @@ public:
 		square_state     = square     | state,
 		box_state        = box        | state,
 		roundbox_state   = roundbox   | state,
+		roundbox_left_state   = roundbox_left   | state,
+		roundbox_middle_state = roundbox_middle | state,
+		roundbox_right_state  = roundbox_right  | state,
 		imagebox_state   = imagebox   | state,
 		sortarrow_state  = sortarrow  | state,
 		arrowright_state = arrowright | state,
@@ -115,7 +121,6 @@ public:
 	PIXVAL text_color;
 
 	bool pressed;
-	scr_coord_val text_offset_x;
 
 	button_t();
 

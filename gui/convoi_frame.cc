@@ -275,7 +275,7 @@ convoi_frame_t::convoi_frame_t(player_t* player) :
 
 	add_table(4,2);
 	{
-		new_component_span<gui_label_t>("cl_txt_sort", 2);
+		new_component_span<gui_label_t>("hl_txt_sort", 2);
 		new_component<gui_label_t>("cl_txt_mode");
 		filter_on.init(button_t::square, "cl_txt_filter");
 		filter_on.set_tooltip(translator::translate("cl_btn_filter_tooltip"));

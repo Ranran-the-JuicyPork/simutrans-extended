@@ -101,19 +101,20 @@ void halt_detail_t::init()
 
 	// route tab components
 	cont_route.set_table_layout(1,0);
-	cont_route.add_table(3, 1);
+	cont_route.add_table(4,1)->set_spacing(scr_size(0,0));
 	{
 		cont_route.set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(0, 0));
 
-		bt_by_station.init(button_t::roundbox_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
-		bt_by_category.init(button_t::roundbox_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_station.init(button_t::roundbox_left_state, "hd_btn_by_station", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
+		bt_by_category.init(button_t::roundbox_right_state, "hd_btn_by_category", scr_coord(0, 0), D_WIDE_BUTTON_SIZE);
 		bt_by_station.add_listener(this);
 		bt_by_category.add_listener(this);
 		bt_by_station.pressed = false;
 		bt_by_category.pressed = true;
+		cont_route.new_component<gui_fill_t>();
 		cont_route.add_component(&bt_by_station);
 		cont_route.add_component(&bt_by_category);
-		cont_route.new_component<gui_fill_t>();
+		cont_route.new_component<gui_margin_t>(D_MARGIN_RIGHT);
 	}
 	cont_route.end_table();
 	lb_serve_catg.init("lb_served_goods_and_classes", scr_coord(0, 0),

@@ -21,6 +21,9 @@
 // It places components in a horizontal line one by one as long as the frame is
 // wide enough. If a component would exceed the maximum right coordinate, then
 // the floating cursor wraps the component into a new "line".
+// NOTE: This is a method that hacks the old GUI engine and does not match the new GUI engine.
+// This function is currently only used by halt_info (still using the old GUI engine)
+// and will no longer be needed if we update it to the new GUI engine.
 class floating_cursor_t
 {
 	scr_coord cursor;
