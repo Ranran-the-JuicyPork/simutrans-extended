@@ -111,7 +111,7 @@ static char const* const spec_table_first_col_text[] =
 	"tilting_vehicle_equipment"
 };
 
-static KOORD_VAL spec_table_first_col_width = 75;
+static scr_coord_val spec_table_first_col_width = 75;
 
 
 // helper class
