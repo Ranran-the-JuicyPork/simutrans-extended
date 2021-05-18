@@ -703,7 +703,7 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	// content of spec table
 	cont_spec.set_margin(scr_size(1, D_V_SPACE), scr_size(1, 0));
 	cont_spec.set_table_layout(1,0);
-	cont_spec.add_table(3,0)->set_spacing(scr_size(0,0));
+	cont_spec.add_table(4,0)->set_spacing(scr_size(0,0));
 	{
 		cont_spec.new_component<gui_fill_t>();
 		bt_spec_table.pressed    = !spec_table.display_payload_table;
@@ -714,6 +714,7 @@ void convoi_detail_t::init(convoihandle_t cnv)
 		bt_payload_table.add_listener(this);
 		cont_spec.add_component(&bt_spec_table);
 		cont_spec.add_component(&bt_payload_table);
+		cont_spec.new_component<gui_margin_t>(D_MARGIN_RIGHT);
 	}
 	cont_spec.end_table();
 	cont_spec.add_component(&scroll_spec);
