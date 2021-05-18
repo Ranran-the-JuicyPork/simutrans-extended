@@ -38,6 +38,8 @@
 #define L_COL_ACCEL_FULL COL_ORANGE_RED
 #define L_COL_ACCEL_EMPTY COL_DODGER_BLUE
 
+sint16 convoi_detail_t::tabstate = -1;
+
 class convoy_t;
 
 static const uint8 physics_curves_color[MAX_PHYSICS_CURVES] =
@@ -474,6 +476,30 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	set_resizemode(diagonal_resize);
 }
 
+void convoi_detail_t::set_tab_opened()
+{
+	const scr_coord_val margin_above_tab = D_TITLEBAR_HEIGHT + tabs.get_pos().y;
+	scr_coord_val ideal_size_h = margin_above_tab + D_MARGIN_BOTTOM;
+	switch (tabstate)
+	{
+		case 0: // spec
+		default:
+			ideal_size_h += veh_info.get_size().h;
+			break;
+		case 1: // loaded detail
+			ideal_size_h += cont_payload.get_size().h;
+			break;
+		case 2: // maintenance
+			ideal_size_h += cont_maintenance.get_size().h + D_V_SPACE*2;
+			break;
+		case 3: // chart
+			ideal_size_h += container_chart.get_size().h + D_V_SPACE*2;
+			break;
+	}
+	if (get_windowsize().h != ideal_size_h) {
+		set_windowsize(scr_size(get_windowsize().w, min(display_get_height() - margin_above_tab, ideal_size_h)));
+	}
+}
 
 void convoi_detail_t::update_labels()
 {
@@ -533,7 +559,7 @@ void convoi_detail_t::update_labels()
 		lb_value.update();
 	}
 
-	set_min_windowsize(scr_size(max(D_DEFAULT_WIDTH, get_min_windowsize().w), D_TITLEBAR_HEIGHT + tabs.get_pos().y + D_TAB_HEADER_HEIGHT + D_MARGIN_TOP));
+	set_min_windowsize(scr_size(max(D_DEFAULT_WIDTH, get_min_windowsize().w), D_TITLEBAR_HEIGHT + tabs.get_pos().y + D_TAB_HEADER_HEIGHT));
 	resize(scr_coord(0, 0));
 }
 
@@ -720,6 +746,14 @@ bool convoi_detail_t::action_triggered(gui_action_creator_t *comp, value_t)
 		else if (comp == &display_detail_button) {
 			display_detail_button.pressed = !display_detail_button.pressed;
 			payload_info.set_show_detail(display_detail_button.pressed);
+			return true;
+		}
+		else if (comp == &tabs) {
+			const sint16 old_tab = tabstate;
+			tabstate = tabs.get_active_tab_index();
+			if (get_windowsize().h == get_min_windowsize().h || tabstate == old_tab) {
+				set_tab_opened();
+			}
 			return true;
 		}
 	}
