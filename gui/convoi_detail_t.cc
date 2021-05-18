@@ -708,8 +708,8 @@ void convoi_detail_t::init(convoihandle_t cnv)
 		cont_spec.new_component<gui_fill_t>();
 		bt_spec_table.pressed    = !spec_table.display_payload_table;
 		bt_payload_table.pressed =  spec_table.display_payload_table;
-		bt_spec_table.init(button_t::roundbox_state, "principal_spec", scr_coord(0, 0), D_BUTTON_SIZE);
-		bt_payload_table.init(button_t::roundbox_state, "payload_spec", scr_coord(0, 0), D_BUTTON_SIZE);
+		bt_spec_table.init(button_t::roundbox_left_state, "principal_spec", scr_coord(0,0), D_BUTTON_SIZE);
+		bt_payload_table.init(button_t::roundbox_right_state, "payload_spec", scr_coord(0,0), D_BUTTON_SIZE);
 		bt_spec_table.add_listener(this);
 		bt_payload_table.add_listener(this);
 		cont_spec.add_component(&bt_spec_table);
