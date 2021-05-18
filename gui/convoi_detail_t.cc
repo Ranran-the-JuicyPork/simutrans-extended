@@ -612,7 +612,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 						else {
 							lb->buf().append(car_number, 0);
 						}
-						lb->set_color(veh->has_available_upgrade(world()->get_current_month()) == 2 ? COL_UPGRADEABLE : color_idx_to_rgb(COL_GREY2));
+						lb->set_color(veh->has_available_upgrade(world()->get_current_month()) == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT);
 						break;
 					}
 					default:
