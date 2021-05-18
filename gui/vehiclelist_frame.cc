@@ -286,13 +286,13 @@ vehiclelist_frame_t::vehiclelist_frame_t() :
 	add_table(2,0);
 	{
 		// left column
-		add_table(1, 3);
+		add_table(1,3);
 		{
-			add_table(1, 2);
+			add_table(1,2);
 			{
 				new_component<gui_label_t>( "hl_txt_sort" );
 
-				add_table(4, 1);
+				add_table(3,1);
 				{
 					sort_by.clear_elements();
 					for(int i = 0; i < SORT_MODES; i++) {
@@ -304,17 +304,13 @@ vehiclelist_frame_t::vehiclelist_frame_t() :
 					sort_by.add_listener( this );
 					add_component( &sort_by );
 
-					sort_asc.init(button_t::arrowup_state, "");
-					sort_asc.set_tooltip(translator::translate("hl_btn_sort_asc"));
-					sort_asc.add_listener(this);
-					sort_asc.pressed = vehiclelist_stats_t::reverse;
-					add_component(&sort_asc);
+					// sort asc/desc switching button
+					sort_order.init(button_t::sortarrow_state, "");
+					sort_order.set_tooltip( translator::translate("hl_btn_sort_order") );
+					sort_order.add_listener( this );
+					sort_order.pressed = vehiclelist_stats_t::reverse;
+					add_component( &sort_order );
 
-					sort_desc.init(button_t::arrowdown_state, "");
-					sort_desc.set_tooltip(translator::translate("hl_btn_sort_desc"));
-					sort_desc.add_listener(this);
-					sort_desc.pressed = !vehiclelist_stats_t::reverse;
-					add_component(&sort_desc);
 					new_component<gui_margin_t>(LINESPACE);
 				}
 				end_table();
@@ -466,11 +462,10 @@ bool vehiclelist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v
 	else if(comp == &ware_filter) {
 		fill_list();
 	}
-	else if (comp == &sort_asc || comp == &sort_desc) {
+	else if (comp == &sort_order) {
 		vehiclelist_stats_t::reverse = !vehiclelist_stats_t::reverse;
 		scrolly.sort(0);
-		sort_asc.pressed = vehiclelist_stats_t::reverse;
-		sort_desc.pressed = !vehiclelist_stats_t::reverse;
+		sort_order.pressed = vehiclelist_stats_t::reverse;
 	}
 	else if(comp == &bt_obsolete) {
 		bt_obsolete.pressed ^= 1;

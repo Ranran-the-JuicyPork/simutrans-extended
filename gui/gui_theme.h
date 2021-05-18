@@ -298,6 +298,9 @@ public:
 	static stretch_map_t button_tiles[3];
 	static stretch_map_t button_color_tiles[2];
 	static stretch_map_t round_button_tiles[3];
+	static stretch_map_t round_button_left_tiles[3];
+	static stretch_map_t round_button_middle_tiles[3];
+	static stretch_map_t round_button_right_tiles[3];
 	static stretch_map_t h_scroll_back_tiles;
 	static stretch_map_t h_scroll_knob_tiles;
 	static stretch_map_t v_scroll_back_tiles;

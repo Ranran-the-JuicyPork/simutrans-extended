@@ -143,7 +143,7 @@ citylist_frame_t::citylist_frame_t() :
 		list.add_component(&filter_within_network);
 
 		// 2nd row
-		list.add_table(3, 1);
+		list.add_table(2,1);
 		{
 			for (int i = 0; i < citylist_stats_t::SORT_MODES; i++) {
 				sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
@@ -154,18 +154,12 @@ citylist_frame_t::citylist_frame_t() :
 			sortedby.add_listener(this);
 			list.add_component(&sortedby);
 
-			// sort ascend/descend button
-			sort_asc.init(button_t::arrowup_state, "");
-			sort_asc.set_tooltip(translator::translate("hl_btn_sort_asc"));
-			sort_asc.add_listener(this);
-			sort_asc.pressed = citylist_stats_t::sortreverse;
-			list.add_component(&sort_asc);
-
-			sort_desc.init(button_t::arrowdown_state, "");
-			sort_desc.set_tooltip(translator::translate("hl_btn_sort_desc"));
-			sort_desc.add_listener(this);
-			sort_desc.pressed = !(citylist_stats_t::sortreverse);
-			list.add_component(&sort_desc);
+			// sort ascend/descend switching button
+			sort_order.init(button_t::sortarrow_state, "");
+			sort_order.set_tooltip(translator::translate("hl_btn_sort_order"));
+			sort_order.add_listener(this);
+			sort_order.pressed = citylist_stats_t::sortreverse;
+			list.add_component(&sort_order);
 		}
 		list.end_table();
 
@@ -288,11 +282,10 @@ bool citylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		citylist_stats_t::region_filter = max(0, v.i);
 		fill_list();
 	}
-	else if (comp == &sort_asc || comp == &sort_desc) {
+	else if (comp == &sort_order) {
 		citylist_stats_t::sortreverse = !citylist_stats_t::sortreverse;
 		scrolly.sort(0);
-		sort_asc.pressed = citylist_stats_t::sortreverse;
-		sort_desc.pressed = !(citylist_stats_t::sortreverse);
+		sort_order.pressed = citylist_stats_t::sortreverse;
 	}
 	else if (comp == &filter_within_network) {
 		citylist_stats_t::filter_own_network = !citylist_stats_t::filter_own_network;

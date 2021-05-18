@@ -52,6 +52,9 @@ private:
 	static sort_mode_t sortby;
 	static bool filter_goods;
 
+	// 0:normal 1:produced by 2:consumed by
+	static uint8 display_mode;
+
 	char speed[6];
 	char distance_txt[6];
 	char comfort_txt[6];
@@ -61,13 +64,20 @@ private:
 	vector_tpl<const goods_desc_t*> good_list;
 
 	gui_combobox_t sortedby;
-	button_t sort_asc, sort_desc;
+	button_t sort_order;
+	button_t mode_switcher[3];
 
 	// replace button list with numberinput components for faster navigation
 	// @author: HeinBloed, April 2012
 	gui_numberinput_t distance_input, comfort_input, catering_input, speed_input, class_input;
 
 	gui_aligned_container_t *sort_row;
+
+	// expand/collapse things
+	gui_aligned_container_t input_container;
+	gui_label_t lb_collapsed;
+	button_t show_hide_input;
+	bool show_input = false;
 
 	button_t filter_goods_toggle;
 

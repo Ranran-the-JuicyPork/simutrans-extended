@@ -28,7 +28,7 @@ private:
 
 	gui_combobox_t	sortedby;
 	gui_combobox_t	freight_type_c;
-	button_t sort_asc, sort_desc;
+	button_t sort_asc;
 	button_t filter_within_network, btn_display_mode;
 	factorylist_stats_t stats;
 	gui_scrollpane_t scrolly;

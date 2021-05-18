@@ -40,7 +40,7 @@ labellist_frame_t::labellist_frame_t() :
 		add_component(&filter);
 
 		// 2nd row
-		add_table(3, 1);
+		add_table(2,1);
 		{
 			for (int i = 0; i < labellist::SORT_MODES; i++) {
 				sortedby.new_component<label_sort_item_t>(i);
@@ -51,18 +51,12 @@ labellist_frame_t::labellist_frame_t() :
 			sortedby.add_listener(this);
 			add_component(&sortedby);
 
-			// sort ascend/descend button
-			sort_asc.init(button_t::arrowup_state, "");
-			sort_asc.set_tooltip(translator::translate("hl_btn_sort_asc"));
-			sort_asc.add_listener(this);
-			sort_asc.pressed = labellist_stats_t::sortreverse;
-			add_component(&sort_asc);
-
-			sort_desc.init(button_t::arrowdown_state, "");
-			sort_desc.set_tooltip(translator::translate("hl_btn_sort_desc"));
-			sort_desc.add_listener(this);
-			sort_desc.pressed = !labellist_stats_t::sortreverse;
-			add_component(&sort_desc);
+			// sort asc/desc switching button
+			sort_order.init(button_t::sortarrow_state, "");
+			sort_order.set_tooltip(translator::translate("hl_btn_sort_order"));
+			sort_order.add_listener(this);
+			sort_order.pressed = labellist_stats_t::sortreverse;
+			add_component(&sort_order);
 		}
 		end_table();
 
@@ -145,11 +139,10 @@ bool labellist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		labellist_stats_t::region_filter = max(0, v.i);
 		fill_list();
 	}
-	else if (comp == &sort_asc || comp == &sort_desc) {
+	else if (comp == &sort_order) {
 		labellist_stats_t::sortreverse = !labellist_stats_t::sortreverse;
 		scrolly.sort(0);
-		sort_asc.pressed = labellist_stats_t::sortreverse;
-		sort_desc.pressed = !labellist_stats_t::sortreverse;
+		sort_order.pressed = labellist_stats_t::sortreverse;
 	}
 	else if (comp == &filter) {
 		labellist_stats_t::filter = !labellist_stats_t::filter;

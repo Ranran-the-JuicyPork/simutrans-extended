@@ -335,18 +335,13 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	livery_selector.add_listener(this);
 	add_component(&livery_selector);
 
-	// sort button
-	sort_asc.init(button_t::arrowup_state, "", scr_coord(BUTTON1_X + D_BUTTON_WIDTH * 1.5 + D_H_SPACE, (D_BUTTON_HEIGHT-D_ARROW_UP_HEIGHT)/2), D_ARROW_UP_SIZE);
-	sort_asc.set_tooltip(translator::translate("cl_btn_sort_asc"));
-	sort_asc.add_listener(this);
-	sort_asc.pressed = sortreverse;
-	cont_convoys.add_component(&sort_asc);
-
-	sort_desc.init(button_t::arrowdown_state, "", sort_asc.get_pos() + scr_coord(D_ARROW_UP_WIDTH+2, 0), D_ARROW_DOWN_SIZE);
-	sort_desc.set_tooltip(translator::translate("cl_btn_sort_desc"));
-	sort_desc.add_listener(this);
-	sort_desc.pressed = !sortreverse;
-	cont_convoys.add_component(&sort_desc);
+	// sort asc/desc switching button
+	sort_order.set_typ(button_t::sortarrow_state); // NOTE: This dialog is not yet auto-aligned, so we need to pre-set the typ to calculate the size
+	sort_order.init(button_t::sortarrow_state, "", scr_coord(BUTTON1_X + D_BUTTON_WIDTH * 1.5 + D_H_SPACE, 2), sort_order.get_min_size());
+	sort_order.set_tooltip(translator::translate("cl_btn_sort_order"));
+	sort_order.add_listener(this);
+	sort_order.pressed = sortreverse;
+	cont_convoys.add_component(&sort_order);
 
 	bt_mode_convois.init(button_t::roundbox, gui_convoy_formation_t::cnvlist_mode_button_texts[selected_cnvlist_mode[player->get_player_nr()]], scr_coord(BUTTON3_X, 2), scr_size(D_BUTTON_WIDTH+15, D_BUTTON_HEIGHT));
 	bt_mode_convois.add_listener(this);
@@ -517,11 +512,10 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 		default_sortmode = (uint8)tmp;
 		update_lineinfo(line);
 	}
-	else if (comp == &sort_asc || comp == &sort_desc) {
+	else if (comp == &sort_order) {
 		set_reverse(!get_reverse());
 		update_lineinfo(line);
-		sort_asc.pressed = sortreverse;
-		sort_desc.pressed = !sortreverse;
+		sort_order.pressed = sortreverse;
 	}
 	else if (comp == &bt_mode_convois) {
 		selected_cnvlist_mode[player->get_player_nr()] = (selected_cnvlist_mode[player->get_player_nr()] + 1) % gui_convoy_formation_t::CONVOY_OVERVIEW_MODES;

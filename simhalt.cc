@@ -4719,51 +4719,55 @@ void haltestelle_t::finish_rd(bool need_recheck_for_walking_distance)
 		}
 	}
 
-	// what kind of station here?
-	recalc_station_type();
-
 	// handle name for old stations which don't exist in kartenboden
+	// also recover from stations without tiles (from broken savegames)
 	grund_t* bd = welt->lookup(get_basis_pos3d());
-	if(bd!=NULL  &&  !bd->get_flag(grund_t::has_text) ) {
-		// restore label and bridges
-		grund_t* bd_old = welt->lookup_kartenboden(get_basis_pos());
-		if(bd_old) {
-			// transfer name (if there)
-			const char *name = bd->get_text();
-			if(name) {
-				set_name( name );
-				bd_old->set_text( NULL );
-			}
-			else {
-				set_name( "Unknown" );
+	if(bd!=NULL) {
+
+		// what kind of station here?
+		recalc_station_type();
+
+		if(  !bd->get_flag(grund_t::has_text)  ) {
+			// restore label and bridges
+			grund_t* bd_old = welt->lookup_kartenboden(get_basis_pos());
+			if(bd_old) {
+				// transfer name (if there)
+				const char *name = bd->get_text();
+				if(name) {
+					set_name( name );
+					bd_old->set_text( NULL );
+				}
+				else {
+					set_name( "Unknown" );
+				}
 			}
 		}
-	}
-	else {
-		const char *current_name = bd ? bd->get_text() : translator::translate("Invalid stop");
-		if(  all_names.get(current_name).is_bound()  &&  fabrik_t::get_fab(get_basis_pos())==NULL  ) {
-			// try to get a new name ...
-			const char *new_name;
-			if(  station_type & airstop  ) {
-				new_name = create_name( get_basis_pos(), "Airport" );
+		else {
+			const char *current_name = bd ? bd->get_text() : translator::translate("Invalid stop");
+			if(  all_names.get(current_name).is_bound()  &&  fabrik_t::get_fab(get_basis_pos())==NULL  ) {
+				// try to get a new name ...
+				const char *new_name;
+				if(  station_type & airstop  ) {
+					new_name = create_name( get_basis_pos(), "Airport" );
+				}
+				else if(  station_type & dock  ) {
+					new_name = create_name( get_basis_pos(), "Dock" );
+				}
+				else if(  station_type & (railstation|monorailstop|maglevstop|narrowgaugestop)  ) {
+					new_name = create_name( get_basis_pos(), "BF" );
+				}
+				else {
+					new_name = create_name( get_basis_pos(), "H" );
+				}
+				dbg->warning("haltestelle_t::set_name()","name already used: \'%s\' -> \'%s\'", current_name, new_name );
+				if(bd)
+				{
+					bd->set_text( new_name );
+				}
+				current_name = new_name;
 			}
-			else if(  station_type & dock  ) {
-				new_name = create_name( get_basis_pos(), "Dock" );
-			}
-			else if(  station_type & (railstation|monorailstop|maglevstop|narrowgaugestop)  ) {
-				new_name = create_name( get_basis_pos(), "BF" );
-			}
-			else {
-				new_name = create_name( get_basis_pos(), "H" );
-			}
-			dbg->warning("haltestelle_t::set_name()","name already used: \'%s\' -> \'%s\'", current_name, new_name );
-			if(bd)
-			{
-				bd->set_text( new_name );
-			}
-			current_name = new_name;
+			all_names.set( current_name, self );
 		}
-		all_names.set( current_name, self );
 	}
 
 	convoihandle_t convoy;

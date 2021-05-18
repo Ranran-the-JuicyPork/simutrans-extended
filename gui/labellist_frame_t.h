@@ -20,7 +20,7 @@ class labellist_frame_t : public gui_frame_t, private action_listener_t
 {
 private:
 	gui_combobox_t	sortedby, region_selector;
-	button_t sort_asc, sort_desc;
+	button_t sort_order;
 	button_t filter;
 
 	gui_scrolled_list_t scrolly;

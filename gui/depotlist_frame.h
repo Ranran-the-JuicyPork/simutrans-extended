@@ -24,7 +24,7 @@ class depotlist_frame_t : public gui_frame_t, private action_listener_t
 {
 private:
 	gui_combobox_t sortedby;
-	button_t sort_asc, sort_desc;
+	button_t sort_order;
 	gui_scrolled_list_t scrolly;
 
 	button_t filter_buttons[MAX_DEPOT_TYPES];

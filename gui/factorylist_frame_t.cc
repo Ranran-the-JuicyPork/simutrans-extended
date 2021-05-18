@@ -54,7 +54,7 @@ factorylist_frame_t::factorylist_frame_t() :
 		filter_within_network.pressed = filter_own_network;
 		add_component(&filter_within_network); // (1,2)
 
-		add_table(4, 1);
+		add_table(3,1);
 		{
 			for (int i = 0; i < factorylist::SORT_MODES; i++) {
 				sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
@@ -65,19 +65,14 @@ factorylist_frame_t::factorylist_frame_t() :
 			sortedby.add_listener(this);
 			add_component(&sortedby); // (2,1,1)
 
-			// sort ascend/descend button
-			sort_asc.init(button_t::arrowup_state, "");
+			// sort asc/desc switching button
+			sort_asc.init(button_t::sortarrow_state, "");
 			sort_asc.set_tooltip(translator::translate("hl_btn_sort_asc"));
 			sort_asc.add_listener(this);
 			sort_asc.pressed = sortreverse;
 			add_component(&sort_asc); // (2,1,2)
 
-			sort_desc.init(button_t::arrowdown_state, "");
-			sort_desc.set_tooltip(translator::translate("hl_btn_sort_desc"));
-			sort_desc.add_listener(this);
-			sort_desc.pressed = !sortreverse;
-			add_component(&sort_desc); // (2,1,3)
-			new_component<gui_margin_t>(LINESPACE); // (2,1,4)
+			new_component<gui_margin_t>(LINESPACE); // (2,1,3)
 		}
 		end_table(); // (2,1)
 
@@ -148,11 +143,10 @@ bool factorylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t /
 		default_sortmode = (uint8)tmp;
 		display_list();
 	}
-	else if (comp == &sort_asc || comp == &sort_desc) {
+	else if (comp == &sort_asc) {
 		set_reverse(!get_reverse());
 		display_list();
 		sort_asc.pressed = sortreverse;
-		sort_desc.pressed = !sortreverse;
 	}
 	else if (comp == &filter_within_network) {
 		filter_own_network = !filter_own_network;

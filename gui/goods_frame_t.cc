@@ -51,6 +51,7 @@ uint16 goods_frame_t::distance = 1;
 uint8 goods_frame_t::comfort = 50;
 uint8 goods_frame_t::catering_level = 0;
 uint8 goods_frame_t::g_class = 0;
+uint8 goods_frame_t::display_mode = 0;
 
 const char *goods_frame_t::sort_text[SORT_MODES] = {
 	"gl_btn_unsort",
@@ -74,11 +75,20 @@ goods_frame_t::goods_frame_t() :
 {
 	set_table_layout(1, 0);
 
-	add_table(2, 5);
+	add_table(3,1)->set_alignment(ALIGN_TOP);
 	{
+		show_hide_input.init(button_t::roundbox, "+");
+		show_hide_input.set_width(display_get_char_width('+') + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x);
+		show_hide_input.add_listener(this);
+		add_component(&show_hide_input);
+
+		lb_collapsed.set_text("Open the fare calculation input field");
+		add_component(&lb_collapsed);
+
 		speed[0] = 0;
 
-		new_component<gui_label_t>("distance");
+		input_container.set_table_layout(2,5);
+		input_container.new_component<gui_label_t>("distance");
 
 		distance_txt[0] = 0;
 		comfort_txt[0] = 0;
@@ -90,43 +100,73 @@ goods_frame_t::goods_frame_t() :
 		distance_input.set_value( distance );
 		distance_input.wrap_mode( false );
 		distance_input.add_listener( this );
-		add_component(&distance_input);
+		input_container.add_component(&distance_input);
 
-		new_component<gui_label_t>("Comfort");
+		input_container.new_component<gui_label_t>("Comfort");
 		comfort_input.set_limits( 1, 255 );
 		comfort_input.set_value( comfort );
 		comfort_input.wrap_mode( false );
 		comfort_input.add_listener( this );
-		add_component(&comfort_input);
+		input_container.add_component(&comfort_input);
 
-		new_component<gui_label_t>("Catering level");
+		input_container.new_component<gui_label_t>("Catering level");
 		catering_input.set_limits( 0, 5 );
 		catering_input.set_value( catering_level );
 		catering_input.wrap_mode( false );
 		catering_input.add_listener( this );
-		add_component(&catering_input);
+		input_container.add_component(&catering_input);
 
-		new_component<gui_label_t>("Average speed");
+		input_container.new_component<gui_label_t>("Average speed");
 		speed_input.set_limits(19, 9999);
 		speed_input.set_value(vehicle_speed);
 		speed_input.wrap_mode(false);
 		speed_input.add_listener(this);
-		add_component(&speed_input);
+		input_container.add_component(&speed_input);
 
-		new_component<gui_label_t>("Class");
+		input_container.new_component<gui_label_t>("Class");
 		class_input.set_limits(0, max(goods_manager_t::passengers->get_number_of_classes() - 1, goods_manager_t::mail->get_number_of_classes() - 1)); // TODO: Extrapolate this to show the class names as well as just the number
 		class_input.set_value(g_class);
 		class_input.wrap_mode(false);
 		class_input.add_listener(this);
-		add_component(&class_input);
+		input_container.add_component(&class_input);
+
+		input_container.set_visible(false);
+
+		add_component(&input_container);
 	}
 	end_table();
 
-	new_component<gui_label_t>("hl_txt_sort");
-
 	// sort mode
-	sort_row = add_table(5, 1);
+	sort_row = add_table(4,2);
 	{
+		new_component_span<gui_label_t>("hl_txt_sort", 3);
+		add_table(3,1)->set_spacing(scr_size(0,0));
+		{
+			mode_switcher[0].init(button_t::roundbox_left_state, "gl_normal");
+			mode_switcher[1].init(button_t::roundbox_middle_state, NULL);
+			mode_switcher[2].init(button_t::roundbox_right_state, NULL);
+			if (skinverwaltung_t::input_output) {
+				mode_switcher[1].set_image(skinverwaltung_t::input_output->get_image_id(1));
+				mode_switcher[2].set_image(skinverwaltung_t::input_output->get_image_id(0));
+			}
+			else {
+				mode_switcher[1].set_text("gl_prod");
+				mode_switcher[2].set_text("gl_con");
+			}
+			//mode_switcher[1].set_size( scr_size(30, D_BUTTON_HEIGHT) );
+			mode_switcher[1].set_tooltip("Show producers");
+			mode_switcher[2].set_tooltip("Show consumers");
+
+			for (uint8 i = 0; i < 3; i++) {
+				mode_switcher[i].pressed = display_mode==i;
+				mode_switcher[i].set_width(D_BUTTON_WIDTH/2);
+				mode_switcher[i].add_listener(this);
+				add_component(&mode_switcher[i]);
+			}
+		}
+		end_table();
+
+		// 2nd row
 		for (int i = 0; i < SORT_MODES; i++) {
 			sortedby.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(sort_text[i]), SYSCOL_TEXT);
 		}
@@ -134,27 +174,22 @@ goods_frame_t::goods_frame_t() :
 		sortedby.set_width_fixed(true);
 		sortedby.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
 		sortedby.add_listener(this);
-		add_component(&sortedby); // (1,1)
+		add_component(&sortedby); // (1,2)
 
-		// sort ascend/descend button
-		sort_asc.init(button_t::arrowup_state, "");
-		sort_asc.set_tooltip(translator::translate("hl_btn_sort_asc"));
-		sort_asc.add_listener(this);
-		sort_asc.pressed = sortreverse;
-		add_component(&sort_asc); // (2,1)
+		// sort asc/desc switching button
+		sort_order.init(button_t::sortarrow_state, "");
+		sort_order.set_tooltip(translator::translate("hl_btn_sort_order")); // UI TODO: Change translation
+		sort_order.add_listener(this);
+		sort_order.pressed = sortreverse;
+		add_component(&sort_order); // (2,2)
 
-		sort_desc.init(button_t::arrowdown_state, "");
-		sort_desc.set_tooltip(translator::translate("hl_btn_sort_desc"));
-		sort_desc.add_listener(this);
-		sort_desc.pressed = !sortreverse;
-		add_component(&sort_desc); // (3,1)
-		new_component<gui_margin_t>(LINESPACE); // (4,1)
+		new_component<gui_margin_t>(LINESPACE); // (3,2)
 
 		filter_goods_toggle.init(button_t::square_state, "Show only used");
 		filter_goods_toggle.set_tooltip(translator::translate("Only show goods which are currently handled by factories"));
 		filter_goods_toggle.add_listener(this);
 		filter_goods_toggle.pressed = filter_goods;
-		add_component(&filter_goods_toggle); // (5,1)
+		add_component(&filter_goods_toggle); // (4,2)
 	}
 	end_table();
 
@@ -221,7 +256,7 @@ void goods_frame_t::sort_list()
 		}
 	}
 
-	goods_stats.update_goodslist(good_list, vehicle_speed, goods_frame_t::distance_meters, goods_frame_t::comfort, goods_frame_t::catering_level, g_class);
+	goods_stats.update_goodslist(good_list, vehicle_speed, goods_frame_t::distance_meters, goods_frame_t::comfort, goods_frame_t::catering_level, g_class, goods_frame_t::display_mode);
 }
 
 
@@ -245,12 +280,19 @@ bool goods_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		default_sortmode = (uint8)tmp;
 		sort_list();
 	}
-	else if (comp == &sort_asc || comp == &sort_desc) {
+	else if (comp == &sort_order) {
 		// order
 		sortreverse ^= 1;
 		sort_list();
-		sort_asc.pressed = sortreverse;
-		sort_desc.pressed = !sortreverse;
+		sort_order.pressed = sortreverse;
+	}
+	else if (comp == &mode_switcher[0] || comp == &mode_switcher[1] || comp == &mode_switcher[2]) {
+		// switch the list display mode
+		display_mode = comp==&mode_switcher[0] ? 0 : comp==&mode_switcher[1] ? 1 : 2;
+		for (uint8 i=0; i<3; i++) {
+			mode_switcher[i].pressed = i==display_mode;
+		}
+		sort_list();
 	}
 	else if (comp == &speed_input) {
 		vehicle_speed = v.i;
@@ -277,6 +319,14 @@ bool goods_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		filter_goods = !filter_goods;
 		filter_goods_toggle.pressed = filter_goods;
 		sort_list();
+	}
+	else if (comp == &show_hide_input) {
+		show_input = !show_input;
+		show_hide_input.set_text(show_input ? "-" : "+");
+		show_hide_input.pressed = show_input;
+		input_container.set_visible(show_input);
+		lb_collapsed.set_visible(!show_input);
+		reset_min_windowsize();
 	}
 
 	return true;
@@ -305,7 +355,7 @@ void goods_frame_t::rdwr(loadsave_t *file)
 	file->rdwr_byte(catering_level);
 	file->rdwr_long(vehicle_speed);
 	file->rdwr_byte(g_class);
-	file->rdwr_bool(sort_asc.pressed);
+	file->rdwr_bool(sort_order.pressed);
 	file->rdwr_bool(filter_goods_toggle.pressed);
 	uint8 s = default_sortmode;
 	file->rdwr_byte(s);
@@ -315,8 +365,7 @@ void goods_frame_t::rdwr(loadsave_t *file)
 	if (file->is_loading()) {
 		sortedby.set_selection(s);
 		sortby = (sort_mode_t)b;
-		sortreverse = sort_asc.pressed;
-		sort_desc.pressed = !sort_asc.pressed;
+		sortreverse = sort_order.pressed;
 		sort_list();
 		distance_input.set_value(distance);
 		comfort_input.set_value(comfort);

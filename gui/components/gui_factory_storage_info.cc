@@ -626,3 +626,65 @@ void gui_factory_nearby_halt_info_t::draw(scr_coord offset)
 		set_size(size);
 	}
 }
+
+
+void gui_goods_handled_factory_t::build_factory_list(const goods_desc_t *ware)
+{
+	factory_list.clear();
+	FOR(vector_tpl<fabrik_t*>, const f, world()->get_fab_list()) {
+		if (show_consumer) {
+			// consume(accept) this?
+			if(f->get_desc()->get_accepts_these_goods(ware)) {
+				factory_list.append_unique(f->get_desc());
+			}
+		}
+		else {
+			// produce this?
+			FOR(array_tpl<ware_production_t>, const& product, f->get_output()) {
+				if (product.get_typ() == ware) {
+					factory_list.append_unique(f->get_desc());
+					break; // found
+				}
+			}
+		}
+	}
+}
+
+void gui_goods_handled_factory_t::draw(scr_coord offset)
+{
+	offset += pos;
+	scr_coord_val xoff = 0;
+	if (factory_list.get_count() > 0) {
+		// if pakset has symbol, show symbol
+		if (skinverwaltung_t::input_output){
+			display_color_img(skinverwaltung_t::input_output->get_image_id(show_consumer ? 0:1), offset.x, offset.y + FIXED_SYMBOL_YOFF, 0, false, false);
+			xoff += 14;
+		}
+
+		uint n = 0;
+		FORX(vector_tpl<const factory_desc_t*>, f, factory_list, n++) {
+			bool is_retired=false;
+			if (world()->use_timeline()){
+				if (f->get_building()->get_intro_year_month() > world()->get_timeline_year_month()) {
+					// is future
+					continue;
+				}
+				if (f->get_building()->get_retire_year_month() < world()->get_timeline_year_month()) {
+					is_retired = true;
+				}
+			}
+			if (n) {
+				xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, ", ", ALIGN_LEFT, SYSCOL_TEXT, true);
+			}
+			buf.clear();
+			buf.printf("%s", translator::translate(f->get_name()));
+			xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, buf, ALIGN_LEFT, is_retired ? SYSCOL_OUT_OF_PRODUCTION : SYSCOL_TEXT, true);
+		}
+
+	}
+	else {
+		xoff += display_proportional_clip_rgb(offset.x + xoff, offset.y, "-", ALIGN_LEFT, COL_INACTIVE, true);
+	}
+
+	set_size(scr_size(xoff + D_H_SPACE * 2, D_LABEL_HEIGHT));
+}

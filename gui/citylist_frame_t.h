@@ -36,8 +36,8 @@ class citylist_frame_t : public gui_frame_t, private action_listener_t
 	static const uint8 hist_type_type[karte_t::MAX_WORLD_COST];
 
 	gui_combobox_t sortedby, region_selector;
-	button_t sort_asc, sort_desc;
-	button_t	filter_within_network;
+	button_t sort_order;
+	button_t filter_within_network;
 
 	gui_scrolled_list_t scrolly;
 

@@ -33,7 +33,7 @@ public:
 
 	// update list and resize
 	//void update_goodslist(uint16 *g, uint32 vehicle_speed, int listd_goods, uint32 distance, uint8 comfort, uint8 catering, uint8 g_class);
-	void update_goodslist(vector_tpl<const goods_desc_t*>, uint32 vehicle_speed, /*int listd_goods,*/ uint32 distance, uint8 comfort, uint8 catering, uint8 g_class);
+	void update_goodslist(vector_tpl<const goods_desc_t*>, uint32 vehicle_speed, /*int listd_goods,*/ uint32 distance, uint8 comfort, uint8 catering, uint8 g_class, uint8 display_mode);
 };
 
 #endif

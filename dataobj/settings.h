@@ -793,7 +793,16 @@ public:
 	void copy_city_road(settings_t const& other);
 
 	// init from this file ...
-	void parse_simuconf( tabfile_t &simuconf, sint16 &disp_width, sint16 &disp_height, sint16 &fullscreen, std::string &objfilename );
+	void parse_simuconf(tabfile_t& simuconf, sint16& disp_width, sint16& disp_height, bool& fullscreen, std::string& objfilename);
+
+	// init without screen parameters ...
+	void parse_simuconf(tabfile_t& simuconf) {
+		sint16 idummy = 0;
+		bool bdummy = false;
+		std::string sdummy;
+
+		parse_simuconf(simuconf, idummy, idummy, bdummy, sdummy);
+	}
 
 	void parse_colours(tabfile_t& simuconf);
 
@@ -831,7 +840,7 @@ public:
 	sint8 get_maximumheight() const { return world_maximum_height; }
 	sint8 get_minimumheight() const { return world_minimum_height; }
 
-	sint16 get_groundwater() const {return groundwater;}
+	sint8 get_groundwater() const {return (sint8)groundwater;}
 
 	double get_max_mountain_height() const {return max_mountain_height;}
 
