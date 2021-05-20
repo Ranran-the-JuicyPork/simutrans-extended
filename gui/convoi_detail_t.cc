@@ -591,11 +591,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 			// Whether the cell component is in buf text format or not?
 			if (i == SPECS_ROLE) {
 				const uint16 month_now = world()->get_timeline_year_month();
-				PIXVAL veh_bar_color = (veh->is_future(month_now) || veh->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
-				if (veh->is_obsolete( month_now )) {
-					veh_bar_color = COL_OBSOLETE;
-				}
-
+				const PIXVAL veh_bar_color = veh->is_obsolete(month_now) ? COL_OBSOLETE : (veh->is_future(month_now) || veh->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
 				new_component<gui_vehicle_bar_t>(veh_bar_color, scr_size(D_LABEL_HEIGHT*4, D_LABEL_HEIGHT-2))->set_flags(veh->get_basic_constraint_prev(reversed), veh->get_basic_constraint_next(reversed), veh->get_interactivity());
 			}
 			else {
@@ -910,6 +906,9 @@ void convoi_detail_t::set_tab_opened()
 			break;
 		case 3: // chart
 			ideal_size_h += container_chart.get_size().h + D_V_SPACE*2;
+			break;
+		case 4: // spec table
+			ideal_size_h += cont_spec.get_size().h + D_V_SPACE*2;
 			break;
 	}
 	if (get_windowsize().h != ideal_size_h) {
