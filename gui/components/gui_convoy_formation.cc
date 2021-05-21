@@ -23,9 +23,10 @@ const char *gui_convoy_formation_t::cnvlist_mode_button_texts[CONVOY_OVERVIEW_MO
 
 
 // component for vehicle display
-gui_convoy_formation_t::gui_convoy_formation_t(convoihandle_t cnv)
+gui_convoy_formation_t::gui_convoy_formation_t(convoihandle_t cnv, bool show_car_number_on_image)
 {
 	this->cnv = cnv;
+	this->show_car_number_on_image = show_car_number_on_image;
 }
 
 void gui_convoy_formation_t::draw(scr_coord offset)
@@ -143,20 +144,32 @@ scr_size gui_convoy_formation_t::draw_formation(scr_coord offset) const
 
 scr_size gui_convoy_formation_t::draw_vehicles(scr_coord offset, bool display_images) const
 {
+	cbuffer_t buf;
 	scr_coord p = offset + get_pos();
 	p.y += get_size().h/2;
+
 	// we will use their images offsets and width to shift them to their correct position
 	// this should work with any vehicle size ...
-	scr_size s(D_H_SPACE*2, D_V_SPACE*2);
-	for(unsigned i=0; i<cnv->get_vehicle_count();i++) {
-		scr_coord_val x, y, w, h;
+	scr_size s(D_H_SPACE*2, D_BUTTON_HEIGHT);
+	for(uint8 i=0; i<cnv->get_vehicle_count(); i++) {
+		scr_coord_val x, y, w, h, ypos;
 		const image_id image = cnv->get_vehicle(i)->get_loaded_image();
 		display_get_base_image_offset(image, &x, &y, &w, &h );
+		ypos = show_car_number_on_image ? p.y - y - h/2 + LINEASCENT-3 : p.y - y - h/2;
 		if (display_images) {
-			display_base_img(image, p.x + s.w - x, p.y - y - h/2, cnv->get_owner()->get_player_nr(), false, true);
+			display_base_img(image, p.x + s.w - x, ypos, cnv->get_owner()->get_player_nr(), false, true);
 		}
-		s.w += (w*2)/3;
-		s.h = max(s.h, h);
+		if (show_car_number_on_image) {
+			buf.clear();
+			buf.printf("%s%d", cnv->get_car_numbering(i) < 0 ? translator::translate("LOCO_SYM") : "", abs(cnv->get_car_numbering(i)));
+			const scr_coord_val label_width = display_proportional_clip_rgb(offset.x + s.w+3, offset.y, buf, ALIGN_LEFT, SYSCOL_TEXT_HIGHLIGHT, true);
+			s.w += max(label_width+D_H_SPACE*2, (w*2)/3);
+			s.h = max(s.h, h + LINESPACE + D_V_SPACE);
+		}
+		else {
+			s.w += (w*2)/3;
+			s.h = max(s.h, h + D_V_SPACE);
+		}
 	}
 	return s;
 }

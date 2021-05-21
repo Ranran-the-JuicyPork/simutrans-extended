@@ -636,7 +636,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 // main class
 convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	gui_frame_t(""),
-	formation(cnv),
+	formation(cnv, true),
 	veh_info(cnv),
 	payload_info(cnv),
 	maintenance(cnv),
