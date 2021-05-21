@@ -12,17 +12,19 @@
  */
 
 #include "gui_frame.h"
+#include "simwin.h"
 #include "components/gui_container.h"
 #include "components/gui_scrollpane.h"
 #include "components/gui_textarea.h"
 #include "components/gui_textinput.h"
 #include "components/gui_speedbar.h"
 #include "components/gui_button.h"
-#include "components/gui_label.h"                  // 09-Dec-2001      Markus Weber    Added
+#include "components/gui_label.h"
 #include "components/gui_combobox.h"
 #include "components/action_listener.h"
 #include "../convoihandle_t.h"
-#include "../gui/simwin.h"
+
+#include "../vehicle/simvehicle.h"
 
 class scr_coord;
 
@@ -149,4 +151,19 @@ public:
 	~vehicle_class_manager_t();
 };
 
+
+
+class gui_cabin_fare_changer_t : public gui_aligned_container_t, private action_listener_t
+{
+	vehicle_t *vehicle;
+	uint8 cabin_class;
+
+	button_t buttons[5];
+	char *class_name_untranslated[5];
+
+public:
+	gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_class);
+	void draw(scr_coord offset) OVERRIDE;
+	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+};
 #endif

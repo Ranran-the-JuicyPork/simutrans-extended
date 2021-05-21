@@ -13,7 +13,6 @@
 
 #include "../simunits.h"
 #include "../simconvoi.h"
-#include "../vehicle/simvehicle.h"
 #include "../simcolor.h"
 #include "../display/simgraph.h"
 #include "../simworld.h"
@@ -22,7 +21,6 @@
 #include "../dataobj/schedule.h"
 #include "../dataobj/translator.h"
 #include "../dataobj/loadsave.h"
-// @author hsiegeln
 #include "../simline.h"
 #include "../simmenu.h"
 #include "messagebox.h"
@@ -1064,4 +1062,68 @@ void gui_class_vehicleinfo_t::draw(scr_coord offset)
 //{
 //	return false;
 //}
+
+
+
+gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_class)
+{
+	vehicle = v;
+	cabin_class = original_class;
+	const vehicle_desc_t *desc = vehicle->get_desc();
+
+	set_table_layout(1,0);
+	set_alignment(ALIGN_LEFT | ALIGN_TOP);
+	{
+		const uint8 g_classes = vehicle->get_cargo_type()->get_number_of_classes();
+		const bool is_passenger_vehicle = vehicle->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS;
+
+		add_table(g_classes+1,1)->set_spacing(scr_size(0,0));
+		{
+
+			for (uint8 cx = 0; cx<g_classes; cx++) {
+				char *class_name = new char[32]();
+				if (is_passenger_vehicle) {
+					sprintf(class_name, "p_class[%u]", cx);
+				}
+				else if (vehicle->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_MAIL) {
+					sprintf(class_name, "m_class[%u]", cx);
+				}
+				class_name_untranslated[cx] = class_name;
+
+				char *button_text = new char[32]();
+				sprintf(button_text, "%s%s", cabin_class == cx ? "*": "", translator::translate(class_name_untranslated[cx]));
+
+				buttons[cx].init(cx==0 ? button_t::roundbox_left_state : cx==g_classes-1 ? button_t::roundbox_right_state : button_t::roundbox_middle_state, button_text);
+				if (vehicle->get_reassigned_class(cabin_class) == cx) {
+					buttons[cx].pressed = true;
+				}
+				buttons[cx].set_width( scr_coord_val(D_BUTTON_WIDTH*0.8) );
+				buttons[cx].add_listener(this);
+				add_component(&buttons[cx]);
+			}
+			new_component<gui_fill_t>();
+		}
+		end_table();
+	}
+}
+
+void gui_cabin_fare_changer_t::draw(scr_coord offset)
+{
+	set_size(get_size());
+	gui_aligned_container_t::draw(offset);
+}
+
+bool gui_cabin_fare_changer_t::action_triggered(gui_action_creator_t *comp, value_t)
+{
+	for (uint8 i = 0; i<vehicle->get_cargo_type()->get_number_of_classes(); i++) {
+		if (&buttons[i]==comp) {
+			vehicle->set_class_reassignment(cabin_class, i);
+			buttons[i].pressed=true;
+		}
+		else {
+			buttons[i].pressed=false;
+		}
+	}
+	return false;
+}
 
