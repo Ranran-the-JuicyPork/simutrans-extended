@@ -116,7 +116,7 @@ scr_size gui_convoy_formation_t::draw_formation(scr_coord offset) const
 			buf.append(car_number);
 		}
 
-		int left = display_proportional_clip_rgb(offset.x + 2, offset.y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
+		scr_coord_val left = display_proportional_clip_rgb(offset.x + 2, offset.y, buf, ALIGN_LEFT, v->get_desc()->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 #ifdef DEBUG
 		if (v->is_reversed()) {
 			display_proportional_clip_rgb(offset.x + 2 + left, offset.y - 2, "*", ALIGN_LEFT, COL_CAUTION, true);
@@ -162,7 +162,7 @@ scr_size gui_convoy_formation_t::draw_vehicles(scr_coord offset, bool display_im
 		if (show_car_number_on_image) {
 			buf.clear();
 			buf.printf("%s%d", cnv->get_car_numbering(i) < 0 ? translator::translate("LOCO_SYM") : "", abs(cnv->get_car_numbering(i)));
-			const scr_coord_val label_width = display_proportional_clip_rgb(offset.x + s.w+3, offset.y, buf, ALIGN_LEFT, SYSCOL_TEXT_HIGHLIGHT, true);
+			const scr_coord_val label_width = display_proportional_clip_rgb(offset.x + s.w+3, offset.y, buf, ALIGN_LEFT, cnv->get_vehicle(i)->get_desc()->has_available_upgrade(world()->get_timeline_year_month()) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
 			s.w += max(label_width+D_H_SPACE*2, (w*2)/3);
 			s.h = max(s.h, h + LINESPACE + D_V_SPACE);
 		}
