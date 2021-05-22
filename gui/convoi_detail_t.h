@@ -73,27 +73,6 @@ public:
 	void draw(scr_coord offset) OVERRIDE;
 };
 
-/**
- * One element of the vehicle list display
- */
-class gui_vehicleinfo_t : public gui_container_t
-{
-private:
-	convoihandle_t cnv;
-
-	gui_combobox_t class_selector;
-
-	slist_tpl<gui_combobox_t *> class_selectors;
-
-	vector_tpl<uint16> class_indices;
-
-public:
-	gui_vehicleinfo_t(convoihandle_t cnv);
-
-	void set_cnv( convoihandle_t c ) { cnv = c; }
-
-	void draw(scr_coord offset);
-};
 
 // content of payload info tab
 class gui_convoy_payload_info_t : public gui_container_t
@@ -204,7 +183,6 @@ private:
 
 	convoihandle_t cnv;
 
-	gui_vehicleinfo_t veh_info;
 	gui_convoy_formation_t formation;
 	gui_convoy_payload_info_t payload_info;
 	gui_convoy_maintenance_info_t maintenance;
@@ -213,7 +191,6 @@ private:
 	gui_chart_t accel_chart, force_chart;
 
 	gui_scrollpane_t scrolly_formation;
-	gui_scrollpane_t scrolly;
 	gui_scrollpane_t scrolly_payload_info;
 	gui_scrollpane_t scrolly_maintenance;
 	gui_scrollpane_t scroll_spec;

@@ -637,12 +637,10 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	gui_frame_t(""),
 	formation(cnv, true),
-	veh_info(cnv),
 	payload_info(cnv),
 	maintenance(cnv),
 	spec_table(cnv),
 	scrolly_formation(&formation),
-	scrolly(&veh_info),
 	scrolly_payload_info(&payload_info),
 	scrolly_maintenance(&maintenance),
 	scroll_spec(&spec_table)
@@ -718,9 +716,8 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	scroll_spec.set_show_scroll_y(true);
 
 	add_component(&tabs);
-	tabs.add_tab(&scrolly, translator::translate("cd_spec_tab"));
-	tabs.add_tab(&cont_payload, translator::translate("cd_payload_tab"));
 	tabs.add_tab(&cont_maintenance,  translator::translate("cd_maintenance_tab"));
+	tabs.add_tab(&cont_payload, translator::translate("cd_payload_tab"));
 	tabs.add_tab(&container_chart, translator::translate("cd_physics_tab"));
 	tabs.add_tab(&cont_spec, translator::translate("cd_spec_table"));
 	tabs.add_listener(this);
@@ -894,20 +891,17 @@ void convoi_detail_t::set_tab_opened()
 	scr_coord_val ideal_size_h = margin_above_tab + D_MARGIN_BOTTOM;
 	switch (tabstate)
 	{
-		case 0: // spec
+		case 0: // maintenance
 		default:
-			ideal_size_h += veh_info.get_size().h;
+			ideal_size_h += cont_maintenance.get_size().h + D_V_SPACE * 2;
 			break;
 		case 1: // loaded detail
 			ideal_size_h += cont_payload.get_size().h;
 			break;
-		case 2: // maintenance
-			ideal_size_h += cont_maintenance.get_size().h + D_V_SPACE*2;
-			break;
-		case 3: // chart
+		case 2: // chart
 			ideal_size_h += container_chart.get_size().h + D_V_SPACE*2;
 			break;
-		case 4: // spec table
+		case 3: // spec table
 			ideal_size_h += cont_spec.get_size().h + D_V_SPACE*2;
 			break;
 	}
@@ -1199,8 +1193,8 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 	}
 	// window size, scroll position
 	scr_size size = get_windowsize();
-	sint32 xoff = scrolly.get_scroll_x();
-	sint32 yoff = scrolly.get_scroll_y();
+	sint32 xoff = scrolly_maintenance.get_scroll_x();
+	sint32 yoff = scrolly_maintenance.get_scroll_y();
 	sint32 formation_xoff = scrolly_formation.get_scroll_x();
 	sint32 formation_yoff = scrolly_formation.get_scroll_y();
 
@@ -1221,7 +1215,7 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 		convoi_detail_t *w = new convoi_detail_t(cnv);
 		create_win(pos.x, pos.y, w, w_info, magic_convoi_detail + cnv.get_id());
 		w->set_windowsize( size );
-		w->scrolly.set_scroll_position( xoff, yoff );
+		w->scrolly_maintenance.set_scroll_position( xoff, yoff );
 		w->scrolly_formation.set_scroll_position(formation_xoff, formation_yoff);
 		// we must invalidate halthandle
 		cnv = convoihandle_t();
@@ -1230,23 +1224,12 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 }
 
 
-// component for vehicle display
-gui_vehicleinfo_t::gui_vehicleinfo_t(convoihandle_t cnv)
-{
-	this->cnv = cnv;
-}
-
-
 /*
  * Draw the component
  */
+/*
 void gui_vehicleinfo_t::draw(scr_coord offset)
 {
-	// keep previous maximum width
-	int x_size = get_size().w - 51 - pos.x;
-	karte_t *welt = world();
-	offset.y += LINESPACE/2;
-
 	int total_height = 0;
 	if (cnv.is_bound()) {
 		cbuffer_t buf;
@@ -1257,92 +1240,6 @@ void gui_vehicleinfo_t::draw(scr_coord offset)
 			vehicle_t *v = cnv->get_vehicle(veh);
 			vehicle_as_potential_convoy_t convoy(*v->get_desc());
 			const uint8 upgradable_state = v->get_desc()->has_available_upgrade(month_now);
-
-			// first image
-			scr_coord_val x, y, w, h;
-			const image_id image = v->get_loaded_image();
-			display_get_base_image_offset(image, &x, &y, &w, &h);
-			display_base_img(image, 11 - x + pos.x + offset.x, pos.y + offset.y + total_height - y + 2 + LINESPACE, cnv->get_owner()->get_player_nr(), false, true);
-			w = max(40, w + 4) + 11;
-
-			// now add the other info
-			int extra_y = 0;
-
-			// cars number in this convoy
-			sint8 car_number = cnv->get_car_numbering(veh);
-			buf.clear();
-			if (car_number < 0) {
-				buf.printf("%.2s%d", translator::translate("LOCO_SYM"), abs(car_number)); // This also applies to horses and tractors and push locomotives.
-			}
-			else {
-				buf.append(car_number);
-			}
-			display_proportional_clip_rgb(pos.x + offset.x + D_MARGIN_LEFT, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, upgradable_state == 2 ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, true);
-			buf.clear();
-
-			// upgradable symbol
-			if (upgradable_state && skinverwaltung_t::upgradable) {
-				if (welt->get_settings().get_show_future_vehicle_info() || (!welt->get_settings().get_show_future_vehicle_info() && v->get_desc()->is_future(month_now) != 2)) {
-					display_color_img(skinverwaltung_t::upgradable->get_image_id(upgradable_state - 1), pos.x + w + offset.x - D_FIXED_SYMBOL_WIDTH, pos.y + offset.y + total_height + extra_y + h + LINESPACE, 0, false, false);
-				}
-			}
-
-			// name of this
-			display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, translator::translate(v->get_desc()->get_name()), ALIGN_LEFT, SYSCOL_TEXT, true);
-			extra_y += LINESPACE + D_V_SPACE;
-			w += D_H_SPACE;
-
-			// power, tractive force, gear
-			if (v->get_desc()->get_power() > 0) {
-				buf.clear();
-				buf.printf(translator::translate("Power/tractive force (%s): %4d kW / %d kN\n"),
-					translator::translate(vehicle_desc_t::get_engine_type((vehicle_desc_t::engine_t)v->get_desc()->get_engine_type())),
-					v->get_desc()->get_power(), v->get_desc()->get_tractive_effort());
-				display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-				extra_y += LINESPACE;
-				buf.clear();
-				buf.printf("%s %0.2f : 1", translator::translate("Gear:"), v->get_desc()->get_gear() / 64.0);
-				display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-				extra_y += LINESPACE;
-			}
-
-			// max speed
-			buf.clear();
-			buf.printf("%s %3d km/h\n", translator::translate("Max. speed:"), v->get_desc()->get_topspeed());
-			display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-			extra_y += LINESPACE;
-
-			// weight
-			buf.clear();
-			buf.printf("%s %.1ft (%.1ft)", translator::translate("Weight:"), v->get_sum_weight()/1000.0, v->get_desc()->get_weight() / 1000.0);
-			display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-			extra_y += LINESPACE;
-
-			// Axle load
-			buf.clear();
-			buf.printf("%s %dt", translator::translate("Axle load:"), v->get_desc()->get_axle_load());
-			display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-			extra_y += LINESPACE;
-
-			// Brake force
-			buf.clear();
-			buf.printf("%s %4.1f kN", translator::translate("Max. brake force:"), convoy.get_braking_force().to_double() / 1000.0);
-			display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-			extra_y += LINESPACE;
-
-			// Range
-			buf.clear();
-			buf.printf("%s: ", translator::translate("Range"));
-			if (v->get_desc()->get_range() == 0)
-			{
-				buf.append(translator::translate("unlimited"));
-			}
-			else
-			{
-				buf.printf("%i km", v->get_desc()->get_range());
-			}
-			display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, SYSCOL_TEXT, true);
-			extra_y += LINESPACE;
 
 			//Catering - A vehicle can be a catering vehicle without carrying passengers.
 			if (v->get_desc()->get_catering_level() > 0)
@@ -1422,26 +1319,10 @@ void gui_vehicleinfo_t::draw(scr_coord offset)
 				extra_y += LINESPACE;
 			}
 
-			// Friction
-			if (v->get_frictionfactor() != 1)
-			{
-				buf.clear();
-				buf.printf("%s %i", translator::translate("Friction:"), v->get_frictionfactor());
-				display_proportional_clip_rgb(pos.x + w + offset.x, pos.y + offset.y + total_height + extra_y, buf, ALIGN_LEFT, MONEY_PLUS, true);
-			}
-			extra_y += LINESPACE;
-
-			//skip at least five lines
-			total_height += max(extra_y + LINESPACE*2, 5 * LINESPACE);
 		}
 	}
-
-	scr_size size(max(x_size + pos.x, get_size().w), total_height);
-	if (size != get_size()) {
-		set_size(size);
-	}
 }
-
+*/
 
 // component for payload display
 gui_convoy_payload_info_t::gui_convoy_payload_info_t(convoihandle_t cnv)
