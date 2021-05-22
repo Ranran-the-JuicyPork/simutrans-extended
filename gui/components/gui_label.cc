@@ -54,6 +54,9 @@ void gui_label_t::set_fixed_width(const scr_coord_val width)
 
 scr_size gui_label_t::get_min_size() const
 {
+	if (fixed_width) {
+		return scr_size(fixed_width, D_LABEL_HEIGHT);
+	}
 	return scr_size( max(min_size.w, text ? display_calc_proportional_string_len_width(text,strlen(text)) : D_BUTTON_WIDTH), D_LABEL_HEIGHT );
 }
 
