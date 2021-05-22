@@ -722,9 +722,7 @@ public:
 	 * Fetches goods from this halt
 	 * @param load Output parameter. Goods will be put into this list, the vehicle has to load them.
 	 * @param good_category Specifies the kind of good (or compatible goods) we are requesting to fetch from this stop.
-	 * @param amount How many units of the cargo we can fetch.
-	 * @param schedule Schedule of the vehicle requesting the fetch.
-	 * @param player Company that's requesting the fetch.
+	 * @param requested_amount How many units of the cargo we can fetch.
 	 */
 	bool fetch_goods( slist_tpl<ware_t> &load, const goods_desc_t *good_category, sint32 requested_amount, const schedule_t *schedule, const player_t *player, convoi_t* cnv, bool overcrowd, const uint8 g_class, const bool use_lower_classes, bool& other_classes_available, const bool mixed_load_prohibition, uint8 goods_restriction);
 
@@ -763,14 +761,12 @@ public:
 	uint8 get_empty_lane(const grund_t *gr, convoihandle_t cnv) const;
 
 	/**
-	 * @param buf the buffer to fill
-	 * @return Goods description text (buf)
+	 * @param[out] buf Goods description text
 	 */
 	void get_freight_info(cbuffer_t & buf);
 
 	/**
-	 * @param buf the buffer to fill
-	 * @return short list of the waiting goods (i.e. 110 Wood, 15 Coal)
+	 * @param[out] buf short list of the waiting goods (i.e. 110 Wood, 15 Coal)
 	 */
 	void get_short_freight_info(cbuffer_t & buf) const;
 

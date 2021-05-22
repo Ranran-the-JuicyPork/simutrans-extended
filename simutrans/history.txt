@@ -16,6 +16,7 @@
 	FIX: Crash on reload after lowering canal with a ship on a nearby tile
 	FIX: Crash when liquidating company owning a non-empty underground depot
 	FIX: Crash when liquidating company owning a house
+	ADD: chat window transparency in network mode now controlled by theme: gui_color_chat_window_network_transparency and gui_chat_window_network_transparency
 
 
 Release of 122.0 (r9274 on 10-Oct-2020):

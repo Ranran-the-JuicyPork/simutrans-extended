@@ -3216,7 +3216,7 @@ sint64 settings_t::get_starting_money(sint16 const year) const
 
 /**
  * returns newest way-desc for road_timeline_t arrays
- * @param road_timeline_t must be an array with at least num_roads elements, no range checks!
+ * @param roads must be an array with at least @p num_roads elements, no range checks!
  */
 static const way_desc_t *get_timeline_road_type( uint16 year, uint16 num_roads, road_timeline_t* roads)
 {

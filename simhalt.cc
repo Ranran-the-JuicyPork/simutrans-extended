@@ -3336,8 +3336,7 @@ void haltestelle_t::liefere_an(ware_t ware, uint8 walked_between_stations)
 
 
 /**
- * @param buf the buffer to fill
- * @return Goods description text (buf)
+ * @param[out] buf Goods description text (buf)
  */
 void haltestelle_t::get_freight_info(cbuffer_t & buf)
 {
