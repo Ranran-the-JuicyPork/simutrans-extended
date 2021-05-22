@@ -1106,10 +1106,14 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 	if (cnv.is_bound()) {
 		old_reversed = cnv->is_reversed();
 		old_vehicle_count = cnv->get_vehicle_count();
+
+		const uint8 catering_level = cnv->get_catering_level(goods_manager_t::INDEX_PAS);
+
 		for (uint8 veh = 0; veh < cnv->get_vehicle_count(); veh++) {
 			vehicle_t *v = cnv->get_vehicle(veh);
 			const vehicle_desc_t *desc = v->get_desc();
 			const uint16 month_now = world()->get_timeline_year_month();
+			const bool is_passenger_vehicle = v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS;
 
 			// vehicle bar
 			//const PIXVAL veh_bar_color = desc->is_obsolete(month_now) ? COL_OBSOLETE : (desc->is_future(month_now) || desc->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
@@ -1122,7 +1126,11 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 			lb->update();
 
 			// 2: vehicle name
-			cont_vehicle_row.new_component<gui_label_t>(translator::translate(desc->get_name()));
+			lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
+			lb->buf().printf("%s", translator::translate(desc->get_name()));
+			lb->set_fixed_width(D_BUTTON_WIDTH*1.8);
+			lb->set_tooltip(translator::translate(desc->get_name()));
+			lb->update();
 
 			// 3: category symbol
 			cont_vehicle_row.new_component<gui_image_t>()->set_image((desc->get_total_capacity() || desc->get_overcrowded_capacity()) ? desc->get_freight_type()->get_catg_symbol() : IMG_EMPTY, true);
@@ -1130,7 +1138,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 			// 4: cabin capacity table
 			const uint8 g_classes = v->get_cargo_type()->get_number_of_classes();
 			if (g_classes > 1) {
-				cont_vehicle_row.add_table(3,0); // for cabins row
+				cont_vehicle_row.add_table(4,0); // for cabins row
 				for (uint8 cy = 0; cy < g_classes; cy++) {
 					if (desc->get_capacity(cy)) {
 						// 4-1: capacity of this accomodation class
@@ -1140,18 +1148,30 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 						lb->update();
 
 						// 4-2: comfort of this accomodation class
-						if (v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS) {
+						if (is_passenger_vehicle) {
 							lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered);
 							lb->buf().printf(" %d ", desc->get_comfort(cy));
 							lb->set_fixed_width(proportional_string_width(" 888 "));
-							lb->set_tooltip("Comfort");
+							lb->set_tooltip(translator::translate("Comfort"));
 							lb->update();
 						}
 						else {
 							cont_vehicle_row.new_component<gui_margin_t>(proportional_string_width(" 888 "));
 						}
 
-						// 4-3: Consecutive buttons
+						// 4-3: catering bonus
+						if (catering_level && is_passenger_vehicle) {
+							lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_UP_TRIANGLE, gui_label_t::left);
+							lb->buf().printf("+%d ", v->get_comfort(catering_level, v->get_reassigned_class(cy)) - v->get_comfort(0, v->get_reassigned_class(cy)));
+							lb->set_fixed_width(proportional_string_width("+88 "));
+							lb->set_tooltip("catering bonus\nfor travelling");
+							lb->update();
+						}
+						else {
+							cont_vehicle_row.new_component<gui_margin_t>(catering_level ? proportional_string_width("+88 ") : 0);
+						}
+
+						// 4-4: Consecutive buttons
 						cont_vehicle_row.new_component<gui_cabin_fare_changer_t>(v, cy);
 					}
 				}
@@ -1159,7 +1179,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 			}
 			else {
 				// This category does not have any class
-				cont_vehicle_row.add_table(3,0); // for cabins row
+				cont_vehicle_row.add_table(4,0); // for cabins row
 				{
 					// 4-1
 					lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
@@ -1173,17 +1193,30 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 					lb->update();
 
 					// 4-2: comfort
-					if (v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS) {
+					if (is_passenger_vehicle) {
 						lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered);
 						lb->buf().printf(" %d ", desc->get_comfort());
 						lb->set_fixed_width(proportional_string_width(" 888 "));
+						lb->set_tooltip(translator::translate("Comfort"));
 						lb->update();
 					}
 					else {
 						cont_vehicle_row.new_component<gui_empty_t>();
 					}
 
-					// 4-3: empty (no buttons)
+					// 4-3: catering bonus
+					if (catering_level && is_passenger_vehicle) {
+						lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_UP_TRIANGLE, gui_label_t::left);
+						lb->buf().printf("+%d ", v->get_comfort(catering_level, 0) - v->get_comfort(0,0));
+						lb->set_fixed_width(proportional_string_width("+88 "));
+						lb->set_tooltip("catering bonus\nfor travelling");
+						lb->update();
+					}
+					else {
+						cont_vehicle_row.new_component<gui_margin_t>(catering_level ? proportional_string_width("+88 ") : 0);
+					}
+
+					// 4-4: empty (no buttons)
 					cont_vehicle_row.new_component<gui_empty_t>();
 				}
 				cont_vehicle_row.end_table();
