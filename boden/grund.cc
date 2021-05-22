@@ -92,7 +92,7 @@ static inthashtable_tpl<uint64, char*, N_BAGS_LARGE> ground_texts;
 #define get_ground_text_key(k) ( (uint64)(k).x + ((uint64)(k).y << 16) + ((uint64)(k).z << 32) )
 
 // and the reverse operation
-#define get_ground_koord3d_key(key) koord3d( (key) & 0x00007FFF, ((key)>>16) & 0x00007fff, (key)>>32 )
+#define get_ground_koord3d_key(key) koord3d( (key) & 0x00007FFF, ((key)>>16) & 0x00007fff, (sint8)((key)>>32) )
 
 void grund_t::set_text(const char *text)
 {
@@ -2567,7 +2567,7 @@ bool grund_t::removing_way_would_disrupt_public_right_of_way(waytype_t wt)
 						}
 						else if (to->get_neighbour(to_check, w->get_waytype(), ribi_t::nesw[n]))
 						{
-							if (to_check == from)
+							if (to_check == from || to_check == this)
 							{
 								continue;
 							}
@@ -2938,14 +2938,6 @@ bool grund_t::remove_everything_from_way(player_t* player, waytype_t wt, ribi_t:
 					if (gr  &&  gr->is_water()) {
 						gr->calc_image(); // to recalculate ribis
 					}
-				}
-				// make tunnel portals to normal ground
-				if (get_typ()==tunnelboden  &&  (flags&has_way1)==0) {
-					// remove remaining objs
-					obj_loesche_alle( player );
-					// set to normal ground
-					welt->access(here)->kartenboden_setzen( new boden_t( pos, slope ) );
-					// now this is already deleted !
 				}
 			}
 		}

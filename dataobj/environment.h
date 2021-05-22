@@ -234,6 +234,8 @@ public:
 
 	static uint8 gui_player_color_dark;
 	static uint8 gui_player_color_bright;
+	// brightness level of the player color of the titlebar background
+	static uint8 gui_titlebar_player_color_background_brightness;
 
 	// default font name and -size
 	static std::string fontname;
@@ -473,6 +475,9 @@ public:
 
 	/// how dast are distant sounds fading (1: very fast 25: very little)
 	static uint32 sound_distance_scaling;
+
+	// FluidSynth MIDI parameters
+	static std::string soundfont_filename;
 
 	/// @}
 

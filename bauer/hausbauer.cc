@@ -401,6 +401,7 @@ void hausbauer_t::remove( player_t *player, const gebaeude_t *gb, bool map_gener
 			}
 		}
 		// remove all transformers
+		// TODO: review this mechanism - it may be unnecessary and cause crashes.
 		for(k.y = -1; k.y < size.y+1;  k.y ++) {
 			for(k.x = -1; k.x < size.x+1;  k.x ++) {
 				grund_t *gr = NULL;

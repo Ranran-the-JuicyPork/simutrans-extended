@@ -45,7 +45,7 @@ button_t::button_t() :
 	translated_tooltip = tooltip = NULL;
 	background_color = color_idx_to_rgb(COL_WHITE);
 	b_enabled = true;
-	image = IMG_EMPTY;
+	img = IMG_EMPTY;
 
 	// By default a box button
 	init(box,"");
@@ -121,6 +121,10 @@ void button_t::set_typ(enum type t)
 			set_size( scr_size(get_size().w, max(D_BUTTON_HEIGHT, LINESPACE)));
 			break;
 
+		case imagebox:
+			img = IMG_EMPTY;
+			break;
+
 		default:
 			break;
 	}
@@ -182,6 +186,16 @@ scr_size button_t::get_min_size() const
 			size.w = max(size.w, w);
 			return size;
 		}
+
+		case imagebox: {
+			scr_coord_val x = 0, y = 0, w = 0, h = 0;
+			display_get_image_offset(img, &x, &y, &w, &h);
+			scr_size size(gui_theme_t::gui_pos_button_size);
+			size.w = max(size.w, w+2);
+			size.h = max(size.h, h+2);
+			return size;
+		}
+
 		default:
 			return gui_component_t::get_min_size();
 	}
@@ -329,7 +343,7 @@ void button_t::draw(scr_coord offset)
 					// move the text to leave evt. space for a colored box top left or bottom right of it
 					scr_rect area_text = area - gui_theme_t::gui_color_button_text_offset_right;
 					area_text.set_pos( gui_theme_t::gui_color_button_text_offset + area.get_pos() );
-					if (pressed) { area_text.y++; }
+					if (pressed && gui_theme_t::pressed_button_sinks) { area_text.y++; }
 					display_proportional_ellipsis_rgb( area_text, translated_text, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, text_color, true );
 				}
 				if(  win_get_focus()==this  ) {
@@ -345,16 +359,25 @@ void button_t::draw(scr_coord offset)
 					// move the text to leave evt. space for a colored box top left or bottom right of it
 					scr_rect area_text = area - gui_theme_t::gui_button_text_offset_right;
 					area_text.set_pos( gui_theme_t::gui_button_text_offset + area.get_pos() );
-					if (pressed) { area_text.y++; }
+					if (pressed && gui_theme_t::pressed_button_sinks) { area_text.y++; }
 					display_proportional_ellipsis_rgb( area_text, translated_text, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, text_color, true );
 				}
-				else if(image) {
-					const scr_rect img_area = pressed ? scr_rect(area.x, area.y+1, area.w, area.h) : area;
-					display_img_aligned(image, img_area, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true);
+				else if(img) {
+					const scr_rect img_area = (pressed && gui_theme_t::pressed_button_sinks) ? scr_rect(area.x, area.y+1, area.w, area.h) : area;
+					display_img_aligned(img, img_area, ALIGN_CENTER_H | ALIGN_CENTER_V | DT_CLIP, true);
 				}
 				if(  win_get_focus()==this  ) {
 					draw_focus_rect( area );
 				}
+			}
+			break;
+
+		case imagebox:
+			display_img_stretch(gui_theme_t::button_tiles[get_state_offset()], area);
+			display_img_stretch_blend(gui_theme_t::button_color_tiles[b_enabled && pressed], area, (pressed ? text_color: background_color) | TRANSPARENT75_FLAG | OUTLINE_FLAG);
+			display_img_aligned(img, area, ALIGN_CENTER_H | ALIGN_CENTER_V, true);
+			if (win_get_focus() == this) {
+				draw_focus_rect(area);
 			}
 			break;
 
@@ -424,6 +447,7 @@ void button_t::update_focusability()
 			break;
 
 		// those cannot receive focus ...
+		case imagebox:
 		case arrowleft:
 		case repeatarrowleft:
 		case arrowright:

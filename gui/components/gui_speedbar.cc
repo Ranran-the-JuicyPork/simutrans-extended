@@ -137,7 +137,7 @@ void gui_tile_occupancybar_t::draw(scr_coord offset)
 	for (int i = 0; i < tiles; i++)
 	{
 		// draw frame and base color
-		display_ddd_box_clip_rgb(offset.x + (tilebar_width + 4) * i, offset.y, tilebar_width + 2, size.h, color_idx_to_rgb(8), color_idx_to_rgb(8));
+		display_ddd_box_clip_rgb(offset.x + (tilebar_width + 4) * i, offset.y, tilebar_width + 2, size.h, SYSCOL_INDICATOR_BORDER1, SYSCOL_INDICATOR_BORDER1);
 		fill_with_color(offset, i, 0, i == tiles - 1 ? last_tile_occupancy : CARUNITS_PER_TILE, color_idx_to_rgb(COL_GREY4), length_to_pixel);
 		if (insert_mode && len_diff > 0 && len_diff > CARUNITS_PER_TILE*i) {
 			// insert mode, paint the front tile
@@ -251,12 +251,12 @@ void gui_bandgraph_t::draw(scr_coord offset)
 	}
 	else{
 		sint32 temp = 0;
-		KOORD_VAL end = 0;
+		scr_coord_val end = 0;
 		FOR(slist_tpl<info_t>, const& i, values) {
 			if (*i.value>0) {
 				temp += (*i.value);
-				const KOORD_VAL from = size.w * temp / total + 0.5;
-				const KOORD_VAL width = from-end;
+				const scr_coord_val from = size.w * temp / total + 0.5;
+				const scr_coord_val width = from-end;
 				if (width) {
 					display_fillbox_wh_clip_rgb(offset.x + size.w - from, offset.y, width, size.h, i.color, true);
 				}

@@ -15,6 +15,7 @@
 #include "display/simview.h"
 #include "gui/simwin.h"
 #include "gui/gui_theme.h"
+#include "gui/messagebox.h"
 #include "simhalt.h"
 #include "display/simimg.h"
 #include "simcolor.h"
@@ -417,7 +418,7 @@ int simu_main(int argc, char** argv)
 
 	sint16 disp_width = 0;
 	sint16 disp_height = 0;
-	sint16 fullscreen = false;
+	bool fullscreen = false;
 
 	uint32 quit_month = 0x7FFFFFFFu;
 
@@ -710,16 +711,21 @@ int simu_main(int argc, char** argv)
 			env_t::server_announce = 0;
 		}
 	}
-
 	// continue parsing
 	dr_chdir( env_t::data_dir );
 	if(  found_simuconf  ) {
 		if(simuconf.open(path_to_simuconf)) {
 			// we do not allow to change the global font name
 			std::string old_fontname = env_t::fontname;
+			std::string old_soundfont_filename = env_t::soundfont_filename;
+
 			printf("parse_simuconf() at config/simuconf.tab: ");
 			env_t::default_settings.parse_simuconf( simuconf, disp_width, disp_height, fullscreen, env_t::objfilename );
 			simuconf.close();
+			if(  (old_soundfont_filename.length() > 0)  &&  (strcmp( old_soundfont_filename.c_str(), "Error" ) != 0)  ) {
+				// We had a valid soundfont saved by the user, let's restore it
+				env_t::soundfont_filename = old_soundfont_filename;
+			}
 			env_t::fontname = old_fontname;
 		}
 	}
@@ -741,7 +747,7 @@ int simu_main(int argc, char** argv)
 	if(  const char *fn = gimme_arg(argc, argv, "-objects", 1)  ) {
 		env_t::objfilename = fn;
 		// append slash / replace trailing backslash if necessary
-		uint16 len = env_t::objfilename.length();
+		size_t len = env_t::objfilename.length();
 		if (len > 0) {
 			if (env_t::objfilename[len-1]=='\\') {
 				env_t::objfilename.erase(len-1);
@@ -898,7 +904,10 @@ int simu_main(int argc, char** argv)
 	}
 
 	DBG_MESSAGE("simu_main()", "simgraph_init disp_width=%d, disp_height=%d, fullscreen=%d", disp_width, disp_height, (int)fullscreen);
-	simgraph_init(scr_size(disp_width, disp_height), fullscreen != 0);
+	if (!simgraph_init(scr_size(disp_width, disp_height), fullscreen != 0)) {
+		dbg->error("simu_main", "Failed to initialize graphics system.");
+		return EXIT_FAILURE;
+	}
 	DBG_MESSAGE("simu_main()", ".. results in disp_width=%d, disp_height=%d", display_get_width(), display_get_height());
 
 	// now that the graphics system has already started
@@ -1004,11 +1013,15 @@ int simu_main(int argc, char** argv)
 
 		FILE* const f = dr_fopen(buf, "r");
 		if(  !f  ) {
-			dr_fatal_notify(
-				"*** No pak set found ***\n"
-				"\n"
-				"Most likely, you have no pak set installed.\n"
-				"Please download and install a pak set (graphics).\n");
+			cbuffer_t errmsg;
+			errmsg.printf(
+				"The file 'ground.Outside.pak' was not found in\n"
+				"'%s%s'.\n"
+				"This file is required for a valid pak set (graphics).\n"
+				"Please install and select a valid pak set.",
+				env_t::data_dir, env_t::objfilename.c_str());
+
+			dr_fatal_notify(errmsg);
 			simgraph_exit();
 			return EXIT_FAILURE;
 		}
@@ -1018,11 +1031,10 @@ int simu_main(int argc, char** argv)
 	// now find the pak specific tab file ...
 	obj_conf = env_t::objfilename + path_to_simuconf;
 	if(  simuconf.open(obj_conf.c_str())  ) {
-		sint16 idummy;
-		string dummy;
 		env_t::default_settings.set_way_height_clearance( 0 );
+
 		DBG_DEBUG("karte_t::distribute_groundobjs_cities()","parse_simuconf() at %s: ", obj_conf.c_str());
-		env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+		env_t::default_settings.parse_simuconf( simuconf );
 		env_t::default_settings.parse_colours( simuconf );
 		pak_diagonal_multiplier = env_t::default_settings.get_pak_diagonal_multiplier();
 		pak_height_conversion_factor = env_t::pak_height_conversion_factor;
@@ -1036,10 +1048,9 @@ int simu_main(int argc, char** argv)
 	// and parse again the user settings
 	obj_conf = string(env_t::user_dir) + "simuconf.tab";
 	if (simuconf.open(obj_conf.c_str())) {
-		sint16 idummy;
-		string dummy;
+
 		dbg->message("simu_main()", "parse_simuconf() at %s: ", obj_conf.c_str());
-		env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+		env_t::default_settings.parse_simuconf( simuconf );
 		env_t::default_settings.parse_colours( simuconf );
 		simuconf.close();
 	}
@@ -1057,11 +1068,10 @@ int simu_main(int argc, char** argv)
 	// parse ~/simutrans/pakxyz/config.tab"
 	if(  env_t::default_settings.get_with_private_paks()  ) {
 		obj_conf = string(env_t::user_dir) + "addons/" + env_t::objfilename + "config/simuconf.tab";
-		sint16 idummy;
-		string dummy;
+
 		if (simuconf.open(obj_conf.c_str())) {
 			dbg->message("simu_main()","parse_simuconf() at %s: ", obj_conf.c_str());
-			env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+			env_t::default_settings.parse_simuconf( simuconf );
 			env_t::default_settings.parse_colours( simuconf );
 			simuconf.close();
 		}
@@ -1069,7 +1079,7 @@ int simu_main(int argc, char** argv)
 		obj_conf = string(env_t::user_dir) + "simuconf.tab";
 		if (simuconf.open(obj_conf.c_str())) {
 			dbg->message("simu_main()","parse_simuconf() at %s: ", obj_conf.c_str());
-			env_t::default_settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+			env_t::default_settings.parse_simuconf( simuconf );
 			env_t::default_settings.parse_colours( simuconf );
 			simuconf.close();
 		}
@@ -1152,7 +1162,10 @@ int simu_main(int argc, char** argv)
 
 	// loading all objects in the pak
 	dbg->message("simu_main()","Reading object data from %s...", env_t::objfilename.c_str());
-	obj_reader_t::load( env_t::objfilename.c_str(), translator::translate("Loading paks ...") );
+	if (!obj_reader_t::load( env_t::objfilename.c_str(), translator::translate("Loading paks ...") )) {
+		dbg->fatal("simu_main()", "Failed to load pakset. Please re-download or select another pakset.");
+	}
+
 	std::string overlaid_warning; // more prominent handling of double objects
 	if(  dbg->had_overlaid()  ) {
 		overlaid_warning = translator::translate("<h1>Error</h1><p><strong>");
@@ -1173,7 +1186,11 @@ int simu_main(int argc, char** argv)
 			dbg->clear_overlaid();
 		}
 	}
-	obj_reader_t::finish_rd();
+
+	if (!obj_reader_t::finish_rd()) {
+		dbg->fatal("simu_main()", "Failed to load pakset. Please re-download or select another pakset.");
+	}
+
 	pakset_info_t::calculate_checksum();
 	pakset_info_t::debug();
 
@@ -1315,16 +1332,19 @@ int simu_main(int argc, char** argv)
 		dbg->message("simu_main()","Reading midi data ...");
 		char pak_dir[PATH_MAX];
 		sprintf( pak_dir, "%s%s", env_t::data_dir, env_t::objfilename.c_str() );
-		if(  !midi_init(pak_dir)  ) {
-			if(  !midi_init(env_t::user_dir)  ) {
-				if(  !midi_init(env_t::data_dir)  ) {
-					dbg->message("simu_main()","Midi disabled ...");
-				}
-			}
+		if(  !midi_init( pak_dir )  &&  !midi_init( env_t::user_dir )  &&  !midi_init( env_t::data_dir )  ) {
+			midi_set_mute(true);
+			dbg->message("simu_main()","Midi disabled ...");
 		}
 		if(gimme_arg(argc, argv, "-nomidi", 0)) {
 			midi_set_mute(true);
 		}
+#ifdef USE_FLUIDSYNTH_MIDI
+		// Audio is ok, but we failed to find a soundfont
+		if(  strcmp( env_t::soundfont_filename.c_str(), "Error" ) == 0  ) {
+			midi_set_mute( true );
+		}
+#endif
 	}
 	else {
 		dbg->message("simu_main()","Midi disabled ...");
@@ -1361,8 +1381,8 @@ int simu_main(int argc, char** argv)
 
 	// set the frame per second
 	if(  const char *ref_str = gimme_arg(argc, argv, "-fps", 1)  ) {
-		int want_refresh = atoi(ref_str);
-		env_t::fps = want_refresh < 5 ? 5 : (want_refresh > 100 ? 100 : want_refresh);
+		const int want_refresh = atoi(ref_str);
+		env_t::fps = clamp(want_refresh, (int)env_t::min_fps, (int)env_t::max_fps);
 	}
 
 	// query server stuff
@@ -1505,6 +1525,11 @@ int simu_main(int argc, char** argv)
 	if(  !env_t::networkmode  &&  !env_t::server  &&  new_world  ) {
 		welt->get_message()->clear();
 	}
+#ifdef USE_FLUIDSYNTH_MIDI
+	if(  strcmp( env_t::soundfont_filename.c_str(), "Error" ) == 0  ) {
+		create_win( 0,0, new news_img("No soundfont found!\n\nMusic won't play until you load a soundfont from the sound options menu."), w_info, magic_none );
+	}
+#endif
 	while(  !env_t::quit_simutrans  ) {
 		// play next tune?
 		check_midi();

@@ -171,12 +171,6 @@ vector_tpl<nearby_halt_t> karte_t::start_halts;
 vector_tpl<halthandle_t> karte_t::destination_list;
 #endif
 
-// advance 201 ms per sync_step in fast forward mode
-#define MAGIC_STEP (201)
-
-// frame per second for fast forward
-#define FF_PPS (10)
-
 
 static uint32 last_clients = -1;
 static uint8 last_active_player_nr = 0;
@@ -416,12 +410,6 @@ void karte_t::perlin_hoehe_loop( sint16 x_min, sint16 x_max, sint16 y_min, sint1
 }
 
 
-/**
- * Height one point in the map with "perlin noise"
- *
- * @param frequency in 0..1.0 roughness, the higher the rougher
- * @param amplitude in 0..160.0 top height of mountains, may not exceed 160.0!!!
- */
 sint32 karte_t::perlin_hoehe(settings_t const* const sets, koord k, koord const size, sint32 map_size_max)
 {
 	// replace the fixed values with your settings. Amplitude is the top highness of the mountains,
@@ -2612,7 +2600,7 @@ void karte_t::create_beaches(  int xoff, int yoff  )
 			if(  gr->is_water()  &&  gr->get_hoehe()==groundwater  &&  gr->kann_alle_obj_entfernen(NULL)==NULL) {
 				koord k( ix, iy );
 				uint8 neighbour_water = 0;
-				bool water[8];
+				bool water[8] = {};
 				// check whether nearby tiles are water
 				for(  int i = 0;  i < 8;  i++  ) {
 					grund_t *gr2 = lookup_kartenboden( k + koord::neighbours[i] );
@@ -2756,14 +2744,14 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 
 	intr_disable();
 
-	bool minimap_was_visible = minimap_t::is_visible;
+	bool minimap_was_visible = minimap_t::get_instance()->is_visible;
 
 	uint32 max_display_progress;
 
 	// If this is not called by karte_t::init
 	if(  old_x != 0  ) {
 		mute_sound(true);
-		minimap_t::is_visible = false;
+		minimap_t::get_instance()->is_visible = false;
 
 		if(is_display_init()) {
 			display_show_pointer(false);
@@ -3074,8 +3062,8 @@ void karte_t::enlarge_map(settings_t const* sets, sint8 const* const h_field)
 		}
 		mute_sound(false);
 
-		minimap_t::is_visible = minimap_was_visible;
 		minimap_t::get_instance()->init();
+		minimap_t::get_instance()->is_visible = minimap_was_visible;
 		minimap_t::get_instance()->calc_map();
 		minimap_t::get_instance()->set_display_mode( minimap_t::get_instance()->get_display_mode() );
 
@@ -4643,7 +4631,7 @@ DBG_MESSAGE( "karte_t::rotate90()", "called" );
 	factory_builder_t::new_world();
 
 	// update minimap
-	if(minimap_t::is_visible) {
+	if(minimap_t::get_instance()->is_visible) {
 		minimap_t::get_instance()->set_display_mode( minimap_t::get_instance()->get_display_mode() );
 	}
 
@@ -5420,7 +5408,7 @@ void karte_t::new_year()
 
 	cbuffer_t buf;
 	buf.printf( translator::translate("Year %i has started."), last_year );
-	msg->add_message(buf,koord::invalid,message_t::general,color_idx_to_rgb(COL_BLACK),skinverwaltung_t::neujahrsymbol->get_image_id(0));
+	msg->add_message(buf,koord::invalid,message_t::general,SYSCOL_TEXT,skinverwaltung_t::neujahrsymbol->get_image_id(0));
 
 	FOR(vector_tpl<convoihandle_t>, const cnv, convoi_array) {
 		cnv->new_year();
@@ -5532,7 +5520,7 @@ void karte_t::recalc_average_speed(bool skip_messages)
 					{
 						cbuffer_t buf;
 						buf.printf(translator::translate("The following %s has become obsolete:\n%s\n"), vehicle_type, translator::translate(info->get_name()));
-						msg->add_message(buf, koord::invalid, message_t::new_vehicle, color_idx_to_rgb(COL_DARK_BLUE), info->get_base_image());
+						msg->add_message(buf, koord::invalid, message_t::new_vehicle, COL_OBSOLETE, info->get_base_image());
 					}
 				}
 			}
@@ -9420,7 +9408,7 @@ void karte_t::load(loadsave_t *file)
 			dr_chdir( env_t::data_dir );
 			if(simuconf.open("config/simuconf.tab")) {
 				printf("parse_simuconf() in program dir (%s) for override of save file: ", "config/simuconf.tab");
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 			dr_chdir( env_t::user_dir );
@@ -9430,7 +9418,7 @@ void karte_t::load(loadsave_t *file)
 			std::string pak_simuconf = env_t::objfilename + "config/simuconf.tab";
 			if(simuconf.open(pak_simuconf.c_str())) {
 				printf("parse_simuconf() in pak dir (%s) for override of save file: ", pak_simuconf.c_str() );
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 			dr_chdir( env_t::user_dir );
@@ -9440,7 +9428,7 @@ void karte_t::load(loadsave_t *file)
 			std::string userdir_simuconf = "simuconf.tab";
 			if(simuconf.open("simuconf.tab")) {
 				printf("parse_simuconf() in user dir (%s) for override of save file: ", userdir_simuconf.c_str() );
-				settings.parse_simuconf( simuconf, idummy, idummy, idummy, dummy );
+				settings.parse_simuconf( simuconf );
 				simuconf.close();
 			}
 		}

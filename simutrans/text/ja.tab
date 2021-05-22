@@ -2019,10 +2019,6 @@ Vehicle %s is stucked!
 「%s」が\n立ち往生しています！
 Vehicle details
 乗り物の詳細
-Vehicle Name
-車両名
-Vehicle Power
-出力
 Verbrauch
 消費
 Vergroessere die Karte\n
@@ -3128,17 +3124,17 @@ requires
 Reset this replacing operation
 編成の置き換え操作をリセットします。
 reset_all_classes
-全てのクラス設定をリセット
+運賃クラス設定を初期化
 reset_all_mail_classes
-全ての郵便クラス設定をリセット
+郵便物運賃クラス設定を初期化
 reset_all_pass_classes
-全ての旅客クラス設定をリセット
+旅客運賃クラス設定を初期化
 resets_all_classes_to_their_defaults
-全クラス設定をデフォルトに戻します。
+客室（設備）等級に対する運賃クラスの設定を推奨設定に戻します
 resets_all_mail_classes_to_their_defaults
-全郵便クラスの設定をデフォルトに戻します。
+この路線に所属する全ての車両の郵便物運賃クラスの設定を推奨設定に戻します
 resets_all_passenger_classes_to_their_defaults
-全旅客クラスの設定をデフォルトに戻します。
+この路線に所属する全ての車両の旅客運賃クラスの設定を推奨設定に戻します
 residents_wealth
 住民の裕福度
 Restrictions:
@@ -3853,6 +3849,8 @@ Available:
 製造期間：
 Show future
 登場予定
+Show upgraded
+改造車両を表示
 GUI settings
 GUI設定
 map view
@@ -4079,6 +4077,12 @@ if_this_is_set,_convoy_will_go_into_lay_over_state_at_this_stop
 次の運用時刻まで非営業車扱いで待機します
 Last overhauled:
 最終全検：
+Vehicle not found
+該当なし
+One vehicle found
+該当数: 1
+%u vehicles found
+該当数: %u
 #_______________________________unnecessary_text________________________________
 #_______________________________unnecessary_text________________________________
 100 km/h = %i tiles/month
@@ -4105,8 +4109,14 @@ Welcome to Simutrans-Experimental, a game created by Hj. Malthaner and the Simut
 ようこそSimutrans-Extendedへ! Simutrans-StandardはHj. MalthanerとSimutransコミュニティによって開発されました。Simutrans-ExtendedはSimutrans-Standardを元にしてJames E. PettsとSimutransコミュニティによって開発されました。
 Usage/Output
 使用量/発電量
+Vehicle Name
+車両名
+Vehicle Power
+出力
 Power (MW)
 電力 (MW)
+Power: %4d kW\n
+出力: %4d kW\n
 #Show mail service coverage/mail network
 #郵便事業が行われている範囲を表示
 #Show passenger coverage/passenger network
@@ -4115,8 +4125,6 @@ Power (MW)
 #分所要
 # mins. waiting)
 #分待ち)
-Power: %4d kW\n
-出力: %4d kW\n
 #Odometer: %s km
 #積算距離： %skm
 #; %i km/h @ %.2f sec

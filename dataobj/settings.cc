@@ -1889,7 +1889,7 @@ void settings_t::rdwr(loadsave_t *file)
 
 
 // read the settings from this file
-void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16& disp_height, sint16 &fullscreen, std::string& objfilename )
+void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16& disp_height, bool &fullscreen, std::string& objfilename )
 {
 	tabfileobj_t contents;
 
@@ -2363,8 +2363,8 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	bits_per_month = contents.get_int( "bits_per_month", bits_per_month );
 	calc_job_replenishment_ticks();
 	use_timeline = contents.get_int( "use_timeline", use_timeline );
-	starting_year = contents.get_int( "starting_year", starting_year );
-	starting_month = contents.get_int( "starting_month", starting_month + 1 ) - 1;
+	starting_year = clamp(contents.get_int( "starting_year", starting_year ), 0, 0x7FFF);
+	starting_month = clamp(contents.get_int( "starting_month", starting_month + 1 ) - 1, 0, 11);
 
 	env_t::height_conv_mode = (env_t::height_conversion_mode)::clamp<int>(contents.get_int("new_height_map_conversion", (int)env_t::height_conv_mode ), 0, env_t::NUM_HEIGHT_CONV_MODES-1);
 
@@ -3038,6 +3038,11 @@ void settings_t::parse_simuconf( tabfile_t& simuconf, sint16& disp_width, sint16
 	// Default pak file path
 	objfilename = ltrim(contents.get_string("pak_file_path", "" ) );
 
+	// FluidSynth MIDI parameters
+	if(  *contents.get("soundfont_filename")  ) {
+		env_t::soundfont_filename = ltrim(contents.get("soundfont_filename"));
+	}
+
 	printf("Reading simuconf.tab successful!\n" );
 }
 
@@ -3194,7 +3199,7 @@ sint64 settings_t::get_starting_money(sint16 const year) const
 
 /**
  * returns newest way-desc for road_timeline_t arrays
- * @param road_timeline_t must be an array with at least num_roads elements, no range checks!
+ * @param roads must be an array with at least @p num_roads elements, no range checks!
  */
 static const way_desc_t *get_timeline_road_type( uint16 year, uint16 num_roads, road_timeline_t* roads)
 {
