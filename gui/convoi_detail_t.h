@@ -171,6 +171,14 @@ public:
  */
 class convoi_detail_t : public gui_frame_t , private action_listener_t
 {
+	enum {
+		CD_TAB_MAINTENANCE    = 0,
+		CD_TAB_LOADED_DETAIL  = 1,
+		CD_TAB_PHYSICS_CHARTS = 2,
+		CD_TAB_SPEC_TABLE     = 3,
+		CD_TAB_FARE_CHANGER   = 4
+	};
+
 public:
 	enum sort_mode_t {
 		by_destination = 0,

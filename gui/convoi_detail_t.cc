@@ -881,7 +881,8 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	cont_force.end_table();
 
 	if (cnv->in_depot()) {
-		tabs.set_active_tab_index(3);
+		// UI TODO: Make the fare changer accessible from the depot
+		tabs.set_active_tab_index(CD_TAB_PHYSICS_CHARTS);
 	}
 
 	update_labels();
@@ -897,20 +898,20 @@ void convoi_detail_t::set_tab_opened()
 	scr_coord_val ideal_size_h = margin_above_tab + D_MARGIN_BOTTOM;
 	switch (tabstate)
 	{
-		case 0: // maintenance
+		case CD_TAB_MAINTENANCE:
 		default:
 			ideal_size_h += cont_maintenance.get_size().h + D_V_SPACE * 2;
 			break;
-		case 1: // loaded detail
+		case CD_TAB_LOADED_DETAIL:
 			ideal_size_h += cont_payload.get_size().h;
 			break;
-		case 2: // chart
+		case CD_TAB_PHYSICS_CHARTS:
 			ideal_size_h += container_chart.get_size().h + D_V_SPACE*2;
 			break;
-		case 3: // spec table
+		case CD_TAB_SPEC_TABLE:
 			ideal_size_h += cont_spec.get_size().h + D_V_SPACE*2;
 			break;
-		case 4: // fare_controllaer
+		case CD_TAB_FARE_CHANGER:
 			ideal_size_h += cont_fare_changer.get_size().h + D_V_SPACE*2;
 			break;
 	}
