@@ -1064,6 +1064,157 @@ void gui_class_vehicleinfo_t::draw(scr_coord offset)
 //}
 
 
+// Since the state before editing is not recorded, it is returned to the initial (recomended) value
+void gui_convoy_fare_class_changer_t::reset_fare_class()
+{
+	if (!cnv.is_bound()) { return; }
+	for (uint8 veh = 0; veh < cnv->get_vehicle_count(); veh++) {
+		vehicle_t *v = cnv->get_vehicle(veh);
+		const uint8 g_classes = v->get_cargo_type()->get_number_of_classes();
+		if (g_classes==1) {
+			continue; // no classes in this goods
+		}
+		// init all capacities in this vehicle
+		for (uint8 c = 0; c < g_classes; c++) {
+			v->set_class_reassignment(c, c);
+		}
+	}
+	update_vehicles();
+}
+
+gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t cnv)
+{
+	this->cnv = cnv;
+
+	set_table_layout(1,0);
+	init_class.init(button_t::roundbox, "reset_all_classes");
+	init_class.set_tooltip("resets_all_classes_to_their_defaults");
+	init_class.add_listener( this );
+	add_component(&init_class);
+	cont_vehicle_row.set_table_layout(4,0);
+	cont_vehicle_row.set_alignment(ALIGN_TOP);
+	add_component(&cont_vehicle_row);
+
+	update_vehicles();
+}
+
+void gui_convoy_fare_class_changer_t::update_vehicles()
+{
+	any_class = false;
+	cont_vehicle_row.remove_all();
+	if (cnv.is_bound()) {
+		old_reversed = cnv->is_reversed();
+		old_vehicle_count = cnv->get_vehicle_count();
+		for (uint8 veh = 0; veh < cnv->get_vehicle_count(); veh++) {
+			vehicle_t *v = cnv->get_vehicle(veh);
+			const vehicle_desc_t *desc = v->get_desc();
+			const uint16 month_now = world()->get_timeline_year_month();
+
+			// vehicle bar
+			//const PIXVAL veh_bar_color = desc->is_obsolete(month_now) ? COL_OBSOLETE : (desc->is_future(month_now) || desc->is_retired(month_now)) ? COL_OUT_OF_PRODUCTION : COL_SAFETY;
+			//cont_vehicle_row.new_component<gui_vehicle_bar_t>(veh_bar_color, scr_size(D_LABEL_HEIGHT*4, D_LABEL_HEIGHT-2))->set_flags(desc->get_basic_constraint_prev(reversed), desc->get_basic_constraint_next(reversed), desc->get_interactivity());
+
+			// 1: car number
+			gui_label_buf_t *lb = cont_vehicle_row.new_component<gui_label_buf_t>(desc->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, gui_label_t::centered);
+			lb->buf().printf("%s%d", cnv->get_car_numbering(veh) < 0 ? translator::translate("LOCO_SYM") : "", abs(cnv->get_car_numbering(veh)));
+			lb->set_fixed_width( proportional_string_width(translator::translate("LOCO_SYM")) + proportional_string_width("L88") );
+			lb->update();
+
+			// 2: vehicle name
+			cont_vehicle_row.new_component<gui_label_t>(translator::translate(desc->get_name()));
+
+			// 3: category symbol
+			cont_vehicle_row.new_component<gui_image_t>()->set_image((desc->get_total_capacity() || desc->get_overcrowded_capacity()) ? desc->get_freight_type()->get_catg_symbol() : IMG_EMPTY, true);
+
+			// 4: cabin capacity table
+			const uint8 g_classes = v->get_cargo_type()->get_number_of_classes();
+			if (g_classes > 1) {
+				cont_vehicle_row.add_table(3,0); // for cabins row
+				for (uint8 cy = 0; cy < g_classes; cy++) {
+					if (desc->get_capacity(cy)) {
+						// 4-1: capacity of this accomodation class
+						lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
+						lb->buf().printf("%3d", desc->get_capacity(cy));
+						lb->set_fixed_width(proportional_string_width("8888"));
+						lb->update();
+
+						// 4-2: comfort of this accomodation class
+						if (v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS) {
+							lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered);
+							lb->buf().printf(" %d ", desc->get_comfort(cy));
+							lb->set_fixed_width(proportional_string_width(" 888 "));
+							lb->update();
+						}
+						else {
+							cont_vehicle_row.new_component<gui_margin_t>(proportional_string_width(" 888 "));
+						}
+
+						// 4-3: Consecutive buttons
+						cont_vehicle_row.new_component<gui_cabin_fare_changer_t>(v, cy);
+					}
+				}
+				cont_vehicle_row.end_table();
+			}
+			else {
+				// This category does not have any class
+				cont_vehicle_row.add_table(3,0); // for cabins row
+				{
+					// 4-1
+					lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
+					if (desc->get_capacity()) {
+						lb->buf().printf("%3d", desc->get_capacity());
+					}
+					else {
+						lb->buf().append("-");
+					}
+					lb->set_fixed_width(proportional_string_width("8888"));
+					lb->update();
+
+					// 4-2: comfort
+					if (v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS) {
+						lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered);
+						lb->buf().printf(" %d ", desc->get_comfort());
+						lb->set_fixed_width(proportional_string_width(" 888 "));
+						lb->update();
+					}
+					else {
+						cont_vehicle_row.new_component<gui_empty_t>();
+					}
+
+					// 4-3: empty (no buttons)
+					cont_vehicle_row.new_component<gui_empty_t>();
+				}
+				cont_vehicle_row.end_table();
+			}
+
+			if(!any_class && v->get_cargo_type()->get_number_of_classes()>1) {
+				any_class = true;
+			}
+		}
+	}
+
+	init_class.enable(any_class);
+}
+
+void gui_convoy_fare_class_changer_t::draw(scr_coord offset)
+{
+	if (!cnv.is_bound()) { return; }
+	if(cnv->is_reversed() != old_reversed || cnv->get_vehicle_count() != old_vehicle_count) {
+		update_vehicles();
+	}
+	set_size(get_size());
+	gui_aligned_container_t::draw(offset);
+}
+
+bool gui_convoy_fare_class_changer_t::action_triggered(gui_action_creator_t *comp, value_t)
+{
+	if (comp == &init_class) {
+		reset_fare_class();
+		return true;
+	}
+	return false;
+}
+
 
 gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_class)
 {

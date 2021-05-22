@@ -25,6 +25,8 @@
 #include "../convoihandle_t.h"
 #include "simwin.h"
 
+#include "vehicle_class_manager.h"
+
 class scr_coord;
 
 #define MAX_ACCEL_CURVES 4
@@ -188,12 +190,14 @@ private:
 	gui_convoy_maintenance_info_t maintenance;
 	gui_aligned_container_t cont_accel, cont_force;
 	gui_convoy_spec_table_t spec_table;
+	gui_convoy_fare_class_changer_t cont_fare_changer;
 	gui_chart_t accel_chart, force_chart;
 
 	gui_scrollpane_t scrolly_formation;
 	gui_scrollpane_t scrolly_payload_info;
 	gui_scrollpane_t scrolly_maintenance;
 	gui_scrollpane_t scroll_spec;
+	gui_scrollpane_t scroll_fare_changer;
 
 	static sint16 tabstate;
 	gui_tab_panel_t switch_chart;

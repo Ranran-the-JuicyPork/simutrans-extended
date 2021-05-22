@@ -640,10 +640,12 @@ convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	payload_info(cnv),
 	maintenance(cnv),
 	spec_table(cnv),
+	cont_fare_changer(cnv),
 	scrolly_formation(&formation),
 	scrolly_payload_info(&payload_info),
 	scrolly_maintenance(&maintenance),
-	scroll_spec(&spec_table)
+	scroll_spec(&spec_table),
+	scroll_fare_changer(&cont_fare_changer)
 {
 	if (cnv.is_bound()) {
 		init(cnv);
@@ -722,7 +724,8 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	tabs.add_tab(&cont_maintenance,  translator::translate("cd_maintenance_tab"));
 	tabs.add_tab(&cont_payload, translator::translate("cd_payload_tab"));
 	tabs.add_tab(&container_chart, translator::translate("cd_physics_tab"));
-	tabs.add_tab(&cont_spec, translator::translate("cd_spec_table"));
+	tabs.add_tab(&cont_spec, translator::translate("cd_spec_tab"));
+	tabs.add_tab(&scroll_fare_changer, translator::translate("cd_fare_controller"));
 	tabs.add_listener(this);
 
 	// content of payload info tab
@@ -906,6 +909,9 @@ void convoi_detail_t::set_tab_opened()
 			break;
 		case 3: // spec table
 			ideal_size_h += cont_spec.get_size().h + D_V_SPACE*2;
+			break;
+		case 4: // fare_controllaer
+			ideal_size_h += cont_fare_changer.get_size().h + D_V_SPACE*2;
 			break;
 	}
 	if (get_windowsize().h != ideal_size_h) {

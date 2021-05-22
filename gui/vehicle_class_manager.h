@@ -152,6 +152,32 @@ public:
 };
 
 
+class gui_convoy_fare_class_changer_t : public gui_aligned_container_t, private action_listener_t
+{
+	convoihandle_t cnv;
+
+	bool any_class = false;
+
+	uint8 old_vehicle_count=0;
+	bool old_reversed=false;
+
+	gui_aligned_container_t cont_vehicle_row;
+
+	button_t init_class;
+	void reset_fare_class();
+
+	void update_vehicles();
+
+public:
+	gui_convoy_fare_class_changer_t(convoihandle_t cnv);
+
+	//void set_cnv(convoihandle_t c) { cnv = c; }
+
+	void draw(scr_coord offset) OVERRIDE;
+
+	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+};
+
 
 class gui_cabin_fare_changer_t : public gui_aligned_container_t, private action_listener_t
 {
@@ -166,4 +192,6 @@ public:
 	void draw(scr_coord offset) OVERRIDE;
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 };
+
+
 #endif
