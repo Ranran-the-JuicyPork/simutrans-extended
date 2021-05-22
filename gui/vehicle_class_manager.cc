@@ -1087,6 +1087,7 @@ gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t 
 	this->cnv = cnv;
 
 	set_table_layout(1,0);
+	set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(D_SCROLLBAR_WIDTH+D_H_SPACE, D_MARGIN_BOTTOM));
 	init_class.init(button_t::roundbox, "reset_all_classes");
 	init_class.set_tooltip("resets_all_classes_to_their_defaults");
 	init_class.add_listener( this );
@@ -1143,6 +1144,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 							lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered);
 							lb->buf().printf(" %d ", desc->get_comfort(cy));
 							lb->set_fixed_width(proportional_string_width(" 888 "));
+							lb->set_tooltip("Comfort");
 							lb->update();
 						}
 						else {
@@ -1202,7 +1204,6 @@ void gui_convoy_fare_class_changer_t::draw(scr_coord offset)
 	if(cnv->is_reversed() != old_reversed || cnv->get_vehicle_count() != old_vehicle_count) {
 		update_vehicles();
 	}
-	set_size(get_size());
 	gui_aligned_container_t::draw(offset);
 }
 

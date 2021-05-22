@@ -189,7 +189,7 @@ public:
 	};
 
 private:
-	gui_aligned_container_t cont_maintenance, cont_payload, cont_spec;
+	gui_aligned_container_t cont_maintenance, cont_payload, cont_chart_tab, cont_spec_tab;
 
 	convoihandle_t cnv;
 
@@ -202,8 +202,9 @@ private:
 	gui_chart_t accel_chart, force_chart;
 
 	gui_scrollpane_t scrolly_formation;
-	gui_scrollpane_t scrolly_payload_info;
 	gui_scrollpane_t scrolly_maintenance;
+	gui_scrollpane_t scrolly_payload_info;
+	gui_scrollpane_t scrolly_chart;
 	gui_scrollpane_t scroll_spec;
 	gui_scrollpane_t scroll_fare_changer;
 
@@ -211,7 +212,6 @@ private:
 	gui_tab_panel_t switch_chart;
 	gui_tab_panel_t tabs;
 
-	gui_aligned_container_t container_chart;
 	button_t sale_button;
 	button_t withdraw_button;
 	button_t retire_button;

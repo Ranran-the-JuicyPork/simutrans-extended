@@ -644,8 +644,9 @@ convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	scrolly_formation(&formation),
 	scrolly_payload_info(&payload_info),
 	scrolly_maintenance(&maintenance),
-	scroll_spec(&spec_table),
-	scroll_fare_changer(&cont_fare_changer)
+	scrolly_chart(&cont_chart_tab),
+	scroll_spec(&spec_table, true, true),
+	scroll_fare_changer(&cont_fare_changer, true)
 {
 	if (cnv.is_bound()) {
 		init(cnv);
@@ -700,31 +701,29 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	new_component<gui_margin_t>(0, D_V_SPACE);
 
 	// content of spec table
-	cont_spec.set_margin(scr_size(1, D_V_SPACE), scr_size(1, 0));
-	cont_spec.set_table_layout(1,0);
-	cont_spec.add_table(4,0)->set_spacing(scr_size(0,0));
+	cont_spec_tab.set_margin(scr_size(1, D_V_SPACE), scr_size(1, 0));
+	cont_spec_tab.set_table_layout(1,0);
+	cont_spec_tab.add_table(4,0)->set_spacing(scr_size(0,0));
 	{
-		cont_spec.new_component<gui_fill_t>();
+		cont_spec_tab.new_component<gui_fill_t>();
 		bt_spec_table.pressed    = !spec_table.display_payload_table;
 		bt_payload_table.pressed =  spec_table.display_payload_table;
 		bt_spec_table.init(button_t::roundbox_left_state, "principal_spec", scr_coord(0,0), D_BUTTON_SIZE);
 		bt_payload_table.init(button_t::roundbox_right_state, "payload_spec", scr_coord(0,0), D_BUTTON_SIZE);
 		bt_spec_table.add_listener(this);
 		bt_payload_table.add_listener(this);
-		cont_spec.add_component(&bt_spec_table);
-		cont_spec.add_component(&bt_payload_table);
-		cont_spec.new_component<gui_margin_t>(D_MARGIN_RIGHT);
+		cont_spec_tab.add_component(&bt_spec_table);
+		cont_spec_tab.add_component(&bt_payload_table);
+		cont_spec_tab.new_component<gui_margin_t>(D_MARGIN_RIGHT);
 	}
-	cont_spec.end_table();
-	cont_spec.add_component(&scroll_spec);
-	scroll_spec.set_show_scroll_x(true);
-	scroll_spec.set_show_scroll_y(true);
+	cont_spec_tab.end_table();
+	cont_spec_tab.add_component(&scroll_spec);
 
 	add_component(&tabs);
-	tabs.add_tab(&cont_maintenance,  translator::translate("cd_maintenance_tab"));
-	tabs.add_tab(&cont_payload, translator::translate("cd_payload_tab"));
-	tabs.add_tab(&container_chart, translator::translate("cd_physics_tab"));
-	tabs.add_tab(&cont_spec, translator::translate("cd_spec_tab"));
+	tabs.add_tab(&cont_maintenance,    translator::translate("cd_maintenance_tab"));
+	tabs.add_tab(&cont_payload,        translator::translate("cd_payload_tab"));
+	tabs.add_tab(&scrolly_chart,       translator::translate("cd_physics_tab"));
+	tabs.add_tab(&cont_spec_tab,       translator::translate("cd_spec_tab"));
 	tabs.add_tab(&scroll_fare_changer, translator::translate("cd_fare_controller"));
 	tabs.add_listener(this);
 
@@ -800,24 +799,24 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	cont_maintenance.add_component(&scrolly_maintenance);
 	scrolly_maintenance.set_maximize(true);
 
-	container_chart.set_table_layout(1,0);
-	container_chart.add_table(3,0)->set_spacing(scr_size(0,1));
+	cont_chart_tab.set_table_layout(1,0);
+	cont_chart_tab.add_table(3,0)->set_spacing(scr_size(0,1));
 	{
-		container_chart.set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(D_MARGIN_RIGHT,0));
-		container_chart.new_component<gui_label_t>("Starting acceleration:")->set_tooltip(translator::translate("helptxt_starting_acceleration"));
-		lb_acceleration = container_chart.new_component<gui_acceleration_label_t>(cnv);
-		container_chart.new_component<gui_fill_t>();
+		cont_chart_tab.set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(D_MARGIN_RIGHT,0));
+		cont_chart_tab.new_component<gui_label_t>("Starting acceleration:")->set_tooltip(translator::translate("helptxt_starting_acceleration"));
+		lb_acceleration = cont_chart_tab.new_component<gui_acceleration_label_t>(cnv);
+		cont_chart_tab.new_component<gui_fill_t>();
 
-		container_chart.new_component<gui_label_t>("time_to_top_speed:")->set_tooltip(translator::translate("helptxt_acceleration_time"));
-		lb_acc_time = container_chart.new_component<gui_acceleration_time_label_t>(cnv);
-		container_chart.new_component<gui_fill_t>();
+		cont_chart_tab.new_component<gui_label_t>("time_to_top_speed:")->set_tooltip(translator::translate("helptxt_acceleration_time"));
+		lb_acc_time = cont_chart_tab.new_component<gui_acceleration_time_label_t>(cnv);
+		cont_chart_tab.new_component<gui_fill_t>();
 
-		container_chart.new_component<gui_label_t>("distance_required_to_top_speed:")->set_tooltip(translator::translate("helptxt_acceleration_distance"));
-		lb_acc_distance = container_chart.new_component<gui_acceleration_dist_label_t>(cnv);
-		container_chart.new_component<gui_fill_t>();
+		cont_chart_tab.new_component<gui_label_t>("distance_required_to_top_speed:")->set_tooltip(translator::translate("helptxt_acceleration_distance"));
+		lb_acc_distance = cont_chart_tab.new_component<gui_acceleration_dist_label_t>(cnv);
+		cont_chart_tab.new_component<gui_fill_t>();
 	}
-	container_chart.end_table();
-	container_chart.add_component(&switch_chart);
+	cont_chart_tab.end_table();
+	cont_chart_tab.add_component(&switch_chart);
 
 	switch_chart.add_tab(&cont_accel, translator::translate("v-t graph"), NULL, translator::translate("helptxt_v-t_graph"));
 	switch_chart.add_tab(&cont_force, translator::translate("f-v graph"), NULL, translator::translate("helptxt_f-v_graph"));
@@ -888,7 +887,7 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	update_labels();
 
 	reset_min_windowsize();
-	set_windowsize(scr_size(D_DEFAULT_WIDTH, tabs.get_pos().y + container_chart.get_size().h));
+	set_windowsize(scr_size(D_DEFAULT_WIDTH, tabs.get_pos().y + cont_chart_tab.get_size().h));
 	set_resizemode(diagonal_resize);
 }
 
@@ -906,13 +905,13 @@ void convoi_detail_t::set_tab_opened()
 			ideal_size_h += cont_payload.get_size().h;
 			break;
 		case CD_TAB_PHYSICS_CHARTS:
-			ideal_size_h += container_chart.get_size().h + D_V_SPACE*2;
+			ideal_size_h += cont_chart_tab.get_size().h + D_V_SPACE*2;
 			break;
 		case CD_TAB_SPEC_TABLE:
-			ideal_size_h += cont_spec.get_size().h + D_V_SPACE*2;
+			ideal_size_h += cont_spec_tab.get_size().h + D_V_SPACE*2;
 			break;
 		case CD_TAB_FARE_CHANGER:
-			ideal_size_h += cont_fare_changer.get_size().h + D_V_SPACE*2;
+			ideal_size_h += cont_fare_changer.get_size().h + D_V_SPACE*2+D_SCROLLBAR_HEIGHT;
 			break;
 	}
 	if (get_windowsize().h != ideal_size_h) {
@@ -1027,7 +1026,7 @@ void convoi_detail_t::draw(scr_coord pos, scr_size size)
 	retire_button.pressed = cnv->get_depot_when_empty();
 	class_management_button.pressed = win_get_magic(magic_class_manager);
 
-	if (tabs.get_active_tab_index()==3) {
+	if (tabs.get_active_tab_index() == CD_TAB_PHYSICS_CHARTS) {
 		// common existing_convoy_t for acceleration curve and weight/speed info.
 		convoi_t &convoy = *cnv.get_rep();
 
