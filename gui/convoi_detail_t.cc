@@ -664,23 +664,26 @@ void convoi_detail_t::init(convoihandle_t cnv)
 		add_component(&lb_vehicle_count);
 		new_component<gui_fill_t>();
 
-		class_management_button.init(button_t::roundbox, "class_manager", scr_coord(0, 0), scr_size(D_BUTTON_WIDTH*1.5, D_BUTTON_HEIGHT));
-		class_management_button.set_tooltip("see_and_change_the_class_assignments");
-		add_component(&class_management_button);
-		class_management_button.add_listener(this);
+		add_table(gui_convoy_formation_t::CONVOY_OVERVIEW_MODES,1)->set_spacing(scr_size(0, 0));
+		{
+			for (uint8 i = 0; i < gui_convoy_formation_t::CONVOY_OVERVIEW_MODES; i++) {
+				overview_selctor[i].init(i == 0 ? button_t::roundbox_left_state : i == gui_convoy_formation_t::CONVOY_OVERVIEW_MODES - 1 ? button_t::roundbox_right_state : button_t::roundbox_middle_state,
+					translator::translate(gui_convoy_formation_t::cnvlist_mode_button_texts[i]));
+				overview_selctor[i].pressed = (i==gui_convoy_formation_t::convoy_overview_t::formation);
+				overview_selctor[i].add_listener(this);
+				add_component(&overview_selctor[i]);
+			}
+		}
+		end_table();
 
 		// 2nd row
 		add_component(&lb_working_method);
 		new_component<gui_fill_t>();
 
-		for (uint8 i = 0; i < gui_convoy_formation_t::CONVOY_OVERVIEW_MODES; i++) {
-			overview_selctor.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(gui_convoy_formation_t::cnvlist_mode_button_texts[i]), SYSCOL_TEXT);
-		}
-		overview_selctor.set_selection(gui_convoy_formation_t::convoy_overview_t::formation);
-		overview_selctor.set_width_fixed(true);
-		overview_selctor.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
-		overview_selctor.add_listener(this);
-		add_component(&overview_selctor);
+		class_management_button.init(button_t::roundbox, "class_manager", scr_coord(0, 0), scr_size(D_BUTTON_WIDTH*1.5, D_BUTTON_HEIGHT));
+		class_management_button.set_tooltip("see_and_change_the_class_assignments");
+		add_component(&class_management_button);
+		class_management_button.add_listener(this);
 	}
 	end_table();
 
@@ -934,9 +937,6 @@ void convoi_detail_t::update_labels()
 	}
 	lb_working_method.update();
 
-	// update the convoy overview panel
-	formation.set_mode(overview_selctor.get_selection());
-
 	// contents of payload tab
 	{
 		// convoy min - max loading time
@@ -1148,10 +1148,6 @@ bool convoi_detail_t::action_triggered(gui_action_creator_t *comp, value_t)
 			create_win(20, 40, new vehicle_class_manager_t(cnv), w_info, magic_class_manager + cnv.get_id());
 			return true;
 		}
-		else if (comp == &overview_selctor) {
-			update_labels();
-			return true;
-		}
 		else if (comp == &display_detail_button) {
 			display_detail_button.pressed = !display_detail_button.pressed;
 			payload_info.set_show_detail(display_detail_button.pressed);
@@ -1168,6 +1164,19 @@ bool convoi_detail_t::action_triggered(gui_action_creator_t *comp, value_t)
 			if (get_windowsize().h == get_min_windowsize().h || tabstate == old_tab) {
 				set_tab_opened();
 			}
+			return true;
+		}
+		else {
+			for (uint8 i = 0; i < gui_convoy_formation_t::CONVOY_OVERVIEW_MODES; i++) {
+				if (comp == &overview_selctor[i]) {
+					formation.set_mode(i);
+					overview_selctor[i].pressed=true;
+				}
+				else {
+					overview_selctor[i].pressed=false;
+				}
+			}
+			update_labels();
 			return true;
 		}
 	}

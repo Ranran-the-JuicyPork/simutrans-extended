@@ -207,7 +207,7 @@ private:
 	button_t display_detail_button;
 	button_t bt_spec_table, bt_payload_table;
 
-	gui_combobox_t overview_selctor;
+	button_t overview_selctor[gui_convoy_formation_t::CONVOY_OVERVIEW_MODES];
 	gui_label_buf_t
 		lb_vehicle_count, lb_working_method, // for main frame
 		lb_loading_time, lb_catering_level,  // for payload tab
