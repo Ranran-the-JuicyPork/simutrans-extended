@@ -16,23 +16,15 @@
 #include "../simcolor.h"
 #include "../display/simgraph.h"
 #include "../simworld.h"
-#include "../gui/simwin.h"
 
-#include "../dataobj/schedule.h"
 #include "../dataobj/translator.h"
 #include "../dataobj/loadsave.h"
 #include "../simline.h"
-#include "../simmenu.h"
-#include "messagebox.h"
 
 #include "../player/simplay.h"
 
 #include "../utils/simstring.h"
 #include "../utils/cbuffer_t.h"
-
-#include "components/gui_chart.h"
-
-#include "../obj/roadsign.h"
 
 
 

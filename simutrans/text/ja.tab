@@ -3718,9 +3718,9 @@ Starting acceleration:
 Sell for %s
 %sで売却
 cl_btn_general
-編成外観・積載率
+編成外観
 cl_btn_payload
-カテゴリ別積載状況
+積載状況
 cl_btn_formation
 編成図
 available_company_takeovers:

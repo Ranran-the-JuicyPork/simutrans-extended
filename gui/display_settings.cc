@@ -84,7 +84,6 @@ public:
 };
 
 
-
 gui_settings_t::gui_settings_t()
 {
 	set_table_layout( 1, 0 );
@@ -102,9 +101,18 @@ gui_settings_t::gui_settings_t()
 	add_component( buttons + IDBTN_CHANGE_FONT );
 
 	// add controls to info container
-	add_table(2,4);
+	add_table(2,0);
 	{
 		set_alignment(ALIGN_LEFT);
+		// position of menu
+		new_component<gui_label_t>("Toolbar position:");
+		switch (env_t::menupos) {
+			case MENU_TOP: toolbar_pos.init(button_t::arrowup, NULL); break;
+			case MENU_LEFT: toolbar_pos.init(button_t::arrowleft, NULL); break;
+			case MENU_BOTTOM: toolbar_pos.init(button_t::arrowdown, NULL); break;
+			case MENU_RIGHT: toolbar_pos.init(button_t::arrowright, NULL); break;
+		}
+		add_component(&toolbar_pos);
 		// Frame time label
 		new_component<gui_label_t>("Frame time:");
 		frame_time_value_label.buf().printf(" 9999 ms");
@@ -685,6 +693,7 @@ color_gui_t::color_gui_t() :
 	for( int i = 0; i < COLORS_MAX_BUTTONS; i++ ) {
 		buttons[ i ].add_listener( this );
 	}
+	gui_settings.toolbar_pos.add_listener(this);
 
 	set_resizemode(diagonal_resize);
 	set_min_windowsize( scr_size(D_DEFAULT_WIDTH, max(get_min_windowsize().h, traffic_settings.get_size().h)) );
@@ -693,8 +702,28 @@ color_gui_t::color_gui_t() :
 	resize( scr_coord( 0, 0 ) );
 }
 
-bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t)
+bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 {
+	if(  comp == &gui_settings.toolbar_pos  ) {
+		env_t::menupos++;
+		env_t::menupos &= 3;
+		switch (env_t::menupos) {
+			case MENU_TOP: gui_settings.toolbar_pos.set_typ(button_t::arrowup); break;
+			case MENU_LEFT: gui_settings.toolbar_pos.set_typ(button_t::arrowleft); break;
+			case MENU_BOTTOM: gui_settings.toolbar_pos.set_typ(button_t::arrowdown); break;
+			case MENU_RIGHT: gui_settings.toolbar_pos.set_typ(button_t::arrowright); break;
+		}
+		welt->set_dirty();
+
+		// move all windows
+		event_t* ev = new event_t();
+		ev->ev_class = EVENT_SYSTEM;
+		ev->ev_code = SYSTEM_RELOAD_WINDOWS;
+		queue_event(ev);
+
+		return true;
+	}
+
 	int i;
 	for(  i=0;  i<COLORS_MAX_BUTTONS  &&  comp!=buttons+i;  i++  ) { }
 
@@ -842,4 +871,14 @@ void color_gui_t::draw(scr_coord pos, scr_size size)
 
 	// All components are updated, now draw them...
 	gui_frame_t::draw(pos, size);
+}
+
+
+void color_gui_t::rdwr(loadsave_t *f)
+{
+	tabs.rdwr(f);
+	scrolly_gui.rdwr(f);
+	scrolly_map.rdwr(f);
+	scrolly_station.rdwr(f);
+	scrolly_traffic.rdwr(f);
 }

@@ -16,6 +16,8 @@
 #include "../utils/simrandom.h"
 void rdwr_win_settings(loadsave_t *file); // simwin
 
+sint16 env_t::menupos = MENU_TOP;
+
 sint8 env_t::pak_tile_height_step = 16;
 sint8 env_t::pak_height_conversion_factor = 1;
 env_t::height_conversion_mode env_t::height_conv_mode = env_t::HEIGHT_CONV_LINEAR;
@@ -591,6 +593,9 @@ void env_t::rdwr(loadsave_t *file)
 		if(  file->is_loading()  ) {
 			soundfont_filename = str ? str.c_str() : "";
 		}
+
+		file->rdwr_short(env_t::menupos);
+		env_t::menupos & 3;
 	}
 	if( file->is_version_ex_atleast(14, 40) ) {
 		file->rdwr_byte(gui_titlebar_player_color_background_brightness);
