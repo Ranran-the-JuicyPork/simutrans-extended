@@ -899,16 +899,16 @@ void convoi_detail_t::set_tab_opened()
 	{
 		case CD_TAB_MAINTENANCE:
 		default:
-			ideal_size_h += cont_maintenance.get_size().h + D_V_SPACE * 2;
+			ideal_size_h += maintenance.get_size().h + D_BUTTON_HEIGHT + D_MARGINS_Y + D_V_SPACE*3;
 			break;
 		case CD_TAB_LOADED_DETAIL:
-			ideal_size_h += cont_payload.get_size().h;
+			ideal_size_h += payload_info.get_size().h + D_BUTTON_HEIGHT + D_MARGINS_Y + D_V_SPACE;
 			break;
 		case CD_TAB_PHYSICS_CHARTS:
 			ideal_size_h += cont_chart_tab.get_size().h + D_V_SPACE*2;
 			break;
 		case CD_TAB_SPEC_TABLE:
-			ideal_size_h += cont_spec_tab.get_size().h + D_V_SPACE*2;
+			ideal_size_h += spec_table.get_size().h + D_BUTTON_HEIGHT + D_V_SPACE*4;
 			break;
 		case CD_TAB_FARE_CHANGER:
 			ideal_size_h += cont_fare_changer.get_size().h + D_V_SPACE*2+D_SCROLLBAR_HEIGHT;
