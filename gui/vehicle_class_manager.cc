@@ -26,6 +26,8 @@
 #include "../utils/simstring.h"
 #include "../utils/cbuffer_t.h"
 
+#include "components/gui_divider.h"
+#include "components/gui_image.h"
 
 
 #define SCL_HEIGHT (15*LINESPACE)
@@ -1084,6 +1086,8 @@ gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t 
 	init_class.set_tooltip("resets_all_classes_to_their_defaults");
 	init_class.add_listener( this );
 	add_component(&init_class);
+	new_component<gui_margin_t>(0,D_V_SPACE);
+
 	cont_vehicle_row.set_table_layout(4,0);
 	cont_vehicle_row.set_alignment(ALIGN_TOP);
 	add_component(&cont_vehicle_row);
@@ -1091,14 +1095,24 @@ gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t 
 	update_vehicles();
 }
 
+#define L_CAR_NUM_CELL_WIDTH ( proportional_string_width(translator::translate("LOCO_SYM"))+proportional_string_width("L88") )
 void gui_convoy_fare_class_changer_t::update_vehicles()
 {
 	any_class = false;
 	cont_vehicle_row.remove_all();
 	if (cnv.is_bound()) {
+		// draw headers
+		cont_vehicle_row.new_component<gui_label_t>("No.", SYSCOL_TEXT_TITLE, gui_label_t::left);
+		cont_vehicle_row.new_component<gui_label_t>("Name", SYSCOL_TEXT_TITLE, gui_label_t::left);
+		cont_vehicle_row.new_component_span<gui_label_t>("Capacity info.", SYSCOL_TEXT_TITLE, gui_label_t::left, 2);
+
+		// draw borders
+		cont_vehicle_row.new_component<gui_divider_t>()->init(scr_coord(0,0), L_CAR_NUM_CELL_WIDTH, LINESPACE*0.5);
+		cont_vehicle_row.new_component<gui_divider_t>();
+		cont_vehicle_row.new_component_span<gui_divider_t>(2);
+
 		old_reversed = cnv->is_reversed();
 		old_vehicle_count = cnv->get_vehicle_count();
-
 		const uint8 catering_level = cnv->get_catering_level(goods_manager_t::INDEX_PAS);
 
 		for (uint8 veh = 0; veh < cnv->get_vehicle_count(); veh++) {
@@ -1114,7 +1128,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 			// 1: car number
 			gui_label_buf_t *lb = cont_vehicle_row.new_component<gui_label_buf_t>(desc->has_available_upgrade(month_now) ? COL_UPGRADEABLE : SYSCOL_TEXT_WEAK, gui_label_t::centered);
 			lb->buf().printf("%s%d", cnv->get_car_numbering(veh) < 0 ? translator::translate("LOCO_SYM") : "", abs(cnv->get_car_numbering(veh)));
-			lb->set_fixed_width( proportional_string_width(translator::translate("LOCO_SYM")) + proportional_string_width("L88") );
+			lb->set_fixed_width( L_CAR_NUM_CELL_WIDTH );
 			lb->update();
 
 			// 2: vehicle name
@@ -1136,7 +1150,10 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 						// 4-1: capacity of this accomodation class
 						lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
 						lb->buf().printf("%3d", desc->get_capacity(cy));
-						lb->set_fixed_width(proportional_string_width("8888"));
+						if (is_passenger_vehicle && v->get_overcrowded_capacity(cy)) {
+							lb->buf().printf(" (%d)", v->get_overcrowded_capacity(cy));
+						}
+						lb->set_fixed_width(proportional_string_width("8888(888)"));
 						lb->update();
 
 						// 4-2: comfort of this accomodation class
@@ -1177,11 +1194,14 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 					lb = cont_vehicle_row.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
 					if (desc->get_capacity()) {
 						lb->buf().printf("%3d", desc->get_capacity());
+						if (is_passenger_vehicle && desc->get_overcrowded_capacity()) {
+							lb->buf().printf(" (%d)", desc->get_overcrowded_capacity());
+						}
 					}
 					else {
 						lb->buf().append("-");
 					}
-					lb->set_fixed_width(proportional_string_width("8888"));
+					lb->set_fixed_width(proportional_string_width("8888(888)"));
 					lb->update();
 
 					// 4-2: comfort
