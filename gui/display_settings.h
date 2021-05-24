@@ -40,7 +40,7 @@ private:
 		cities_to_process_label;
 
 public:
-	button_t toolbar_pos;
+	button_t toolbar_pos[4];
 
 	gui_settings_t();
 	virtual void draw( scr_coord offset ) OVERRIDE;

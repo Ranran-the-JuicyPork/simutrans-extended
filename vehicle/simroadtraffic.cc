@@ -1058,7 +1058,7 @@ grund_t* private_car_t::hop_check()
 
 		if (found_route)
 		{
-			pos_next_next = weg->get_next_on_private_car_route_to(check_target);
+			pos_next_next = weg->get_next_on_private_car_route_to(check_target,true,simrand(4,"private_car_t::hop_check"));
 
 			// Check whether we are at the end of the route (i.e. the destination)
 			if ((current_city == destination_city) && pos_next_next == koord3d::invalid)

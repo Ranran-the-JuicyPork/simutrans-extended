@@ -100,19 +100,35 @@ gui_settings_t::gui_settings_t()
 	buttons[ IDBTN_CHANGE_FONT ].init( button_t::roundbox_state | button_t::flexible, "Select display font" );
 	add_component( buttons + IDBTN_CHANGE_FONT );
 
+	// position of menu
+	add_table(5,1)->set_spacing(scr_size(0,0));
+	{
+		new_component<gui_label_t>("Toolbar position:");
+		new_component<gui_margin_t>(D_H_SPACE);
+		static char const* const positions[] = { "Left", "Top", "Right", "Bottom" };
+		for (uint8 i=0; i<4; i++) {
+			toolbar_pos[i].pressed = (env_t::menupos == i);
+			toolbar_pos[i].init( button_t::roundbox_state, positions[i], scr_coord(0,0), scr_size(D_BUTTON_WIDTH*0.8, D_BUTTON_HEIGHT) );
+		}
+
+		add_component( &toolbar_pos[MENU_LEFT] );
+		add_table(1,2);
+		{
+			add_component( &toolbar_pos[MENU_TOP] );
+			add_component( &toolbar_pos[MENU_BOTTOM] );
+		}
+		end_table();
+		add_component( &toolbar_pos[MENU_RIGHT] );
+	}
+	end_table();
+
+	new_component<gui_divider_t>();
+
 	// add controls to info container
 	add_table(2,0);
 	{
 		set_alignment(ALIGN_LEFT);
-		// position of menu
-		new_component<gui_label_t>("Toolbar position:");
-		switch (env_t::menupos) {
-			case MENU_TOP: toolbar_pos.init(button_t::arrowup, NULL); break;
-			case MENU_LEFT: toolbar_pos.init(button_t::arrowleft, NULL); break;
-			case MENU_BOTTOM: toolbar_pos.init(button_t::arrowdown, NULL); break;
-			case MENU_RIGHT: toolbar_pos.init(button_t::arrowright, NULL); break;
-		}
-		add_component(&toolbar_pos);
+
 		// Frame time label
 		new_component<gui_label_t>("Frame time:");
 		frame_time_value_label.buf().printf(" 9999 ms");
@@ -693,7 +709,9 @@ color_gui_t::color_gui_t() :
 	for( int i = 0; i < COLORS_MAX_BUTTONS; i++ ) {
 		buttons[ i ].add_listener( this );
 	}
-	gui_settings.toolbar_pos.add_listener(this);
+	for( uint8 i = 0; i < 4; i++ ) {
+		gui_settings.toolbar_pos[i].add_listener(this);
+	}
 
 	set_resizemode(diagonal_resize);
 	set_min_windowsize( scr_size(D_DEFAULT_WIDTH, max(get_min_windowsize().h, traffic_settings.get_size().h)) );
@@ -704,23 +722,25 @@ color_gui_t::color_gui_t() :
 
 bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 {
-	if(  comp == &gui_settings.toolbar_pos  ) {
-		env_t::menupos++;
-		env_t::menupos &= 3;
-		switch (env_t::menupos) {
-			case MENU_TOP: gui_settings.toolbar_pos.set_typ(button_t::arrowup); break;
-			case MENU_LEFT: gui_settings.toolbar_pos.set_typ(button_t::arrowleft); break;
-			case MENU_BOTTOM: gui_settings.toolbar_pos.set_typ(button_t::arrowdown); break;
-			case MENU_RIGHT: gui_settings.toolbar_pos.set_typ(button_t::arrowright); break;
+	bool reflesh_toolbar_pos_btn = false;
+	for(  uint8 i=0; i<4; i++  ) {
+		if(  comp == &gui_settings.toolbar_pos[i]  ) {
+			env_t::menupos = i;
+			reflesh_toolbar_pos_btn = true;
+
+			welt->set_dirty();
+			// move all windows
+			event_t* ev = new event_t();
+			ev->ev_class = EVENT_SYSTEM;
+			ev->ev_code = SYSTEM_RELOAD_WINDOWS;
+			queue_event(ev);
+			break;
 		}
-		welt->set_dirty();
-
-		// move all windows
-		event_t* ev = new event_t();
-		ev->ev_class = EVENT_SYSTEM;
-		ev->ev_code = SYSTEM_RELOAD_WINDOWS;
-		queue_event(ev);
-
+	}
+	if( reflesh_toolbar_pos_btn ) {
+		for(  uint8 i=0; i<4; i++  ) {
+			gui_settings.toolbar_pos[i].pressed = (env_t::menupos == i);
+		}
 		return true;
 	}
 
