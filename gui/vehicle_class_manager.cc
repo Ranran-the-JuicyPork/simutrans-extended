@@ -1095,7 +1095,7 @@ gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t 
 	update_vehicles();
 }
 
-#define L_CAR_NUM_CELL_WIDTH ( proportional_string_width(translator::translate("LOCO_SYM"))+proportional_string_width("L88") )
+#define L_CAR_NUM_CELL_WIDTH ( proportional_string_width(translator::translate("LOCO_SYM"))+proportional_string_width("188") )
 void gui_convoy_fare_class_changer_t::update_vehicles()
 {
 	any_class = false;
@@ -1104,7 +1104,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 		// draw headers
 		cont_vehicle_row.new_component<gui_label_t>("No.", SYSCOL_TEXT_TITLE, gui_label_t::left);
 		cont_vehicle_row.new_component<gui_label_t>("Name", SYSCOL_TEXT_TITLE, gui_label_t::left);
-		cont_vehicle_row.new_component_span<gui_label_t>("Capacity info.", SYSCOL_TEXT_TITLE, gui_label_t::left, 2);
+		cont_vehicle_row.new_component_span<gui_label_t>("Capacity:", SYSCOL_TEXT_TITLE, gui_label_t::left, 2);
 
 		// draw borders
 		cont_vehicle_row.new_component<gui_divider_t>()->init(scr_coord(0,0), L_CAR_NUM_CELL_WIDTH, LINESPACE*0.5);
