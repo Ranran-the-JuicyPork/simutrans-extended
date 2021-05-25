@@ -69,7 +69,6 @@ enum magic_numbers {
 	magic_listtools,
 	magic_edittools,
 	magic_slopetools,
-	magic_halt_list_t,
 	magic_label_frame,
 	magic_city_info_t,
 	magic_citylist_frame_t,

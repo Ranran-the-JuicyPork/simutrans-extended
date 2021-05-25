@@ -7,6 +7,7 @@
 #define GUI_HALT_LIST_FRAME_H
 
 
+#include "simwin.h"
 #include "gui_frame.h"
 #include "halt_list_stats.h"
 #include "components/gui_button.h"
@@ -82,7 +83,7 @@ private:
 	static sort_mode_t sortby;
 	static bool sortreverse;
 
-	static int filter_flags;
+	static uint32 filter_flags;
 
 	static char name_filter_value[64];
 
@@ -96,7 +97,7 @@ public:
 
 	static bool compare_halts(halthandle_t, halthandle_t);
 
-	halt_list_frame_t(player_t *player);
+	halt_list_frame_t();
 
 	virtual ~halt_list_frame_t();
 
@@ -145,6 +146,10 @@ public:
 	bool has_min_sizer() const OVERRIDE {return true;}
 
 	void map_rotate90( sint16 ) OVERRIDE { fill_list(); }
+
+	void rdwr(loadsave_t* file) OVERRIDE;
+
+	uint32 get_rdwr_id() OVERRIDE { return magic_halt_list; }
 };
 
 #endif

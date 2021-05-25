@@ -494,6 +494,7 @@ void building_info_t::update_signalbox_info() {
 
 		cont_signalbox_info.set_visible(true);
 	}
+	reset_min_windowsize();
 }
 
 // Tabs are closed => left click the tab to open it with the appropriate size.

@@ -106,6 +106,8 @@ const uint8 citylist_frame_t::hist_type_type[karte_t::MAX_WORLD_COST] =
 	PERCENT
 };
 
+char citylist_frame_t::name_filter[256] = "";
+
 
 citylist_frame_t::citylist_frame_t() :
 	gui_frame_t(translator::translate("City list")),
@@ -129,7 +131,7 @@ citylist_frame_t::citylist_frame_t() :
 
 	list.set_table_layout(1, 0);
 
-	list.add_table(3, 2);
+	list.add_table(3,3);
 	{
 		// 1st row
 		list.new_component<gui_label_t>("hl_txt_sort");
@@ -155,11 +157,11 @@ citylist_frame_t::citylist_frame_t() :
 			list.add_component(&sortedby);
 
 			// sort ascend/descend switching button
-			sort_order.init(button_t::sortarrow_state, "");
-			sort_order.set_tooltip(translator::translate("hl_btn_sort_order"));
-			sort_order.add_listener(this);
-			sort_order.pressed = citylist_stats_t::sortreverse;
-			list.add_component(&sort_order);
+			sorteddir.init(button_t::sortarrow_state, "");
+			sorteddir.set_tooltip(translator::translate("hl_btn_sort_order"));
+			sorteddir.add_listener(this);
+			sorteddir.pressed = citylist_stats_t::sortreverse;
+			list.add_component(&sorteddir);
 		}
 		list.end_table();
 
@@ -182,6 +184,10 @@ citylist_frame_t::citylist_frame_t() :
 			list.new_component<gui_empty_t>();
 		}
 
+		// 3rd row
+		list.new_component<gui_empty_t>();
+		name_filter_input.set_text(name_filter, lengthof(name_filter));
+		list.add_component(&name_filter_input, 2);
 	}
 	list.end_table();
 
@@ -257,8 +263,12 @@ void citylist_frame_t::update_label()
 void citylist_frame_t::fill_list()
 {
 	scrolly.clear_elements();
+	strcpy(last_name_filter, name_filter);
 	FOR(const weighted_vector_tpl<stadt_t *>, city, world()->get_cities()) {
 		if (citylist_stats_t::region_filter && (citylist_stats_t::region_filter-1) != welt->get_region(city->get_pos())) {
+			continue;
+		}
+		if (last_name_filter[0] != 0 && !utf8caseutf8(city->get_name(), last_name_filter)) {
 			continue;
 		}
 
@@ -282,10 +292,10 @@ bool citylist_frame_t::action_triggered( gui_action_creator_t *comp,value_t v)
 		citylist_stats_t::region_filter = max(0, v.i);
 		fill_list();
 	}
-	else if (comp == &sort_order) {
+	else if (comp == &sorteddir) {
 		citylist_stats_t::sortreverse = !citylist_stats_t::sortreverse;
 		scrolly.sort(0);
-		sort_order.pressed = citylist_stats_t::sortreverse;
+		sorteddir.pressed = citylist_stats_t::sortreverse;
 	}
 	else if (comp == &filter_within_network) {
 		citylist_stats_t::filter_own_network = !citylist_stats_t::filter_own_network;
@@ -301,10 +311,38 @@ void citylist_frame_t::draw(scr_coord pos, scr_size size)
 {
 	welt->update_history();
 
-	if(  (sint32)world()->get_cities().get_count() != scrolly.get_count()  ) {
+	if(  (sint32)world()->get_cities().get_count() != scrolly.get_count()  ||  strcmp(last_name_filter, name_filter)  ) {
 		fill_list();
 	}
 	update_label();
 
 	gui_frame_t::draw(pos, size);
+}
+
+
+
+void citylist_frame_t::rdwr(loadsave_t* file)
+{
+	scr_size size = get_windowsize();
+
+	size.rdwr(file);
+	scrolly.rdwr(file);
+	year_month_tabs.rdwr(file);
+	main.rdwr(file);
+	//filterowner.rdwr(file);
+	sortedby.rdwr(file);
+	file->rdwr_str(name_filter, lengthof(name_filter));
+	file->rdwr_byte(citylist_stats_t::sort_mode);
+	file->rdwr_byte(citylist_stats_t::region_filter);
+	file->rdwr_bool(citylist_stats_t::sortreverse);
+	file->rdwr_bool(citylist_stats_t::filter_own_network);
+	if (file->is_loading()) {
+		sorteddir.pressed = citylist_stats_t::sortreverse;
+		filter_within_network.pressed = citylist_stats_t::filter_own_network;
+		sortedby.set_selection(citylist_stats_t::sort_mode);
+		region_selector.set_selection(citylist_stats_t::region_filter);
+		name_filter_input.set_text( name_filter, lengthof(name_filter) );
+		fill_list();
+		set_windowsize(size);
+	}
 }

@@ -48,11 +48,13 @@
 #include "halt_detail.h"
 #include "halt_info.h"
 #include "convoi_detail_t.h"
+#include "convoi_frame.h"
 #include "convoi_info_t.h"
 #include "schedule_gui.h"
 #include "line_management_gui.h"
 #include "schedule_list.h"
 #include "city_info.h"
+#include "citylist_frame_t.h"
 #include "message_frame_t.h"
 #include "message_option_t.h"
 #include "fabrik_info.h"
@@ -64,6 +66,7 @@
 #endif
 #include "scenario_info.h"
 #include "depotlist_frame.h"
+#include "halt_list_frame.h"
 #include "display_settings.h"
 
 #include "../simversion.h"
@@ -605,9 +608,10 @@ void rdwr_all_win(loadsave_t *file)
 #endif
 					case magic_scenario_info:  w = new scenario_info_t(); break;
 					//case magic_depot:          w = new depot_frame_t(); break;
-					//case magic_convoi_list:    w = new convoi_frame_t(); break;
-					//case magic_depotlist:      w = new depotlist_frame_t(); break;
+					case magic_convoi_list:    w = new convoi_frame_t(); break;
 					//case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
+					case magic_halt_list:      w = new halt_list_frame_t(); break;
+					case magic_citylist_frame_t: w = new citylist_frame_t(); break;
 					case magic_color_gui_t:    w = new color_gui_t(); break;
 
 					default:
@@ -1205,10 +1209,10 @@ void snap_check_win( const int win, scr_coord *r, const scr_coord from_pos, cons
 
 		if(  i==wins_count  ) {
 			// Allow snap to screen edge
-			other_pos.x = 0;
-			other_pos.y = env_t::iconsize.h;
-			other_size.x = display_get_width();
-			other_size.y = display_get_height()-win_get_statusbar_height()-other_pos.y;
+			other_pos.x = (env_t::menupos==MENU_LEFT)*env_t::iconsize.w;
+			other_pos.y = (env_t::menupos==MENU_TOP)*env_t::iconsize.h + (env_t::menupos==MENU_BOTTOM)*win_get_statusbar_height();
+			other_size.x = display_get_width() - other_pos.x - (env_t::menupos==MENU_RIGHT)*env_t::iconsize.w;
+			other_size.y = display_get_height()-win_get_statusbar_height()-env_t::iconsize.h;
 			if(  show_ticker  ) {
 				other_size.y -= TICKER_HEIGHT;
 			}
@@ -1223,7 +1227,7 @@ void snap_check_win( const int win, scr_coord *r, const scr_coord from_pos, cons
 		}
 
 		// my bottom below other top  and  my top above other bottom  ---- in same vertical band
-		if(  from_pos.y+from_size.y>=other_pos.y  &&  from_pos.y<=other_pos.y+other_size.y  ) {
+		if(  from_pos.y+from_size.y >= other_pos.y  &&  from_pos.y <= other_pos.y+other_size.y  ) {
 			if(  resize  ) {
 				// other right side and my new right side within snap
 				snap_check_distance( &r->x, other_pos.x+other_size.x-from_pos.x, to_size.x );  // snap right - align right sides
