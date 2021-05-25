@@ -1062,7 +1062,7 @@ void gui_class_vehicleinfo_t::draw(scr_coord offset)
 void gui_convoy_fare_class_changer_t::reset_fare_class()
 {
 	if (!cnv.is_bound()) { return; }
-	if (cnv->get_owner() == world()->get_active_player()) {
+	if (cnv->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
 		for (uint8 veh = 0; veh < cnv->get_vehicle_count(); veh++) {
 			vehicle_t *v = cnv->get_vehicle(veh);
 			const uint8 g_classes = v->get_cargo_type()->get_number_of_classes();
@@ -1240,7 +1240,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 				any_class = true;
 			}
 		}
-		init_class.enable( (cnv->get_owner()==world()->get_active_player()) && any_class );
+		init_class.enable( (cnv->get_owner()==world()->get_active_player()) && !world()->get_active_player()->is_locked() && any_class );
 	}
 }
 
@@ -1256,7 +1256,7 @@ void gui_convoy_fare_class_changer_t::draw(scr_coord offset)
 bool gui_convoy_fare_class_changer_t::action_triggered(gui_action_creator_t *comp, value_t)
 {
 	if (!cnv.is_bound()) { return false; }
-	if (comp == &init_class && cnv->get_owner() == world()->get_active_player()) {
+	if (comp == &init_class && cnv->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
 		reset_fare_class();
 		return true;
 	}
@@ -1297,7 +1297,7 @@ gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_
 					buttons[cx].pressed = true;
 				}
 				buttons[cx].set_width( scr_coord_val(D_BUTTON_WIDTH*0.8) );
-				buttons[cx].enable( buttons[cx].pressed || vehicle->get_owner()==world()->get_active_player() );
+				buttons[cx].enable( buttons[cx].pressed || (vehicle->get_owner()==world()->get_active_player() && !world()->get_active_player()->is_locked()));
 				buttons[cx].add_listener(this);
 				add_component(&buttons[cx]);
 			}
@@ -1315,7 +1315,7 @@ void gui_cabin_fare_changer_t::draw(scr_coord offset)
 
 bool gui_cabin_fare_changer_t::action_triggered(gui_action_creator_t *comp, value_t)
 {
-	if(vehicle->get_owner() == world()->get_active_player()) {
+	if(vehicle->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
 		for (uint8 i = 0; i < vehicle->get_cargo_type()->get_number_of_classes(); i++) {
 			if (&buttons[i] == comp) {
 				vehicle->set_class_reassignment(cabin_class, i);
