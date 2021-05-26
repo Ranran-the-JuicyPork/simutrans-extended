@@ -3176,16 +3176,16 @@ void gui_convoy_assembler_t::draw_vehicle_bar_help(scr_coord offset)
 
 	top += LINESPACE;
 	display_fillbox_wh_clip_rgb(left+1, top+padding_y, VEHICLE_BAR_HEIGHT*2 - 2, VEHICLE_BAR_HEIGHT, COL_SAFETY, true);
-	display_blend_wh_rgb(left+3, top + FIXED_SYMBOL_YOFF + 1, VEHICLE_BAR_HEIGHT*2 - 6, VEHICLE_BAR_HEIGHT - 2, color_idx_to_rgb(COL_WHITE), 30);
+	display_blend_wh_rgb(left+3, top + padding_y + 1, VEHICLE_BAR_HEIGHT*2 - 6, VEHICLE_BAR_HEIGHT - 2, color_idx_to_rgb(COL_WHITE), 30);
 	display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT*2 + 3, top, translator::translate("helptxt_unpowered_vehicle"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 	if (skinverwaltung_t::upgradable) {
 		top += LINESPACE;
-		display_color_img(skinverwaltung_t::upgradable->get_image_id(1), left + 1, top + FIXED_SYMBOL_YOFF, 0, false, false);
+		display_color_img(skinverwaltung_t::upgradable->get_image_id(1), left + 1, top+padding_y, 0, false, false);
 		display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade available"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 
 		top += LINESPACE;
-		display_color_img(skinverwaltung_t::upgradable->get_image_id(0), left + 1, top + FIXED_SYMBOL_YOFF, 0, false, false);
+		display_color_img(skinverwaltung_t::upgradable->get_image_id(0), left + 1, top+padding_y, 0, false, false);
 		if (welt->get_settings().get_show_future_vehicle_info()) {
 			display_proportional_clip_rgb(left + VEHICLE_BAR_HEIGHT * 2 + 3, top, translator::translate("Upgrade is not available yet"), ALIGN_LEFT, SYSCOL_TEXT_WEAK, true);
 		}
