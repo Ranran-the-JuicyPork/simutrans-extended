@@ -6145,16 +6145,12 @@ void karte_t::refresh_private_car_routes() {
 }
 
 void karte_t::clear_private_car_routes() {
-	weg_t::private_car_route_map::route_map_lock();
 	for(auto & w : weg_t::get_alle_wege()) {
 		for(auto & l : w->private_car_routes[weg_t::get_private_car_routes_currently_writing_element()]) {
-			l.pre_reset();
+			l.clear();
+			l.resize(0);
 		}
 	}
-	weg_t::private_car_route_map::reset(weg_t::get_private_car_routes_currently_writing_element());
-
-	weg_t::private_car_route_map::route_map_unlock();
-
 }
 
 void karte_t::step_time_interval_signals()
