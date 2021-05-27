@@ -36,7 +36,6 @@ bool classify_file_data(rdwr_stream_t *stream, file_info_t *info);
 
 file_info_t::file_info_t() :
 	file_type(TYPE_RAW),
-	version(INVALID_FILE_VERSION),
 	header_size(0)
 {
 	pak_extension[0] = 0;
@@ -181,7 +180,6 @@ file_classify_status_t classify_image_file(const char *path, file_info_t *info)
 	}
 
 	info->file_type = file_info_t::TYPE_RAW;
-	info->version = INVALID_FILE_VERSION;
 	info->header_size = 0;
 
 	return FILE_CLASSIFY_OK;
