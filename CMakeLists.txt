@@ -327,6 +327,10 @@ add_executable(simutrans-extended
 	io/rdwr/rdwr_stream.cc
 	io/rdwr/zlib_file_rdwr_stream.cc
 	io/classify_file.cc
+	io/raw_image.cc
+	io/raw_image_bmp.cc
+	io/raw_image_png.cc
+	io/raw_image_ppm.cc
 	network/checksum.cc
 	network/memory_rw.cc
 	network/network_address.cc
@@ -481,21 +485,13 @@ if (SIMUTRANS_BACKEND STREQUAL "sdl2")
 	target_link_libraries(simutrans-extended PRIVATE SDL2::Core)
 	target_compile_definitions(simutrans-extended PRIVATE COLOUR_DEPTH=16)
 
-	if (WIN32)
-		target_sources(simutrans-extended PRIVATE sys/simsys_w32_png.cc)
-	endif ()
-
 elseif (SIMUTRANS_BACKEND STREQUAL "mixer_sdl2")
 	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_s2.cc sound/sdl2_mixer_sound.cc music/sdl2_mixer_midi.cc)
 	target_link_libraries(simutrans-extended PRIVATE SDL2::Core SDL2::Mixer)
 	target_compile_definitions(simutrans-extended PRIVATE COLOUR_DEPTH=16)
 
-	if (WIN32)
-		target_sources(simutrans-extended PRIVATE sys/simsys_w32_png.cc)
-	endif ()
-
 elseif (SIMUTRANS_BACKEND STREQUAL "gdi")
-	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_w.cc sys/simsys_w32_png.cc ${BACKUP_SOUND} )
+	target_sources(simutrans-extended PRIVATE display/simgraph16.cc sys/simsys_w.cc ${BACKUP_SOUND} )
 	target_link_libraries(simutrans-extended PRIVATE imm32)
 	target_compile_definitions(simutrans-extended PRIVATE COLOUR_DEPTH=16)
 
