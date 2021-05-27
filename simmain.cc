@@ -703,10 +703,8 @@ int simu_main(int argc, char** argv)
 		{
 			// too new => remove it
 			file.close();
-			dr_remove(xml_filename);
 		}
-		else
-		{
+		else {
 			found_settings = true;
 			env_t::rdwr(&file);
 			env_t::default_settings.rdwr(&file);
