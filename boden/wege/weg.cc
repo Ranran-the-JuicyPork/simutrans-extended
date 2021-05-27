@@ -766,7 +766,7 @@ void weg_t::info(cbuffer_t & buf) const
 			uint32 cities_count = 0;
 			uint32 buildings_count = 0;
 #ifdef DEBUG
-			buf.append(translator::translate("[indices: "));
+			buf.append(translator::translate("[indexes: "));
 			for(uint8 i=0;i<5;i++) {
 				buf.printf("%d ",private_car_routes[private_car_routes_currently_reading_element][i].get_idx());
 			}
