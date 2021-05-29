@@ -381,7 +381,7 @@ public:
 	void set_active(bool yesno)
 	{
 		is_current = yesno;
-		stop.set_color(yesno ? SYSCOL_TEXT_HIGHLIGHT : SYSCOL_TEXT);
+		stop.set_color(yesno ? SYSCOL_LIST_TEXT_SELECTED_FOCUS : SYSCOL_TEXT);
 	}
 
 	bool infowin_event(const event_t *ev) OVERRIDE
