@@ -18,6 +18,7 @@
 #include "components/gui_image.h"
 
 #include "components/gui_scrollpane.h"
+#include "components/gui_schedule_item.h"
 
 #include "../convoihandle_t.h"
 #include "../linehandle_t.h"
@@ -65,34 +66,6 @@ public:
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
-
-class gui_schedule_entry_number_t : public gui_container_t
-{
-	sint8 player_nr;
-	uint8 style;
-	uint number;
-	gui_label_buf_t lb_number;
-public:
-	enum number_style {
-		halt = 0,
-		interchange,
-		depot,
-		waypoint,
-		none
-	};
-
-	gui_schedule_entry_number_t(uint number, sint8 player, uint8 style_ = number_style::halt);
-
-	void draw(scr_coord offset);
-
-	void init(uint number_, sint8 player, uint8 style_ = number_style::halt) { number = number_; player_nr = player; style = style_; };
-
-	void set_number_style(uint8 style_) { style = style_; };
-	void set_owner(sint8 player_nr_) { player_nr = player_nr_; };
-
-	scr_size get_min_size() const OVERRIDE { return size; }
-	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
-};
 
 class gui_colored_route_bar_t : public gui_container_t
 {

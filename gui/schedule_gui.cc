@@ -31,23 +31,21 @@
 #include "depot_frame.h"
 #include "schedule_gui.h"
 #include "line_item.h"
+#include "minimap.h"
 
 #include "components/gui_button.h"
 #include "components/gui_textarea.h"
-#include "minimap.h"
+
 
 static karte_ptr_t welt;
 
-
-#define L_ENTRY_NO_HEIGHT (LINESPACE+4)
-#define L_ENTRY_NO_WIDTH (proportional_string_width("88")+6)
 
 // helper class
 gui_wait_loading_schedule_t::gui_wait_loading_schedule_t(uint32 flags_, uint8 val_)
 {
 	val = val_;
 	flags = flags_;
-	size.h = L_ENTRY_NO_HEIGHT;
+	size.h = D_ENTRY_NO_HEIGHT;
 }
 
 void gui_wait_loading_schedule_t::draw(scr_coord offset)
@@ -85,7 +83,7 @@ gui_schedule_couple_order_t::gui_schedule_couple_order_t(uint16 leave_, uint16 j
 {
 	leave = leave_;
 	join = join_;
-	size.h = L_ENTRY_NO_HEIGHT;
+	size.h = D_ENTRY_NO_HEIGHT;
 	lb_leave.init(color_idx_to_rgb(COL_WHITE), gui_label_t::centered);
 	lb_leave.set_pos(scr_coord(0, 2));
 	lb_leave.set_size(scr_size(L_COUPLE_ORDER_LABEL_WIDTH, D_LABEL_HEIGHT));
@@ -121,66 +119,6 @@ void gui_schedule_couple_order_t::draw(scr_coord offset)
 	size.w = total_x;
 }
 
-gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint number_, sint8 player, uint8 style_)
-{
-	number = number_+1;
-	style = style_;
-	player_nr = player;
-	set_size(scr_size(L_ENTRY_NO_WIDTH, L_ENTRY_NO_HEIGHT));
-	lb_number.set_align(gui_label_t::centered);
-	lb_number.set_size(scr_size(size.w, D_LABEL_HEIGHT));
-	lb_number.set_pos(scr_coord(0, 2));
-	add_component(&lb_number);
-}
-
-void gui_schedule_entry_number_t::draw(scr_coord offset)
-{
-	const PIXVAL base_colval = color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3);
-	PIXVAL text_colval = base_colval;
-	if (number > 99) {
-		size.w = proportional_string_width("000")+6;
-	}
-
-	// draw the back image
-	switch (style) {
-		case number_style::halt:
-			display_filled_roundbox_clip(pos.x+offset.x, pos.y+offset.y, size.w, L_ENTRY_NO_HEIGHT, base_colval, false);
-			text_colval = color_idx_to_rgb(COL_WHITE);
-			break;
-		case number_style::interchange:
-			display_filled_roundbox_clip(pos.x+offset.x, pos.y+offset.y, size.w, L_ENTRY_NO_HEIGHT, base_colval, false);
-			display_filled_roundbox_clip(pos.x+offset.x + 2, pos.y+offset.y + 2, size.w - 4, L_ENTRY_NO_HEIGHT - 4, color_idx_to_rgb(COL_WHITE), false);
-			break;
-		case number_style::depot:
-			for (uint8 i = 0; i < 3; i++) {
-				const scr_coord_val w = (size.w/2)*(i+1)/4;
-				display_fillbox_wh_clip_rgb(pos.x+offset.x+(size.w-w*2)/2, pos.y+offset.y+i, w*2, 1, color_idx_to_rgb(91), false);
-			}
-			display_fillbox_wh_clip_rgb(pos.x+offset.x, pos.y+offset.y+3, size.w, L_ENTRY_NO_HEIGHT-3, color_idx_to_rgb(91), false);
-			text_colval = color_idx_to_rgb(COL_WHITE);
-			break;
-		case number_style::none:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + (size.w- L_ENTRY_NO_WIDTH/2)/2, pos.y+offset.y, L_ENTRY_NO_WIDTH/2, L_ENTRY_NO_HEIGHT,
-				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
-			break;
-		case number_style::waypoint:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + L_ENTRY_NO_WIDTH/4, pos.y+offset.y, L_ENTRY_NO_WIDTH/2, L_ENTRY_NO_HEIGHT,
-				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
-			display_filled_circle_rgb(pos.x+offset.x + size.w/2, pos.y+offset.y + L_ENTRY_NO_HEIGHT/2, L_ENTRY_NO_HEIGHT/2, base_colval);
-			break;
-		default:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x, pos.y+offset.y, size.w, L_ENTRY_NO_HEIGHT, base_colval, false);
-			text_colval = color_idx_to_rgb(COL_WHITE);
-			break;
-	}
-	if (style != number_style::waypoint) {
-		lb_number.buf().printf("%u", number);
-		lb_number.set_color(text_colval);
-	}
-	lb_number.update();
-	lb_number.set_fixed_width(size.w);
-	gui_container_t::draw(offset);
-}
 
 
 gui_colored_route_bar_t::gui_colored_route_bar_t(sint8 player, uint8 style_)
@@ -191,19 +129,19 @@ gui_colored_route_bar_t::gui_colored_route_bar_t(sint8 player, uint8 style_)
 
 void gui_colored_route_bar_t::draw(scr_coord offset)
 {
-	set_size(scr_size(L_ENTRY_NO_WIDTH, LINESPACE));
-	const uint8 width = L_ENTRY_NO_WIDTH/2;
+	set_size(scr_size(D_ENTRY_NO_WIDTH, LINESPACE));
+	const uint8 width = D_ENTRY_NO_WIDTH/2;
 
 	const PIXVAL alert_colval = (alert_level==1) ? COL_CAUTION : (alert_level==2) ? COL_WARNING : color_idx_to_rgb(COL_RED+1);
 	// edge lines
 	if (alert_level) {
 		switch (style) {
 			default:
-				display_blend_wh_rgb(pos.x+offset.x+L_ENTRY_NO_WIDTH/4-1, pos.y+offset.y, width+2, LINESPACE, alert_colval, 60);
+				display_blend_wh_rgb(pos.x+offset.x+D_ENTRY_NO_WIDTH/4-1, pos.y+offset.y, width+2, LINESPACE, alert_colval, 60);
 				break;
 			case line_style::dashed:
 			case line_style::thin:
-				display_blend_wh_rgb(pos.x+offset.x+L_ENTRY_NO_WIDTH/4,   pos.y+offset.y, width,   LINESPACE, alert_colval, 60);
+				display_blend_wh_rgb(pos.x+offset.x+D_ENTRY_NO_WIDTH/4,   pos.y+offset.y, width,   LINESPACE, alert_colval, 60);
 				break;
 			case line_style::reversed:
 			case line_style::none:
@@ -215,34 +153,34 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	switch (style) {
 		case line_style::solid:
 		default:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + L_ENTRY_NO_WIDTH/4, pos.y+offset.y, width, LINESPACE,
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, width, LINESPACE,
 				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
 			break;
 		case line_style::thin:
 		{
-			const uint8 border_width = 2 + L_ENTRY_NO_WIDTH%2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + L_ENTRY_NO_WIDTH/2 - 1, pos.y+offset.y, border_width, LINESPACE,
+			const uint8 border_width = 2 + D_ENTRY_NO_WIDTH%2;
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/2 - 1, pos.y+offset.y, border_width, LINESPACE,
 				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
 			break;
 		}
 		case line_style::doubled:
 		{
 			const uint8 border_width = width>6 ? 3:2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + L_ENTRY_NO_WIDTH/4, pos.y+offset.y, border_width, LINESPACE,
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, border_width, LINESPACE,
 				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + L_ENTRY_NO_WIDTH * 3/4 - border_width, pos.y+offset.y, border_width, LINESPACE,
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH * 3/4 - border_width, pos.y+offset.y, border_width, LINESPACE,
 				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
 			break;
 		}
 		case line_style::dashed:
 			for (uint8 h=1; h+2<LINESPACE; h+=4) {
-				display_fillbox_wh_clip_rgb(pos.x+offset.x + L_ENTRY_NO_WIDTH/4 + 1, pos.y+offset.y+h, width - 2, 2,
+				display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4 + 1, pos.y+offset.y+h, width - 2, 2,
 					color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
 			}
 			break;
 		case line_style::reversed:
 			if (skinverwaltung_t::reverse_arrows) {
-				display_color_img_with_tooltip(skinverwaltung_t::reverse_arrows->get_image_id(0), pos.x+offset.x + (L_ENTRY_NO_WIDTH-10)/2, pos.y+offset.y+2, 0, false, false, "Vehicles make a round trip between the schedule endpoints, visiting all stops in reverse after reaching the end.");
+				display_color_img_with_tooltip(skinverwaltung_t::reverse_arrows->get_image_id(0), pos.x+offset.x + (D_ENTRY_NO_WIDTH-10)/2, pos.y+offset.y+2, 0, false, false, "Vehicles make a round trip between the schedule endpoints, visiting all stops in reverse after reaching the end.");
 			}
 			else {
 				display_proportional_clip_rgb(pos.x+offset.x, pos.y+offset.y, translator::translate("[R]"), ALIGN_LEFT, SYSCOL_TEXT_STRONG, true);
@@ -299,7 +237,7 @@ public:
 
 		wait_loading = new_component<gui_wait_loading_schedule_t>(entry.flags, entry.minimum_loading); // 3
 
-		entry_no = new_component<gui_schedule_entry_number_t>(number, player->get_player_nr(), 0); // 4
+		entry_no = new_component<gui_schedule_entry_number_t>(number, player->get_player_color1(), 0); // 4
 
 		add_table(7,1); //5
 		{
@@ -364,12 +302,12 @@ public:
 		if(welt->lookup(entry.pos) && welt->lookup(entry.pos)->get_depot() != NULL){
 			// Depot check must come first, as depot and dock tiles can overlap at sea
 			entry_no->set_number_style(gui_schedule_entry_number_t::number_style::depot);
-			entry_no->set_owner(player->get_player_nr());
+			entry_no->set_color(player->get_player_color1());
 		}
 		else if (halt.is_bound()) {
 			const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count())>1;
 			entry_no->set_number_style(is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt);
-			entry_no->set_owner(halt->get_owner()->get_player_nr());
+			entry_no->set_color(halt->get_owner()->get_player_color1());
 
 			if (is_air_wt) {
 				img_nc_alert.set_visible(halt->has_no_control_tower());
@@ -380,7 +318,7 @@ public:
 		}
 		else {
 			entry_no->set_number_style(gui_schedule_entry_number_t::number_style::waypoint);
-			entry_no->set_owner(player->get_player_nr()); // can't get the owner of the way without passing the value of waytype
+			entry_no->set_color(player->get_player_color1()); // can't get the owner of the way without passing the value of waytype
 		}
 
 		img_layover.set_visible(entry.is_flag_set(schedule_entry_t::lay_over));
@@ -435,7 +373,7 @@ public:
 	{
 		update_label();
 		if (is_current) {
-			display_blend_wh_rgb(pos.x+offset.x, pos.y+offset.y-1, size.w, L_ENTRY_NO_HEIGHT+2, SYSCOL_LIST_BACKGROUND_SELECTED_F, 75);
+			display_blend_wh_rgb(pos.x+offset.x, pos.y+offset.y-1, size.w, D_ENTRY_NO_HEIGHT+2, SYSCOL_LIST_BACKGROUND_SELECTED_F, 75);
 		}
 		gui_aligned_container_t::draw(offset);
 	}
@@ -449,7 +387,7 @@ public:
 	bool infowin_event(const event_t *ev) OVERRIDE
 	{
 		if( ev->ev_class == EVENT_CLICK ) {
-			if(  IS_RIGHTCLICK(ev)  ||  (ev->mx < entry_no->get_pos().x+L_ENTRY_NO_WIDTH && ev->mx > entry_no->get_pos().x) ) {
+			if(  IS_RIGHTCLICK(ev)  ||  (ev->mx < entry_no->get_pos().x+D_ENTRY_NO_WIDTH && ev->mx > entry_no->get_pos().x) ) {
 				// just center on it
 				welt->get_viewport()->change_world_position( entry.pos );
 			}
@@ -828,7 +766,7 @@ void schedule_gui_t::init(schedule_t* schedule_, player_t* player, convoihandle_
 
 			add_table(2,1);
 			{
-				entry_no = new_component<gui_schedule_entry_number_t>(-1, player->get_player_nr(), 0);
+				entry_no = new_component<gui_schedule_entry_number_t>(-1, player->get_player_color1(), 0);
 				entry_no->set_rigid(true);
 				entry_no->set_visible(false);
 				lb_entry_pos.set_visible(false);
@@ -1142,7 +1080,7 @@ void schedule_gui_t::update_selection()
 			bt_range_stop.enable();
 			bt_discharge_payload.enable();
 			const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1;
-			entry_no->init(current_stop+1, halt->get_owner()->get_player_nr(),
+			entry_no->init(current_stop+1, halt->get_owner()->get_player_color1(),
 				is_depot ? gui_schedule_entry_number_t::number_style::depot :
 				is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt);
 			if(!schedule->get_current_entry().is_flag_set(schedule_entry_t::wait_for_time))
@@ -1209,10 +1147,10 @@ void schedule_gui_t::update_selection()
 			conditional_depart.disable();
 			condition_broadcast.disable();
 			if (is_depot) {
-				entry_no->init(current_stop + 1, 0, gui_schedule_entry_number_t::number_style::depot);
+				entry_no->init(current_stop + 1, 8, gui_schedule_entry_number_t::number_style::depot);
 			}
 			else {
-				entry_no->init(0, player->get_player_nr(), gui_schedule_entry_number_t::number_style::waypoint);
+				entry_no->init(0, player->get_player_color1(), gui_schedule_entry_number_t::number_style::waypoint);
 			}
 		}
 		resize(scr_coord(0,0)); // UI TODO: Refresh(resize) the screen only when needed
