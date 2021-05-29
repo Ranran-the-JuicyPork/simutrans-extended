@@ -13,7 +13,7 @@ gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint number_, uint8 p_c
 {
 	number = number_ + 1;
 	style = style_;
-	p_color_idx = p_col - p_col % 8;
+	p_color_idx = p_col;
 	set_size(scr_size(D_ENTRY_NO_WIDTH, D_ENTRY_NO_HEIGHT));
 
 	lb_number.set_align(gui_label_t::centered);
@@ -24,8 +24,8 @@ gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint number_, uint8 p_c
 
 void gui_schedule_entry_number_t::draw(scr_coord offset)
 {
-	const PIXVAL base_colval = color_idx_to_rgb(p_color_idx + env_t::gui_player_color_bright);
-	      PIXVAL text_colval = color_idx_to_rgb(p_color_idx + env_t::gui_player_color_dark);
+	const PIXVAL base_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + env_t::gui_player_color_bright);
+	      PIXVAL text_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + env_t::gui_player_color_dark);
 	if (number > 99) {
 		size.w = proportional_string_width("000") + 6;
 	}
