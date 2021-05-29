@@ -37,24 +37,22 @@ void gui_schedule_entry_number_t::draw(scr_coord offset)
 			text_colval = color_idx_to_rgb(COL_WHITE);
 			break;
 		case number_style::interchange:
-			display_filled_roundbox_clip(pos.x+offset.x, pos.y+offset.y, size.w, D_ENTRY_NO_HEIGHT, base_colval, false);
-			display_filled_roundbox_clip(pos.x+offset.x + 2, pos.y+offset.y + 2, size.w - 4, D_ENTRY_NO_HEIGHT - 4, color_idx_to_rgb(COL_WHITE), false);
+			display_filled_roundbox_clip(pos.x+offset.x,   pos.y+offset.y,   size.w,   D_ENTRY_NO_HEIGHT,   base_colval, false);
+			display_filled_roundbox_clip(pos.x+offset.x+2, pos.y+offset.y+2, size.w-4, D_ENTRY_NO_HEIGHT-4, color_idx_to_rgb(COL_WHITE), false);
 			break;
 		case number_style::depot:
 			for (uint8 i = 0; i < 3; i++) {
-				const scr_coord_val w = (size.w/2) * (i+1) / 4;
+				const scr_coord_val w = (size.w/2) * (i+1)/4;
 				display_fillbox_wh_clip_rgb(pos.x+offset.x + (size.w - w*2)/2, pos.y+offset.y + i, w*2, 1, color_idx_to_rgb(91), false);
 			}
 			display_fillbox_wh_clip_rgb(pos.x+offset.x, pos.y+offset.y + 3, size.w, D_ENTRY_NO_HEIGHT - 3, color_idx_to_rgb(91), false);
 			text_colval = color_idx_to_rgb(COL_WHITE);
 			break;
 		case number_style::none:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + (size.w - D_ENTRY_NO_WIDTH/2)/2, pos.y+offset.y, D_ENTRY_NO_WIDTH/2, D_ENTRY_NO_HEIGHT,
-				base_colval, true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + (size.w - D_ENTRY_NO_WIDTH/2)/2, pos.y+offset.y, D_ENTRY_NO_WIDTH/2, D_ENTRY_NO_HEIGHT, base_colval, true);
 			break;
 		case number_style::waypoint:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH / 4, pos.y+offset.y, D_ENTRY_NO_WIDTH/2, D_ENTRY_NO_HEIGHT,
-				base_colval, true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, D_ENTRY_NO_WIDTH/2, D_ENTRY_NO_HEIGHT, base_colval, true);
 			display_filled_circle_rgb(pos.x+offset.x + size.w/2, pos.y+offset.y + D_ENTRY_NO_HEIGHT/2, D_ENTRY_NO_HEIGHT/2, base_colval);
 			break;
 		default:
