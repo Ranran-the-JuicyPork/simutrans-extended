@@ -121,16 +121,17 @@ void gui_schedule_couple_order_t::draw(scr_coord offset)
 
 
 
-gui_colored_route_bar_t::gui_colored_route_bar_t(sint8 player, uint8 style_)
+gui_colored_route_bar_t::gui_colored_route_bar_t(uint8 p_col, uint8 style_)
 {
 	style = style_;
-	player_nr = player;
+	p_color_idx = p_col;
 }
 
 void gui_colored_route_bar_t::draw(scr_coord offset)
 {
 	set_size(scr_size(D_ENTRY_NO_WIDTH, LINESPACE));
 	const uint8 width = D_ENTRY_NO_WIDTH/2;
+	PIXVAL text_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + env_t::gui_player_color_dark);
 
 	const PIXVAL alert_colval = (alert_level==1) ? COL_CAUTION : (alert_level==2) ? COL_WARNING : color_idx_to_rgb(COL_RED+1);
 	// edge lines
@@ -153,29 +154,25 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	switch (style) {
 		case line_style::solid:
 		default:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, width, LINESPACE,
-				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, width, LINESPACE, text_colval, true);
 			break;
 		case line_style::thin:
 		{
 			const uint8 border_width = 2 + D_ENTRY_NO_WIDTH%2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/2 - 1, pos.y+offset.y, border_width, LINESPACE,
-				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/2 - 1, pos.y+offset.y, border_width, LINESPACE, text_colval, true);
 			break;
 		}
 		case line_style::doubled:
 		{
 			const uint8 border_width = width>6 ? 3:2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, border_width, LINESPACE,
-				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, border_width, LINESPACE, text_colval, true);
 			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH * 3/4 - border_width, pos.y+offset.y, border_width, LINESPACE,
-				color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
+				text_colval, true);
 			break;
 		}
 		case line_style::dashed:
 			for (uint8 h=1; h+2<LINESPACE; h+=4) {
-				display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4 + 1, pos.y+offset.y+h, width - 2, 2,
-					color_idx_to_rgb(welt->get_player(player_nr)->get_player_color1()+3), true);
+				display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4 + 1, pos.y+offset.y+h, width - 2, 2, text_colval, true);
 			}
 			break;
 		case line_style::reversed:
@@ -283,7 +280,7 @@ public:
 		lb_distance.update();
 		add_component(&lb_distance, 4); // 5
 
-		route_bar = new_component<gui_colored_route_bar_t>(pl->get_player_nr(),0); // 6
+		route_bar = new_component<gui_colored_route_bar_t>(pl->get_player_color1(),0); // 6
 		route_bar->set_visible(true);
 
 		lb_speed_limit.set_color(SYSCOL_TEXT_STRONG);
