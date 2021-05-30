@@ -77,7 +77,7 @@ void gui_vehicle_bar_t::draw(scr_coord offset)
 void gui_capacity_bar_t::draw(scr_coord offset)
 {
 	if (height < 2) { return; }
-	offset += gui_component_t::pos;
+	offset += gui_colorbox_t::pos;
 	if (show_frame) {
 		display_colorbox_with_tooltip(offset.x, offset.y, width, height, bg_col, true, tooltip);
 	}
