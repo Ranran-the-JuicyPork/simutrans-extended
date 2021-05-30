@@ -553,7 +553,7 @@ bool schedule_list_gui_t::action_triggered( gui_action_creator_t *comp, value_t 
 		update_lineinfo( selected_line[player->get_player_nr()][selected_tab[player->get_player_nr()]] );
 		build_line_list(tab);
 		if (tab>0) {
-			bt_new_line.enable();
+			bt_new_line.enable( (welt->get_active_player() == player || player == welt->get_player(1))  &&  !welt->get_active_player()->is_locked() );
 		}
 		else {
 			bt_new_line.disable();
@@ -631,7 +631,8 @@ void schedule_list_gui_t::reset_line_name()
 
 void schedule_list_gui_t::rename_line()
 {
-	if (line.is_bound()) {
+	if (line.is_bound()
+		&& ((player == welt->get_active_player() && !welt->get_active_player()->is_locked()) || welt->get_active_player() == welt->get_public_player())) {
 		const char *t = inp_name.get_text();
 		// only change if old name and current name are the same
 		// otherwise some unintended undo if renaming would occur
@@ -660,11 +661,12 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 	if(  old_player != welt->get_active_player()  ) {
 		// deativate buttons, if not curretn player
 		old_player = welt->get_active_player();
-		const bool activate = old_player == player || old_player == welt->get_player( 1 );
+		const bool activate = (old_player == player || old_player == welt->get_player( 1 )) && !welt->get_active_player()->is_locked();
 		bt_delete_line.enable( activate );
 		bt_edit_line.enable( activate );
 		bt_new_line.enable( activate   &&  tabs.get_active_tab_index() > 0);
 		bt_withdraw_line.enable( activate );
+		livery_selector.enable( activate );
 	}
 
 	// if search string changed, update line selection
@@ -779,7 +781,7 @@ void schedule_list_gui_t::display(scr_coord pos)
 			vehicle_t* v = cnv->get_vehicle(veh);
 			if (v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS || v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_MAIL)
 			{
-				bt_line_class_manager.enable();
+				bt_line_class_manager.enable( (welt->get_active_player() == player || player == welt->get_player(1)) && !welt->get_active_player()->is_locked() );
 			}
 		}
 	}
@@ -887,6 +889,7 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		rename_line();
 	}
 	if(new_line.is_bound()) {
+		const bool activate = (old_player == player || old_player == welt->get_player(1)) && !welt->get_active_player()->is_locked();
 		// ok, this line is visible
 		scrolly_convois.set_visible(true);
 		scrolly_haltestellen.set_visible(true);
@@ -926,12 +929,12 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		add_component(&bt_withdraw_line);
 		bt_withdraw_line.disable();
 		if(icnv>0) {
-			bt_withdraw_line.enable();
+			bt_withdraw_line.enable( activate );
 		}
 		else {
-			bt_delete_line.enable();
+			bt_delete_line.enable( activate );
 		}
-		bt_edit_line.enable();
+		bt_edit_line.enable( activate );
 
 		bt_withdraw_line.pressed = new_line->get_withdraw();
 

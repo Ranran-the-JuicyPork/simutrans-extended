@@ -144,13 +144,7 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "p_class[%u]", c);
-					pass_class_name_untranslated[c] = class_name;
-				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_PAS, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);
@@ -180,13 +174,7 @@ void halt_detail_t::init()
 		{
 			for (uint8 c = 0; c < classes; c++) {
 				button_t *cb = new button_t();
-				char *class_name = new char[32]();
-				if (class_name != nullptr)
-				{
-					sprintf(class_name, "m_class[%u]", c);
-					mail_class_name_untranslated[c] = class_name;
-				}
-				cb->init(button_t::roundbox_state, class_name, scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
+				cb->init(button_t::roundbox_state, goods_manager_t::get_translated_wealth_name(goods_manager_t::INDEX_MAIL, c), scr_coord(0, 0), scr_size(CLASS_TEXT_BUTTON_WIDTH, D_BUTTON_HEIGHT));
 				cb->disable();
 				cb->add_listener(this);
 				cont_route.add_component(cb);

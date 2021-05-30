@@ -90,10 +90,6 @@ private:
 	karte_t* welt;
 	road_vehicle_t *master;
 	stadt_t* origin_city;
-	const stadt_t* last_city;
-	uint32 last_tile_speed;
-	int last_tile_cost_diagonal;
-	int last_tile_cost_straight;
 	uint16 meters_per_tile_x100;
 
 public:

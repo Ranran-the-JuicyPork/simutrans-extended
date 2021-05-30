@@ -207,7 +207,11 @@ private:
 
 public:
 	/// Table containing the four compass directions
-	static const ribi nesw[4];
+	struct _nesw {
+		ribi operator [] (const int i) const {return 1<<i;}
+	};
+	static const _nesw nesw;
+
 	/// Convert building layout to ribi (four rotations), use doppelt in case of two rotations
 	static const ribi layout_to_ribi[4]; // building layout to ribi (for four rotations, for two use doppelt()!
 

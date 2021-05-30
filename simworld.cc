@@ -8925,7 +8925,7 @@ DBG_MESSAGE("karte_t::save(loadsave_t *file)", "motd filename %s", env_t::server
 
 		for (auto city : cities_awaiting_private_car_route_check)
 		{
-			koord location = city->get_center();
+			koord location = city->get_pos();
 			location.rdwr(file);
 		}
 

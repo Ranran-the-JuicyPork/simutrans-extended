@@ -5905,10 +5905,6 @@ private_car_destination_finder_t::private_car_destination_finder_t(karte_t* w, r
 	welt = w;
 	master = m;
 	origin_city = o;
-	last_tile_speed = 0;
-	last_tile_cost_diagonal = 0;
-	last_tile_cost_straight = 0;
-	last_city = NULL;
 	meters_per_tile_x100 = welt->get_settings().get_meters_per_tile() * 100; // For 100ths of a minute
 }
 
@@ -5982,33 +5978,15 @@ int private_car_destination_finder_t::get_cost(const grund_t* gr, sint32 max_spe
 	}
 
 	const sint32 max_tile_speed = w->get_max_speed(); // This returns speed in km/h.
-	const planquadrat_t* plan = welt->access_nocheck(gr->get_pos().get_2d());
-	const stadt_t* city = plan->get_city();
 	const bool is_diagonal = w->is_diagonal();
-
-	if(city == last_city && max_tile_speed == last_tile_speed)
-	{
-		// Need not redo the whole calculation if nothing has changed.
-		if(is_diagonal && last_tile_cost_diagonal > 0)
-		{
-			return last_tile_cost_diagonal;
-		}
-		else if(last_tile_cost_straight > 0)
-		{
-			return last_tile_cost_straight;
-		}
-	}
-
-	last_city = city;
-	last_tile_speed = max_tile_speed;
 
 	sint32 speed = min(max_speed, max_tile_speed);
 
 #ifndef FORBID_CONGESTION_EFFECTS
-	const uint32 congestion_percentage = w->get_congestion_percentage();
+	const sint32 congestion_percentage = w->get_congestion_percentage();
 	if (congestion_percentage)
 	{
-		speed -= (speed * congestion_percentage) / 200;
+		speed = speed * 100 / (100 + congestion_percentage);
 		speed = max(4, speed);
 	}
 #endif
@@ -6038,14 +6016,6 @@ int private_car_destination_finder_t::get_cost(const grund_t* gr, sint32 max_spe
 
 	const int cost = mpt / ((speed * 167) / 10);
 
-	if(is_diagonal)
-	{
-		last_tile_cost_diagonal = cost;
-	}
-	else
-	{
-		last_tile_cost_straight = cost;
-	}
 	return cost;
 }
 
