@@ -1291,17 +1291,9 @@ gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_
 		{
 
 			for (uint8 cx = 0; cx<g_classes; cx++) {
-				char *class_name = new char[32]();
-				if (is_passenger_vehicle) {
-					sprintf(class_name, "p_class[%u]", cx);
-				}
-				else if (vehicle->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_MAIL) {
-					sprintf(class_name, "m_class[%u]", cx);
-				}
-				class_name_untranslated[cx] = class_name;
-
 				char *button_text = new char[32]();
-				sprintf(button_text, "%s%s", cabin_class == cx ? "*": "", translator::translate(class_name_untranslated[cx]));
+				sprintf(button_text, "%s%s", cabin_class == cx ? "*": "",
+					goods_manager_t::get_translated_wealth_name(vehicle->get_cargo_type()->get_catg_index(), cx));
 
 				buttons[cx].init(cx==0 ? button_t::roundbox_left_state : cx==g_classes-1 ? button_t::roundbox_right_state : button_t::roundbox_middle_state, button_text);
 				if (vehicle->get_reassigned_class(cabin_class) == cx) {
