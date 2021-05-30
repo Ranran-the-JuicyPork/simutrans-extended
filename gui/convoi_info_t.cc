@@ -29,6 +29,7 @@
 #include "../utils/simstring.h"
 #include "convoi_detail_t.h"
 
+
 #define CHART_HEIGHT (100)
 
 sint16 convoi_info_t::tabstate = -1;
@@ -84,11 +85,11 @@ static uint8 statistic[convoi_t::MAX_CONVOI_COST] = {
 };
 
 
-		const scr_coord_val text_width = show_loading ? proportional_string_width(" 18888/18888") : proportional_string_width(" 188888");
 void gui_convoy_loading_info_t::update_list()
 {
 	remove_all();
 	if (cnv.is_bound()) {
+		const scr_coord_val text_width = show_loading ? proportional_string_width(" 18888/18888") : proportional_string_width(" 188888");
 		// update factors
 		old_vehicle_count = cnv->get_vehicle_count();
 		old_reversed = cnv->is_reversed();
@@ -147,8 +148,8 @@ void gui_convoy_loading_info_t::update_list()
 
 					// 4: capacity bar
 					if (show_loading) {
-						const PIXVAL catg_bar_col = catg_index < goods_manager_t::INDEX_NONE ? ware->get_color() : color_idx_to_rgb(115);
-						new_component<gui_capacity_bar_t>(scr_size(102, LINESPACE*0.6 + 2), catg_bar_col)->set_value(capacity, cargo_sum);
+						PIXVAL catg_bar_col = catg_index < goods_manager_t::INDEX_NONE ? ware->get_color() : color_idx_to_rgb(115);
+						new_component<gui_capacity_bar_t>(scr_size(102, scr_coord_val(LINESPACE*0.6+2)), catg_bar_col)->set_value(capacity, cargo_sum);
 					}
 
 					new_component<gui_fill_t>();
@@ -176,7 +177,7 @@ void gui_convoy_loading_info_t::update_list()
 
 					// 4: capacity bar
 					if (show_loading) {
-						new_component<gui_capacity_bar_t>(scr_size(102, LINESPACE*0.6), color_idx_to_rgb(COL_OVERCROWD))->set_value(cnv->get_overcrowded_capacity(), cnv->get_overcrowded());
+						new_component<gui_capacity_bar_t>(scr_size(102, scr_coord_val(LINESPACE*0.6)), color_idx_to_rgb(COL_OVERCROWD))->set_value(cnv->get_overcrowded_capacity(), cnv->get_overcrowded());
 					}
 					new_component<gui_fill_t>();
 				}

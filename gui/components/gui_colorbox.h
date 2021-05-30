@@ -90,7 +90,7 @@ public:
 };
 
 
-class gui_capacity_bar_t : public gui_colorbox_t, gui_component_t
+class gui_capacity_bar_t : public gui_colorbox_t
 {
 	PIXVAL bg_col;
 	uint16 capacity;
@@ -98,7 +98,7 @@ class gui_capacity_bar_t : public gui_colorbox_t, gui_component_t
 	bool cylinder_style;
 
 public:
-	gui_capacity_bar_t(scr_size size, PIXVAL c = 0, bool size_fixed=true, bool cylinder_style = true):
+	gui_capacity_bar_t(scr_size size, PIXVAL c = color_idx_to_rgb(COL_GREEN), bool size_fixed=true, bool cylinder_style = true):
 		gui_colorbox_t(color = c) {
 		gui_colorbox_t::set_size(size);
 		width = size.w; height = size.h;
