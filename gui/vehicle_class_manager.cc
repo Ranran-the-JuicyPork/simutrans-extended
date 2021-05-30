@@ -17,6 +17,7 @@
 #include "../display/simgraph.h"
 #include "../simworld.h"
 
+#include "../dataobj/environment.h"
 #include "../dataobj/translator.h"
 #include "../dataobj/loadsave.h"
 #include "../simline.h"
@@ -1104,9 +1105,10 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 	cont_vehicle_row.remove_all();
 	if (cnv.is_bound()) {
 		// draw headers
-		cont_vehicle_row.new_component<gui_label_t>("No.", SYSCOL_TEXT_TITLE, gui_label_t::left);
-		cont_vehicle_row.new_component<gui_label_t>("Name", SYSCOL_TEXT_TITLE, gui_label_t::left);
-		cont_vehicle_row.new_component<gui_label_t>("Capacity:", SYSCOL_TEXT_TITLE, gui_label_t::left);
+		const PIXVAL owner_color = color_idx_to_rgb( cnv->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark);
+		cont_vehicle_row.new_component<gui_label_t>("No.", owner_color, gui_label_t::left);
+		cont_vehicle_row.new_component<gui_label_t>("Name", owner_color, gui_label_t::left);
+		cont_vehicle_row.new_component<gui_label_t>("Capacity:", owner_color, gui_label_t::left);
 
 		// draw borders
 		cont_vehicle_row.new_component<gui_divider_t>()->init(scr_coord(0,0), L_CAR_NUM_CELL_WIDTH, LINESPACE*0.5);
