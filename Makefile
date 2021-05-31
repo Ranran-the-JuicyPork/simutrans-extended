@@ -397,6 +397,7 @@ SOURCES += gui/components/gui_component.cc
 SOURCES += gui/components/gui_label.cc
 SOURCES += gui/components/gui_map_preview.cc
 SOURCES += gui/components/gui_numberinput.cc
+SOURCES += gui/components/gui_schedule_item.cc
 SOURCES += gui/components/gui_scrollbar.cc
 SOURCES += gui/components/gui_scrolled_list.cc
 SOURCES += gui/components/gui_scrollpane.cc

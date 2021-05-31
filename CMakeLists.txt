@@ -230,6 +230,7 @@ add_executable(simutrans-extended
 	gui/components/gui_map_preview.cc
 	gui/components/gui_numberinput.cc
 	gui/components/gui_obj_view_t.cc
+	gui/components/gui_schedule_item.cc
 	gui/components/gui_scrollbar.cc
 	gui/components/gui_scrolled_list.cc
 	gui/components/gui_scrollpane.cc
