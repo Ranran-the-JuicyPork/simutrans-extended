@@ -283,7 +283,6 @@ bool halt_detail_t::is_weltpos()
 // update all buffers
 void halt_detail_t::update_components()
 {
-	line_number.draw(scr_coord(0,0));
 	waiting_bar->update();
 	bool reset_tab = false;
 	int old_tab = tabs.get_active_tab_index();
@@ -625,6 +624,10 @@ void halt_detail_t::rdwr(loadsave_t *file)
 	}
 	halt_pos.rdwr( file );
 	size.rdwr( file );
+	uint8 selected_tab = tabs.get_active_tab_index();
+	if (file->is_version_ex_atleast(14,40)) {
+		file->rdwr_byte(selected_tab);
+	}
 	if(  file->is_loading()  ) {
 		halt = welt->lookup( halt_pos )->get_halt();
 		// now we can open the window ...
@@ -632,6 +635,7 @@ void halt_detail_t::rdwr(loadsave_t *file)
 		halt_detail_t *w = new halt_detail_t(halt);
 		create_win(pos.x, pos.y, w, w_info, magic_halt_detail + halt.get_id());
 		w->set_windowsize( size );
+		w->tabs.set_active_tab_index(selected_tab);
 		destroy_win( this );
 	}
 }

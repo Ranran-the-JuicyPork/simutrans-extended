@@ -1216,6 +1216,10 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 	size.rdwr( file );
 	file->rdwr_long( xoff );
 	file->rdwr_long( yoff );
+	uint8 selected_tab = tabs.get_active_tab_index();
+	if (file->is_version_ex_atleast(14,40)) {
+		file->rdwr_byte(selected_tab);
+	}
 
 	if(  file->is_loading()  ) {
 		// convoy vanished
@@ -1232,6 +1236,7 @@ void convoi_detail_t::rdwr(loadsave_t *file)
 		w->set_windowsize( size );
 		w->scrolly_maintenance.set_scroll_position( xoff, yoff );
 		w->scrolly_formation.set_scroll_position(formation_xoff, formation_yoff);
+		w->tabs.set_active_tab_index(selected_tab);
 		// we must invalidate halthandle
 		cnv = convoihandle_t();
 		destroy_win( this );

@@ -2033,7 +2033,9 @@ bool weg_t::private_car_route_map::insert_unique(koord elem, private_car_route_m
 		return result;
 	}
 	if(link_to){
-		if(link_mode==link_dir){
+		if(link_mode==link_dir
+				&& link_to->link_mode!=link_mode_NULL
+				&& link_to->link_mode!=link_mode_single){
 			idx=link_to->idx;
 			return false;
 		}

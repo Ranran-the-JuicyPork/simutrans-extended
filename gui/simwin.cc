@@ -67,7 +67,11 @@
 #include "scenario_info.h"
 #include "depotlist_frame.h"
 #include "halt_list_frame.h"
+#include "curiositylist_frame_t.h"
+#include "factorylist_frame_t.h"
+#include "labellist_frame_t.h"
 #include "display_settings.h"
+#include "optionen.h"
 
 #include "../simversion.h"
 
@@ -612,7 +616,11 @@ void rdwr_all_win(loadsave_t *file)
 					//case magic_vehiclelist:    w = new vehiclelist_frame_t(); break;
 					case magic_halt_list:      w = new halt_list_frame_t(); break;
 					case magic_citylist_frame_t: w = new citylist_frame_t(); break;
+					case magic_curiositylist:  w = new curiositylist_frame_t(); break;
+					case magic_factorylist:    w = new factorylist_frame_t(); break;
+					case magic_labellist:      w = new labellist_frame_t(); break;
 					case magic_color_gui_t:    w = new color_gui_t(); break;
+					case magic_optionen_gui_t: w = new optionen_gui_t(); break;
 
 					default:
 						if(  id>=magic_finances_t  &&  id<magic_finances_t+MAX_PLAYER_COUNT  ) {
@@ -684,13 +692,13 @@ void win_clamp_xywh_position( scr_coord_val &x, scr_coord_val &y, scr_size wh, b
 		// rect default
 		break;
 	case MENU_BOTTOM:
-		clip_rr = scr_rect(0, win_get_statusbar_height(), display_get_width(), display_get_height() - add_menuheight);
+		clip_rr = scr_rect(0, win_get_statusbar_height(), display_get_width(), clip_rr.h );
 		break;
 	case MENU_LEFT:
 		clip_rr = scr_rect(add_menuwidth, 0, display_get_width() - add_menuwidth, display_get_height() - win_get_statusbar_height());
 		break;
 	case MENU_RIGHT:
-		clip_rr = scr_rect(0, 0, display_get_width() - add_menuheight, display_get_height() - win_get_statusbar_height());
+		clip_rr = scr_rect(0, 0, display_get_width() - add_menuwidth, display_get_height() - win_get_statusbar_height());
 		break;
 	}
 
@@ -967,7 +975,6 @@ bool destroy_win(const gui_frame_t *gui)
 				destroy_framed_win(&win);
 			}
 			return true;
-			break;
 		}
 	}
 	return false;
@@ -1743,6 +1750,7 @@ void win_display_flush(double konto)
 	tooltip_element = main_menu->is_hit( get_mouse_x()-menu_pos.x, get_mouse_y()-menu_pos.y) ? main_menu : NULL;
 	void *old_inside_event_handling = inside_event_handling;
 	inside_event_handling = main_menu;
+	display_set_clip_wh( menu_pos.x, menu_pos.y, menu_size.w, menu_size.h );
 	menu_pos.y -= D_TITLEBAR_HEIGHT;
 	main_menu->draw(menu_pos, menu_size);
 	inside_event_handling = old_inside_event_handling;

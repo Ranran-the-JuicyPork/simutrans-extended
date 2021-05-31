@@ -759,7 +759,6 @@ PIXVAL minimap_t::calc_ground_color(const grund_t *gr, bool show_contour, bool s
 						case monorail_wt:
 						default: // all other ways light red ...
 							color = color_idx_to_rgb(135); break;
-							break;
 					}
 				}
 				else {

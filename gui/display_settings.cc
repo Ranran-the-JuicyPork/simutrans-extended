@@ -122,6 +122,10 @@ gui_settings_t::gui_settings_t()
 	}
 	end_table();
 
+	reselect_closes_tool.init( button_t::square_state, "Reselect closes tools" );
+	reselect_closes_tool.pressed = env_t::reselect_closes_tool;
+	add_component( &reselect_closes_tool, 2 );
+
 	new_component<gui_divider_t>();
 
 	// add controls to info container
@@ -712,6 +716,7 @@ color_gui_t::color_gui_t() :
 	for( uint8 i = 0; i < 4; i++ ) {
 		gui_settings.toolbar_pos[i].add_listener(this);
 	}
+	gui_settings.reselect_closes_tool.add_listener(this);
 
 	set_resizemode(diagonal_resize);
 	set_min_windowsize( scr_size(D_DEFAULT_WIDTH, max(get_min_windowsize().h, traffic_settings.get_size().h)) );
@@ -741,6 +746,12 @@ bool color_gui_t::action_triggered( gui_action_creator_t *comp, value_t )
 		for(  uint8 i=0; i<4; i++  ) {
 			gui_settings.toolbar_pos[i].pressed = (env_t::menupos == i);
 		}
+		return true;
+	}
+
+	if(  comp == &gui_settings.reselect_closes_tool  ) {
+		env_t::reselect_closes_tool = !env_t::reselect_closes_tool;
+		gui_settings.reselect_closes_tool.pressed = env_t::reselect_closes_tool;
 		return true;
 	}
 

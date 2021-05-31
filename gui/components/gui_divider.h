@@ -22,7 +22,7 @@ public:
 		temp_width = width;
 		set_pos( xy );
 		set_size( scr_size( width, height ) );
-	};
+	}
 
 	scr_size get_min_size() const OVERRIDE;
 

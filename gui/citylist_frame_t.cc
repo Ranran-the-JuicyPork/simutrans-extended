@@ -131,18 +131,18 @@ citylist_frame_t::citylist_frame_t() :
 
 	list.set_table_layout(1, 0);
 
-	list.add_table(3,3);
+	list.add_table(2,2);
 	{
 		// 1st row
 		list.new_component<gui_label_t>("hl_txt_sort");
 
-		list.new_component<gui_label_t>("Filter:");
-
-		filter_within_network.init(button_t::square_state, "Within own network");
-		filter_within_network.set_tooltip("Show only cities within the active player's transportation network");
-		filter_within_network.add_listener(this);
-		filter_within_network.pressed = citylist_stats_t::filter_own_network;
-		list.add_component(&filter_within_network);
+		list.add_table(2, 1);
+		{
+			list.new_component<gui_label_t>("Filter:");
+			name_filter_input.set_text(name_filter, lengthof(name_filter));
+			list.add_component(&name_filter_input);
+		}
+		list.end_table();
 
 		// 2nd row
 		list.add_table(2,1);
@@ -165,29 +165,33 @@ citylist_frame_t::citylist_frame_t() :
 		}
 		list.end_table();
 
-		list.new_component<gui_empty_t>();
+		list.add_table(3,1);
+		{
+			list.new_component<gui_margin_t>(LINESPACE);
+			if (!welt->get_settings().regions.empty()) {
+				//region_selector
+				region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All regions"), SYSCOL_TEXT);
 
-		if (!welt->get_settings().regions.empty()) {
-			//region_selector
-			region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate("All regions"), SYSCOL_TEXT);
-
-			for (uint8 r = 0; r < welt->get_settings().regions.get_count(); r++) {
-				region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(welt->get_settings().regions[r].name.c_str()), SYSCOL_TEXT);
+				for (uint8 r = 0; r < welt->get_settings().regions.get_count(); r++) {
+					region_selector.new_component<gui_scrolled_list_t::const_text_scrollitem_t>(translator::translate(welt->get_settings().regions[r].name.c_str()), SYSCOL_TEXT);
+				}
+				region_selector.set_selection(citylist_stats_t::region_filter);
+				region_selector.set_width_fixed(true);
+				region_selector.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
+				region_selector.add_listener(this);
+				list.add_component(&region_selector);
 			}
-			region_selector.set_selection(citylist_stats_t::region_filter);
-			region_selector.set_width_fixed(true);
-			region_selector.set_size(scr_size(D_BUTTON_WIDTH*1.5, D_EDIT_HEIGHT));
-			region_selector.add_listener(this);
-			list.add_component(&region_selector);
-		}
-		else {
-			list.new_component<gui_empty_t>();
-		}
+			else {
+				list.new_component<gui_empty_t>();
+			}
 
-		// 3rd row
-		list.new_component<gui_empty_t>();
-		name_filter_input.set_text(name_filter, lengthof(name_filter));
-		list.add_component(&name_filter_input, 2);
+			filter_within_network.init(button_t::square_state, "Within own network");
+			filter_within_network.set_tooltip("Show only cities within the active player's transportation network");
+			filter_within_network.add_listener(this);
+			filter_within_network.pressed = citylist_stats_t::filter_own_network;
+			list.add_component(&filter_within_network);
+		}
+		list.end_table();
 	}
 	list.end_table();
 

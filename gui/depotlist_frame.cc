@@ -5,12 +5,17 @@
 
 #include "depotlist_frame.h"
 #include "gui_theme.h"
+
+#include "../player/simplay.h"
+
+#include "../simcity.h"
 #include "../simdepot.h"
 #include "../simskin.h"
-#include "../dataobj/translator.h"
-#include "../descriptor/skin_desc.h"
-#include "../simcity.h"
+#include "../simworld.h"
 
+#include "../dataobj/translator.h"
+
+#include "../descriptor/skin_desc.h"
 #include "../boden/wege/maglev.h"
 #include "../boden/wege/monorail.h"
 #include "../boden/wege/narrowgauge.h"
@@ -354,6 +359,21 @@ depotlist_frame_t::depotlist_frame_t(player_t *player) :
 }
 
 
+depotlist_frame_t::depotlist_frame_t() :
+	gui_frame_t(translator::translate("dp_title"), NULL),
+	scrolly(gui_scrolled_list_t::windowskin, depotlist_stats_t::compare)
+{
+	player = NULL;
+	last_depot_count = 0;
+
+	set_table_layout(1, 0);
+
+	scrolly.set_maximize(true);
+
+	set_resizemode(diagonal_resize);
+	reset_min_windowsize();
+}
+
 /**
  * This method is called if an action is triggered
  */
@@ -444,12 +464,22 @@ void depotlist_frame_t::draw(scr_coord pos, scr_size size)
 
 void depotlist_frame_t::rdwr(loadsave_t *file)
 {
+	scr_size size = get_windowsize();
+	uint8 player_nr = player ? player->get_player_nr() : 0;
+
 	file->rdwr_byte(depot_type_filter_bits);
 	file->rdwr_bool(sort_order.pressed);
 	uint8 s = depotlist_stats_t::sort_mode;
 	file->rdwr_byte(s);
+	if (file->is_version_ex_atleast(14, 40)) {
+		file->rdwr_byte(player_nr);
+		size.rdwr(file);
+	}
 
 	if (file->is_loading()) {
+		player = welt->get_player(player_nr);
+		gui_frame_t::set_owner(player);
+		win_set_magic(this, magic_depotlist + player_nr);
 		sortedby.set_selection(s);
 		depotlist_stats_t::sort_mode = s;
 		depotlist_stats_t::reverse = sort_order.pressed;
@@ -457,6 +487,9 @@ void depotlist_frame_t::rdwr(loadsave_t *file)
 			filter_buttons[i].pressed = depot_type_filter_bits & (1 << i);
 		}
 		fill_list();
+		if (file->is_version_ex_atleast(14, 40)) {
+			set_windowsize(size);
+		}
 		all_depot_types.pressed = (depot_type_filter_bits == 255);
 	}
 }

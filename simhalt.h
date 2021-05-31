@@ -316,7 +316,7 @@ public:
 	};
 	bool do_alternative_seats_calculation; //for optimisations purpose
 
-	const slist_tpl<tile_t> &get_tiles() const { return tiles; };
+	const slist_tpl<tile_t> &get_tiles() const { return tiles; }
 
 	bool is_within_walking_distance_of(halthandle_t halt) const;
 

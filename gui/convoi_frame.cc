@@ -440,9 +440,7 @@ void convoi_frame_t::rdwr(loadsave_t *file)
 			}
 			waren_filter = &waren_filter_rd;
 		}
-	}
 
-	if (file->is_loading()) {
 		sortby = (sort_mode_t)default_sortmode;
 		sort_order.pressed = sortreverse;
 		filter_on.pressed = filter_is_on;

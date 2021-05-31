@@ -1926,8 +1926,8 @@ public:
 		}
 	}
 
-	void set_mouse_rest_time(uint32 new_val) { mouse_rest_time = new_val; };
-	void set_sound_wait_time(uint32 new_val) { sound_wait_time = new_val; };
+	void set_mouse_rest_time(uint32 new_val) { mouse_rest_time = new_val; }
+	void set_sound_wait_time(uint32 new_val) { sound_wait_time = new_val; }
 
 	/**
 	* Call this when a ware is ready according to

@@ -7,10 +7,12 @@
 #define GUI_LABELLIST_FRAME_T_H
 
 
+#include "simwin.h"
 #include "gui_frame.h"
 #include "components/gui_button.h"
-#include "components/gui_scrolled_list.h"
 #include "components/gui_combobox.h"
+#include "components/gui_scrolled_list.h"
+#include "components/gui_textinput.h"
 
 
 /**
@@ -25,6 +27,12 @@ private:
 
 	gui_scrolled_list_t scrolly;
 
+	static char name_filter[256];
+	char last_name_filter[256];
+	gui_textinput_t name_filter_input;
+
+	uint32 label_count;
+
 public:
 	labellist_frame_t();
 
@@ -38,7 +46,13 @@ public:
 
 	void fill_list();
 
+	bool has_min_sizer() const OVERRIDE { return true; }
+
 	void map_rotate90( sint16 ) OVERRIDE { fill_list(); }
+
+	void rdwr(loadsave_t* file) OVERRIDE;
+
+	uint32 get_rdwr_id() OVERRIDE { return magic_labellist; }
 };
 
 #endif

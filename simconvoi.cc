@@ -1362,7 +1362,6 @@ sync_result convoi_t::sync_step(uint32 delta_t)
 
 		default:
 			dbg->fatal("convoi_t::sync_step()", "Wrong state %d!\n", state);
-			break;
 	}
 
 	// Debug sums:
@@ -5078,7 +5077,7 @@ void convoi_t::info(cbuffer_t & buf) const
 
 		buf.printf(" %s: %ikW\n", translator::translate("Leistung"), sum_power );
 
-		buf.printf(" %s: %i (%i) t\n", translator::translate("Gewicht"), sum_weight, sum_gesamtweight-sum_weight );
+		buf.printf(" %s: %ld (%ld) t\n", translator::translate("Gewicht"), (long)sum_weight, (long)(sum_gesamtweight - sum_weight));
 
 		buf.printf(" %s: ", translator::translate("Gewinn")  );
 
@@ -5241,7 +5240,7 @@ void convoi_t::get_freight_info_by_class(cbuffer_t &)
 
 void convoi_t::open_schedule_window( bool show )
 {
-	DBG_MESSAGE("convoi_t::open_schedule_window()","Id = %ld, State = %d, Lock = %d",self.get_id(), state, wait_lock);
+	DBG_MESSAGE("convoi_t::open_schedule_window()","Id = %hu, State = %d, Lock = %d", self.get_id(), (int)state, wait_lock);
 
 	// manipulation of schedule not allowed while:
 	// - just starting
@@ -5784,8 +5783,7 @@ sint64 convoi_t::calc_revenue(const ware_t& ware, array_tpl<sint64> & apportione
  */
 void convoi_t::hat_gehalten(halthandle_t halt)
 {
-
-	grund_t *gr = welt->lookup(front()->get_pos());
+	grund_t *gr=welt->lookup(front()->get_pos());
 
 	// now find out station length
 	uint16 vehicles_loading=0;

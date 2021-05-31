@@ -40,6 +40,13 @@ bool curiositylist_stats_t::compare(const gui_component_t *aa, const gui_compone
 	int cmp = 0;
 	switch ( sort_mode ) {
 		default: NOT_REACHED
+
+		case curiositylist::by_paxlevel:
+			if (a->get_adjusted_visitor_demand() != b->get_adjusted_visitor_demand()) {
+				cmp = a->get_adjusted_visitor_demand() - b->get_adjusted_visitor_demand();
+				break;
+			}
+
 		case curiositylist::by_name:
 		{
 			const char* a_name = translator::translate(a->get_tile()->get_desc()->get_name());
@@ -47,10 +54,6 @@ bool curiositylist_stats_t::compare(const gui_component_t *aa, const gui_compone
 			cmp = STRICMP(a_name, b_name);
 			break;
 		}
-
-		case curiositylist::by_paxlevel:
-			cmp = a->get_adjusted_visitor_demand() - b->get_adjusted_visitor_demand();
-			break;
 
 		case curiositylist::by_pax_arrived:
 		{
