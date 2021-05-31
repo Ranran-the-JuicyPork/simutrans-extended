@@ -67,34 +67,6 @@ public:
 };
 
 
-class gui_colored_route_bar_t : public gui_container_t
-{
-	uint8 p_color_idx;
-	uint8 style;
-	uint8 alert_level;
-public:
-	enum line_style {
-		solid = 0,
-		thin,
-		doubled,
-		dashed,
-		reversed, // display reverse symbol
-		none
-	};
-
-	gui_colored_route_bar_t(uint8 p_color_idx, uint8 style_ = line_style::solid);
-
-	void draw(scr_coord offset);
-
-	void set_line_style(uint8 style_) { style = style_; };
-	void set_color(uint8 color_idx) { p_color_idx = color_idx; };
-	// Color the edges of the line according to the warning level.  0=ok(none), 1=yellow, 2=orange, 3=red
-	void set_alert_level(uint8 level) { alert_level = level; };
-
-	scr_size get_min_size() const OVERRIDE { return size; }
-	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
-};
-
 class schedule_gui_stats_t : public gui_aligned_container_t, action_listener_t, public gui_action_creator_t
 {
 private:
