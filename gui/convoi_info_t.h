@@ -26,8 +26,10 @@
 
 #include "../utils/cbuffer_t.h"
 #include "components/gui_convoy_payloadinfo.h"
+#include "components/gui_schedule_item.h"
 
 #define BUTTON_COUNT convoi_t::MAX_CONVOI_COST
+
 
 /**
  * Displays an information window for a convoi
@@ -76,6 +78,9 @@ private:
 
 	button_t details_button;
 	button_t reverse_button;
+
+	gui_aligned_container_t next_halt_cells;
+	gui_schedule_entry_number_t next_halt_number;
 
 	static sint16 tabstate;
 	gui_tab_panel_t switch_mode;

@@ -13,6 +13,7 @@
 #include "../display/viewport.h"
 #include "../simworld.h"
 #include "../simmenu.h"
+#include "../simhalt.h"
 #include "simwin.h"
 #include "../convoy.h"
 
@@ -28,6 +29,8 @@
 
 #include "../utils/simstring.h"
 #include "convoi_detail_t.h"
+
+#include "components/gui_vehicle_capacitybar.h"
 
 #define CHART_HEIGHT (100)
 
@@ -114,7 +117,8 @@ convoi_info_t::convoi_info_t(convoihandle_t cnv) :
 	text(&freight_info),
 	view(scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
 	loading_bar(cnv),
-	scroll_freight(&container_freight, true, true)
+	scroll_freight(&container_freight, true, true),
+	next_halt_number(-1)
 {
 	if (cnv.is_bound()) {
 		init(cnv);
@@ -160,7 +164,11 @@ void convoi_info_t::init(convoihandle_t cnv)
 				end_table();
 				new_component<gui_margin_t>(100);
 
-				add_component(&target_label, 2);
+				add_component(&next_halt_cells,2);
+				next_halt_cells.set_table_layout(3,1);
+				next_halt_cells.new_component<gui_label_t>("Fahrtziel"); // "Destination"
+				next_halt_cells.add_component(&next_halt_number);
+				next_halt_cells.add_component(&target_label);
 
 				distance_label.set_align(gui_label_t::right);
 				add_component(&distance_label);
@@ -517,10 +525,28 @@ void convoi_info_t::update_labels()
 	weight_label.update();
 
 	// next stop
-	target_label.buf().printf("%s: ", translator::translate("Fahrtziel")); // "Destination"
 	const schedule_t *schedule = cnv->get_schedule();
-	schedule_t::gimme_short_stop_name(target_label.buf(), welt, cnv->get_owner(), schedule, schedule->get_current_stop(), 50 - strlen(translator::translate("Fahrtziel")));
+	if (go_home_button.pressed) {
+		target_label.buf().append(translator::translate("go home"));
+	}
+	else {
+		schedule_t::gimme_short_stop_name(target_label.buf(), welt, cnv->get_owner(), schedule, schedule->get_current_stop(), 50);
+	}
 	target_label.update();
+	uint8 halt_col_idx;
+	uint8 halt_symbol_style=0;
+	const koord3d next_pos = schedule->get_current_entry().pos;
+	const halthandle_t next_halt = haltestelle_t::get_halt(next_pos, cnv->get_owner());
+	if (next_halt.is_bound()) {
+		halt_col_idx= next_halt->get_owner()->get_player_color1();
+		if ((next_halt->registered_lines.get_count() + next_halt->registered_convoys.get_count()) > 1) {
+			halt_symbol_style = gui_schedule_entry_number_t::number_style::interchange;
+		}
+	}
+	else if (welt->lookup(next_pos) && welt->lookup(next_pos)->get_depot() != NULL) {
+		halt_symbol_style=gui_schedule_entry_number_t::number_style::depot;
+	}
+	next_halt_number.init(schedule->get_current_stop() + 1, halt_col_idx, halt_symbol_style);
 
 	// distance
 	sint32 cnv_route_index_left = cnv->get_route()->get_count() - 1 - cnv_route_index;
