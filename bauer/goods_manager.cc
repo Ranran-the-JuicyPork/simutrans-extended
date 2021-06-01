@@ -33,11 +33,11 @@ static special_obj_tpl<goods_desc_t> const special_objects[] = {
 	{ NULL, NULL }
 };
 
-static char wealth_class_name_untranslated_pas[5][32] = {
+static char const wealth_class_name_untranslated_pas[5][32] = {
 	"p_class[0]", "p_class[1]", "p_class[2]", "p_class[3]", "p_class[4]"
 };
 
-static char wealth_class_name_untranslated_mail[5][32] = {
+static char const wealth_class_name_untranslated_mail[5][32] = {
 	"m_class[0]", "m_class[1]", "m_class[2]", "m_class[3]", "m_class[4]"
 };
 
