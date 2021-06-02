@@ -76,7 +76,6 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 		set_size(scr_size(0,0));
 		break;
 	}
-	gui_container_t::draw(offset);
 }
 
 

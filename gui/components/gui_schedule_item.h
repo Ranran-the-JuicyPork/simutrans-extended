@@ -13,11 +13,11 @@
 #include "../../dataobj/translator.h"
 
 
-class gui_colored_route_bar_t : public gui_container_t
+class gui_colored_route_bar_t : public gui_component_t
 {
 	uint8 p_color_idx;
 	uint8 style;
-	uint8 alert_level;
+	uint8 alert_level=0;
 public:
 	enum line_style {
 		solid = 0,
