@@ -20,7 +20,7 @@ gui_colored_route_bar_t::gui_colored_route_bar_t(uint8 p_col, uint8 style_)
 void gui_colored_route_bar_t::draw(scr_coord offset)
 {
 	const uint8 width = D_ENTRY_NO_WIDTH/2;
-	PIXVAL text_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + env_t::gui_player_color_dark);
+	PIXVAL base_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + 3);
 
 	const PIXVAL alert_colval = (alert_level==1) ? COL_CAUTION : (alert_level==2) ? COL_WARNING : color_idx_to_rgb(COL_RED+1);
 	// edge lines
@@ -43,25 +43,24 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	switch (style) {
 		case line_style::solid:
 		default:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4,   pos.y+offset.y, width,        LINESPACE, text_colval, true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4,   pos.y+offset.y, width,        LINESPACE, base_colval, true);
 			break;
 		case line_style::thin:
 		{
 			const uint8 border_width = 2 + D_ENTRY_NO_WIDTH % 2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/2-1, pos.y+offset.y, border_width, LINESPACE, text_colval, true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/2-1, pos.y+offset.y, border_width, LINESPACE, base_colval, true);
 			break;
 		}
 		case line_style::doubled:
 		{
 			const uint8 border_width = width > 6 ? 3 : 2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4,                  pos.y+offset.y, border_width, LINESPACE, text_colval, true);
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH*3/4 - border_width, pos.y+offset.y, border_width, LINESPACE,
-				text_colval, true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4,                  pos.y+offset.y, border_width, LINESPACE, base_colval, true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH*3/4 - border_width, pos.y+offset.y, border_width, LINESPACE, base_colval, true);
 			break;
 		}
 		case line_style::dashed:
 			for (uint8 h=1; h+2 < LINESPACE; h+=4) {
-				display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4+1, pos.y+offset.y + h, width-2, 2, text_colval, true);
+				display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4+1, pos.y+offset.y + h, width-2, 2, base_colval, true);
 			}
 			break;
 		case line_style::reversed:
@@ -95,7 +94,7 @@ gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint number_, uint8 p_c
 
 void gui_schedule_entry_number_t::draw(scr_coord offset)
 {
-	const PIXVAL base_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + env_t::gui_player_color_bright);
+	const PIXVAL base_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + 3);
 	      PIXVAL text_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + env_t::gui_player_color_dark);
 	if (number > 99) {
 		size.w = proportional_string_width("000") + 6;
@@ -104,7 +103,7 @@ void gui_schedule_entry_number_t::draw(scr_coord offset)
 	// draw the back image
 	switch (style) {
 		case number_style::halt:
-			display_filled_roundbox_clip(pos.x+offset.x, pos.y+offset.y, size.w, D_ENTRY_NO_HEIGHT, base_colval, false);
+			display_filled_roundbox_clip(pos.x+offset.x,   pos.y+offset.y,   size.w,   D_ENTRY_NO_HEIGHT,   base_colval, false);
 			text_colval = color_idx_to_rgb(COL_WHITE);
 			break;
 		case number_style::interchange:
