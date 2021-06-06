@@ -434,12 +434,6 @@ random_player_colors = 0
 # and there are 0...15 player in the game
 player_color[1] = 1,4
 
-# remove companies without convois after x month (0=off, 6=default)
-remove_dummy_player_months = 6
-
-# remove password of abandoned companies (wihtout any building activity) after x month (0=off default)
-unprotect_abondoned_player_months = 0
-
 # (=1) drive on the left side of the road
 drive_left = 0
 

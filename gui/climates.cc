@@ -114,7 +114,7 @@ climate_gui_t::climate_gui_t(settings_t* const sets_par) :
 	add_component( &lake ,2);
 
 	new_component<gui_label_t>("Number of rivers");
-	river_n.init( sets->get_river_number(), 0, 1024, gui_numberinput_t::POWER2, false );
+	river_n.init( sets->get_river_number(), 0, 4096, gui_numberinput_t::POWER2, false );
 	river_n.add_listener(this);
 	add_component( &river_n );
 

@@ -9935,12 +9935,11 @@ bool tool_access_t::init(player_t *)
 			}
 		}
 
+		convoihandle_t cnv_x;
 		entries_to_remove.clear();
-		const uint32 convoy_count = welt->convoys().get_count();
-		convoihandle_t cnv;
-		for(uint32 i = 0; i < convoy_count; i ++)
+		for(auto & cnv : welt->convoys())
 		{
-			cnv = welt->convoys()[i];
+			cnv_x = cnv;
 			if(!cnv.is_bound() || cnv->get_line().is_bound() || cnv->get_owner() != receiving_player)
 			{
 				// We dealt above with lines.
@@ -10004,9 +10003,9 @@ bool tool_access_t::init(player_t *)
 		world()->await_path_explorer();
 #endif
 		path_explorer_t::refresh_all_categories(false);
-		if (cnv.is_bound())
+		if (cnv_x.is_bound())
 		{
-			cnv->clear_departures();
+			cnv_x->clear_departures();
 		}
 	}
 

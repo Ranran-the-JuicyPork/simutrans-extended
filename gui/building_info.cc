@@ -248,12 +248,13 @@ void gui_building_stats_t::draw(scr_coord offset)
 	}
 }
 
-building_info_t::building_info_t(gebaeude_t* gb, player_t* owner) : base_infowin_t(translator::translate(gb->get_name()), owner),
-building_view(koord3d::invalid, scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
-cont_stats(gb, get_titlecolor()),
-scrolly_stats(&cont_stats, true),
-scrolly_near_by_halt(&cont_near_by_halt, true),
-scrolly_signalbox(&cont_signalbox_info, true)
+building_info_t::building_info_t(gebaeude_t* gb, player_t* owner) :
+	base_infowin_t(translator::translate(gb->get_name()), owner),
+	building_view(koord3d::invalid, scr_size(max(64, get_base_tile_raster_width()), max(56, (get_base_tile_raster_width() * 7) / 8))),
+	cont_stats(gb, get_titlecolor()),
+	scrolly_stats(&cont_stats, true),
+	scrolly_near_by_halt(&cont_near_by_halt, true),
+	scrolly_signalbox(&cont_signalbox_info, true)
 {
 	this->owner = owner;
 	building = gb->get_first_tile();

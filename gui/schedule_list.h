@@ -21,6 +21,8 @@
 #include "halt_list_stats.h"
 #include "../simline.h"
 
+#include "times_history_container.h"
+
 class player_t;
 class schedule_list_gui_t : public gui_frame_t, public action_listener_t
 {
@@ -31,10 +33,11 @@ private:
 
 	static const char *sort_text[SORT_MODES];
 
-	button_t bt_new_line, bt_edit_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_times_history, bt_mode_convois;
+	button_t bt_new_line, bt_edit_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_mode_convois;
 	button_t sort_order;
 	gui_container_t cont, cont_haltestellen, cont_charts, cont_convoys;
-	gui_scrollpane_t scrolly_convois, scrolly_haltestellen;
+	gui_aligned_container_t cont_times_history;
+	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scroll_times_history;
 	gui_scrolled_list_t scl;
 	gui_speedbar_t filled_bar;
 	gui_textinput_t inp_name, inp_filter;

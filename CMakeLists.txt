@@ -316,9 +316,7 @@ add_executable(simutrans-extended
 	gui/sprachen.cc
 	gui/station_building_select.cc
 	gui/themeselector.cc
-	gui/times_history.cc
 	gui/times_history_container.cc
-	gui/times_history_entry.cc
 	gui/tool_selector.cc
 	gui/trafficlight_info.cc
 	gui/vehiclelist_frame.cc

@@ -115,8 +115,7 @@ enum magic_numbers {
 	// magic numbers with big jumps between them
 	magic_convoi_info,
 	magic_convoi_detail       = magic_convoi_info         + 0x10000,
-	magic_convoi_time_history = magic_convoi_detail       + 0x10000,
-	magic_halt_info           = magic_convoi_time_history + 0x10000,
+	magic_halt_info           = magic_convoi_detail       + 0x10000,
 	magic_halt_detail         = magic_halt_info           + 0x10000,
 	magic_replace             = magic_halt_detail         + 0x10000,
 	magic_toolbar             = magic_replace             + 0x10000,
