@@ -57,7 +57,7 @@ public:
 		none
 	};
 
-	gui_schedule_entry_number_t(uint number, uint8 p_color_idx = 8, uint8 style_ = number_style::halt);
+	gui_schedule_entry_number_t(uint number, uint8 p_color_idx = 8, uint8 style_ = number_style::halt, scr_size size = scr_size(D_ENTRY_NO_WIDTH, D_ENTRY_NO_HEIGHT));
 
 	void draw(scr_coord offset);
 
