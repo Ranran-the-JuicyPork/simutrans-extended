@@ -126,8 +126,10 @@ gui_convoy_loading_info_t::gui_convoy_loading_info_t(convoihandle_t cnv, bool sh
 
 void gui_convoy_loading_info_t::draw(scr_coord offset)
 {
-	if(old_weight != cnv->get_weight_summary().weight || old_vehicle_count != cnv->get_vehicle_count() || old_reversed != cnv->is_reversed()) {
-		update_list();
+	if (cnv.is_bound()) {
+		if(old_weight != cnv->get_weight_summary().weight || old_vehicle_count != cnv->get_vehicle_count() || old_reversed != cnv->is_reversed()) {
+			update_list();
+		}
+		gui_aligned_container_t::draw(offset);
 	}
-	gui_aligned_container_t::draw(offset);
 }
