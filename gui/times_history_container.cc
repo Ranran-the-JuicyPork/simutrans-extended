@@ -182,7 +182,7 @@ void gui_times_history_t::build_table()
 			new_component_span<gui_empty_t>(5);
 
 			// row2
-			uint8 line_col_idx = reversed ? player->get_player_color2() : player->get_player_color1();
+			uint8 line_col_idx = (!mirrored && reversed) ? player->get_player_color2() : player->get_player_color1();
 			if (i < schedule_indices->get_count() - 1) {
 				uint32 distance_to_next_stop = shortest_distance(entry.pos.get_2d(), entries[next_entry_index].pos.get_2d()) * world()->get_settings().get_meters_per_tile();
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
