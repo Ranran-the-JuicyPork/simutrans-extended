@@ -70,4 +70,18 @@ public:
 	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
 };
 
+
+class gui_convoy_arrow_t : public gui_component_t
+{
+	PIXVAL color;
+public:
+
+	gui_convoy_arrow_t(PIXVAL color=COL_SAFETY, scr_size size = scr_size(LINESPACE*0.7, LINESPACE));
+
+	void draw(scr_coord offset);
+
+	scr_size get_min_size() const OVERRIDE { return size; }
+	scr_size get_max_size() const OVERRIDE { return get_min_size(); }
+};
+
 #endif
