@@ -19,7 +19,9 @@ gui_colored_route_bar_t::gui_colored_route_bar_t(uint8 p_col, uint8 style_)
 
 void gui_colored_route_bar_t::draw(scr_coord offset)
 {
-	const uint8 width = D_ENTRY_NO_WIDTH/2;
+	offset += pos + scr_coord(2,0);
+	const uint8 width = (D_ENTRY_NO_WIDTH-4)/2;
+	scr_coord_val offset_x = D_ENTRY_NO_WIDTH/4-1;
 	PIXVAL base_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + 3);
 
 	const PIXVAL alert_colval = (alert_level==1) ? COL_CAUTION : (alert_level==2) ? COL_WARNING : color_idx_to_rgb(COL_RED+1);
@@ -27,11 +29,11 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	if (alert_level) {
 		switch (style) {
 		default:
-			display_blend_wh_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4-1, pos.y+offset.y, width+2, LINESPACE, alert_colval, 60);
+			display_blend_wh_rgb(offset.x + width/2-1, offset.y, width+2, LINESPACE, alert_colval, 60);
 			break;
 		case line_style::dashed:
 		case line_style::thin:
-			display_blend_wh_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4,   pos.y+offset.y, width,   LINESPACE, alert_colval, 60);
+			display_blend_wh_rgb(offset.x + offset_x,  offset.y, width,   LINESPACE, alert_colval, 60);
 			break;
 		case line_style::reversed:
 		case line_style::none:
@@ -43,32 +45,32 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	switch (style) {
 		case line_style::solid:
 		default:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4,   pos.y+offset.y, width,        LINESPACE, base_colval, true);
+			display_fillbox_wh_clip_rgb(offset.x + offset_x, offset.y, width, LINESPACE, base_colval, true);
 			break;
 		case line_style::thin:
 		{
 			const uint8 border_width = 2 + D_ENTRY_NO_WIDTH % 2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/2-1, pos.y+offset.y, border_width, LINESPACE, base_colval, true);
+			display_fillbox_wh_clip_rgb(offset.x + D_ENTRY_NO_WIDTH/2-3, offset.y, border_width, LINESPACE, base_colval, true);
 			break;
 		}
 		case line_style::doubled:
 		{
 			const uint8 border_width = width > 6 ? 3 : 2;
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4,                  pos.y+offset.y, border_width, LINESPACE, base_colval, true);
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH*3/4 - border_width, pos.y+offset.y, border_width, LINESPACE, base_colval, true);
+			display_fillbox_wh_clip_rgb(offset.x + offset_x, offset.y, border_width, LINESPACE, base_colval, true);
+			display_fillbox_wh_clip_rgb(offset.x + D_ENTRY_NO_WIDTH-4-offset_x-border_width, offset.y, border_width, LINESPACE, base_colval, true);
 			break;
 		}
 		case line_style::dashed:
 			for (uint8 h=1; h+2 < LINESPACE; h+=4) {
-				display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4+1, pos.y+offset.y + h, width-2, 2, base_colval, true);
+				display_fillbox_wh_clip_rgb(offset.x + offset_x+1, offset.y + h, width-2, 2, base_colval, true);
 			}
 			break;
 		case line_style::reversed:
 			if (skinverwaltung_t::reverse_arrows) {
-				display_color_img_with_tooltip(skinverwaltung_t::reverse_arrows->get_image_id(0), pos.x+offset.x + (D_ENTRY_NO_WIDTH-10)/2, pos.y+offset.y+2, 0, false, false, "Vehicles make a round trip between the schedule endpoints, visiting all stops in reverse after reaching the end.");
+				display_color_img_with_tooltip(skinverwaltung_t::reverse_arrows->get_image_id(0), offset.x + (D_ENTRY_NO_WIDTH-10)/2, offset.y+2, 0, false, false, "Vehicles make a round trip between the schedule endpoints, visiting all stops in reverse after reaching the end.");
 			}
 			else {
-				display_proportional_clip_rgb(pos.x+offset.x, pos.y+offset.y, translator::translate("[R]"), ALIGN_LEFT, SYSCOL_TEXT_STRONG, true);
+				display_proportional_clip_rgb(offset.x, offset.y, translator::translate("[R]"), ALIGN_LEFT, SYSCOL_TEXT_STRONG, true);
 			}
 			break;
 		case line_style::none:
