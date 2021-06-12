@@ -2332,13 +2332,13 @@ average
 Average speed
 平均速度
 Avg trip time
-平均時間
+運用行程の平均時間
 Axle load:
 軸重:
 Base profit per km (when full):
 満載時の1kmあたりの収入(合計):
 bidirectional_order
-停車順: 往復
+往復行路
 block_reservation
 閉塞予約
 brakes from max. speed in %i m

@@ -36,6 +36,7 @@ class gui_times_history_t : public gui_aligned_container_t
 	// for update
 	uint8 old_current_stop = -1;
 	uint32 update_time;
+	sint32 old_route_index = INT32_MAX;
 
 	void init();
 

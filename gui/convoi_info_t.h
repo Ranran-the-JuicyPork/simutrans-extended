@@ -63,7 +63,7 @@ private:
 	gui_textarea_t text;
 	obj_view_t view;
 	gui_label_buf_t speed_label, profit_label, running_cost_label, weight_label, target_label, line_label;
-	gui_label_buf_t distance_label, avg_triptime_label;
+	gui_label_buf_t distance_label, lb_working_method;
 	gui_textinput_t input;
 	gui_loadingbar_t loading_bar;
 	gui_speedbar_t speed_bar;

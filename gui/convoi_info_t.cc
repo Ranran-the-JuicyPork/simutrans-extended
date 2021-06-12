@@ -29,8 +29,7 @@
 #include "../utils/simstring.h"
 #include "convoi_detail_t.h"
 
-#include "components/gui_vehicle_capacitybar.h"
-
+#include "../obj/roadsign.h"
 
 #define CHART_HEIGHT (100)
 
@@ -85,8 +84,6 @@ static uint8 statistic[convoi_t::MAX_CONVOI_COST] = {
 	convoi_t::CONVOI_CAPACITY, convoi_t::CONVOI_TRANSPORTED_GOODS, convoi_t::CONVOI_DISTANCE, convoi_t::CONVOI_AVERAGE_SPEED, convoi_t::CONVOI_COMFORT,
 	convoi_t::CONVOI_REVENUE, convoi_t::CONVOI_OPERATIONS, convoi_t::CONVOI_REFUNDS, convoi_t::CONVOI_WAYTOLL, convoi_t::CONVOI_PROFIT
 };
-
-
 
 //bool convoi_info_t::route_search_in_progress=false;
 
@@ -169,16 +166,6 @@ void convoi_info_t::init(convoihandle_t cnv)
 				end_table();
 				new_component<gui_margin_t>(100);
 
-				add_component(&next_halt_cells,2);
-				next_halt_cells.set_table_layout(3,1);
-				next_halt_cells.new_component<gui_label_t>("Fahrtziel"); // "Destination"
-				next_halt_cells.add_component(&next_halt_number);
-				next_halt_cells.add_component(&target_label);
-
-				distance_label.set_align(gui_label_t::right);
-				add_component(&distance_label);
-				add_component(&route_bar);
-
 				add_component(&container_line,2);
 				container_line.set_table_layout(4,1);
 				container_line.add_component(&line_button);
@@ -199,7 +186,18 @@ void convoi_info_t::init(convoihandle_t cnv)
 				line_button.add_listener( this );
 				line_bound = false;
 
-				add_component(&avg_triptime_label, 2);
+				add_component(&next_halt_cells,2);
+				next_halt_cells.set_table_layout(3,1);
+				next_halt_cells.new_component<gui_label_t>("Fahrtziel"); // "Destination"
+				next_halt_cells.add_component(&next_halt_number);
+				next_halt_cells.add_component(&target_label);
+
+				distance_label.set_align(gui_label_t::right);
+				add_component(&distance_label);
+				add_component(&route_bar);
+
+				lb_working_method.set_align(gui_label_t::right);
+				add_component(&lb_working_method, 2);
 			}
 			end_table();
 
@@ -580,14 +578,24 @@ void convoi_info_t::update_labels()
 	}
 	line_label.update();
 
-	sint64 average_round_trip_time = cnv->get_average_round_trip_time();
-	if (average_round_trip_time) {
-		char as_clock[32];
-		welt->sprintf_ticks(as_clock, sizeof(as_clock), average_round_trip_time);
-		avg_triptime_label.buf().printf("%s: %s", translator::translate("Avg trip time"), as_clock);
-	}
-	avg_triptime_label.update();
 
+	vehicle_t* v1 = cnv->get_vehicle(0);
+	if (v1->get_waytype() == track_wt || v1->get_waytype() == maglev_wt || v1->get_waytype() == tram_wt || v1->get_waytype() == narrowgauge_wt || v1->get_waytype() == monorail_wt) {
+		if (cnv->in_depot()) {
+			lb_working_method.buf().append("");
+		}
+		else {
+			// Current working method
+			rail_vehicle_t* rv1 = (rail_vehicle_t*)v1;
+			rail_vehicle_t* rv2 = (rail_vehicle_t*)cnv->get_vehicle(cnv->get_vehicle_count() - 1);
+			lb_working_method.buf().printf("%s: %s", translator::translate("Current working method"), translator::translate(rv1->is_leading() ? roadsign_t::get_working_method_name(rv1->get_working_method()) : roadsign_t::get_working_method_name(rv2->get_working_method())));
+		}
+	}
+	else if (uint16 minimum_runway_length = cnv->get_vehicle(0)->get_desc()->get_minimum_runway_length()) {
+		// for air vehicle
+		lb_working_method.buf().printf("%s: %i m \n", translator::translate("Minimum runway length"), minimum_runway_length);
+	}
+	lb_working_method.update();
 
 	// buffer update now only when needed by convoi itself => dedicated buffer for this
 	const int old_len=freight_info.len();

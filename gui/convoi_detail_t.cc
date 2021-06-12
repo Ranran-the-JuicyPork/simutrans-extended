@@ -27,7 +27,6 @@
 #include "../utils/simstring.h"
 #include "../utils/cbuffer_t.h"
 
-#include "../obj/roadsign.h"
 #include "simwin.h"
 #include "vehicle_class_manager.h"
 
@@ -680,8 +679,7 @@ void convoi_detail_t::init(convoihandle_t cnv)
 		end_table();
 
 		// 2nd row
-		add_component(&lb_working_method);
-		new_component<gui_fill_t>();
+		new_component_span<gui_empty_t>(2);
 
 		class_management_button.init(button_t::roundbox, "class_manager", scr_coord(0, 0), scr_size(D_BUTTON_WIDTH*1.5, D_BUTTON_HEIGHT));
 		class_management_button.set_tooltip("see_and_change_the_class_assignments");
@@ -923,25 +921,6 @@ void convoi_detail_t::update_labels()
 {
 	lb_vehicle_count.buf().printf("%s %i (%s %i)", translator::translate("Fahrzeuge:"), cnv->get_vehicle_count(), translator::translate("Station tiles:"), cnv->get_tile_length());
 	lb_vehicle_count.update();
-
-	vehicle_t* v1 = cnv->get_vehicle(0);
-
-	if (v1->get_waytype() == track_wt || v1->get_waytype() == maglev_wt || v1->get_waytype() == tram_wt || v1->get_waytype() == narrowgauge_wt || v1->get_waytype() == monorail_wt) {
-		if (cnv->in_depot()) {
-			lb_working_method.buf().append("");
-		}
-		else {
-			// Current working method
-			rail_vehicle_t* rv1 = (rail_vehicle_t*)v1;
-			rail_vehicle_t* rv2 = (rail_vehicle_t*)cnv->get_vehicle(cnv->get_vehicle_count() - 1);
-			lb_working_method.buf().printf("%s: %s", translator::translate("Current working method"), translator::translate(rv1->is_leading() ? roadsign_t::get_working_method_name(rv1->get_working_method()) : roadsign_t::get_working_method_name(rv2->get_working_method())));
-		}
-	}
-	else if (uint16 minimum_runway_length = cnv->get_vehicle(0)->get_desc()->get_minimum_runway_length()) {
-		// for air vehicle
-		lb_working_method.buf().printf("%s: %i m \n", translator::translate("Minimum runway length"), minimum_runway_length);
-	}
-	lb_working_method.update();
 
 	// contents of payload tab
 	{

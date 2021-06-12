@@ -221,9 +221,9 @@ private:
 
 	button_t overview_selctor[gui_convoy_formation_t::CONVOY_OVERVIEW_MODES];
 	gui_label_buf_t
-		lb_vehicle_count, lb_working_method, // for main frame
-		lb_loading_time, lb_catering_level,  // for payload tab
-		lb_odometer, lb_value;               // for maintenance tab
+		lb_vehicle_count,                   // for main frame
+		lb_loading_time, lb_catering_level, // for payload tab
+		lb_odometer, lb_value;              // for maintenance tab
 	gui_acceleration_label_t      *lb_acceleration;
 	gui_acceleration_time_label_t *lb_acc_time;
 	gui_acceleration_dist_label_t *lb_acc_distance;
