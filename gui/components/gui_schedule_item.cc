@@ -104,7 +104,7 @@ void gui_schedule_entry_number_t::draw(scr_coord offset)
 	// draw the back image
 	switch (style) {
 		case number_style::halt:
-			display_filled_roundbox_clip(pos.x+offset.x,   pos.y+offset.y,   size.w,   size.h,   base_colval, false);
+			display_filled_roundbox_clip(pos.x+offset.x+2, pos.y+offset.y,   size.w-4, size.h,   base_colval, false);
 			text_colval = color_idx_to_rgb(COL_WHITE);
 			break;
 		case number_style::interchange:
