@@ -261,6 +261,9 @@ public:
 		return schedule_type_text[get_type()];
 	};
 
+	// Distance to return to the first scheduled point
+	uint32 get_travel_distance() const;
+
 	/**
 	 * Append description of entry to buf.
 	 * If @p max_chars > 0 then append short version, without loading level and position.
