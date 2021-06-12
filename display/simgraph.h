@@ -45,7 +45,7 @@ extern int default_font_linespace;
 #define LOADINGBAR_WIDTH 100
 
 #define D_ENTRY_NO_HEIGHT (LINESPACE+4)
-#define D_ENTRY_NO_WIDTH (proportional_string_width("88")+6)
+#define D_ENTRY_NO_WIDTH (proportional_string_width("188")+6)
 
 /**
 * Alignment enum to align controls against each other

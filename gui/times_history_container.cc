@@ -154,6 +154,7 @@ void gui_times_history_t::build_table()
 	sint32 cnv_route_index;
 	sint32 cnv_route_index_left;
 	PIXVAL convoy_state_col = COL_SAFETY;
+	bool found_location = false;
 	if (convoy.is_bound()) {
 		cnv_route_index = convoy->front()->get_route_index();
 		cnv_route_index_left = convoy->get_route()->get_count() - cnv_route_index;
@@ -190,13 +191,13 @@ void gui_times_history_t::build_table()
 			const schedule_entry_t entry = entries[entry_index];
 			const halthandle_t halt = haltestelle_t::get_halt(entry.pos, player);
 
-			const bool is_interchange = (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1;
+			const bool is_interchange = halt.is_bound() ? (halt->registered_lines.get_count() + halt->registered_convoys.get_count()) > 1 : false;
 
 			// convoy location check
-			bool stopped_here=false;
-			bool in_this_section=false;
+			bool stopped_here = false;
+			bool in_this_section = false;
 			const uint8 next_stop_index = min(schedule_indices->at(i == schedule_indices->get_count() - 1 ? 0 : i + 1), entries.get_count()-1);
-			if (convoy.is_bound()) {
+			if (convoy.is_bound() && !found_location) {
 				if (cnv_route_index_left > 0) {
 					if (mirrored) {
 						if ((!reversed && i < (schedule_indices->get_count()/2)) || (reversed && i >= (schedule_indices->get_count()/2))) {
@@ -223,15 +224,18 @@ void gui_times_history_t::build_table()
 						stopped_here = (i>0 && entry_index == schedule->get_current_stop());
 					}
 				}
-
+				found_location = (in_this_section || stopped_here);
 			}
 
 			button_t *b = new_component<button_t>();
 			b->set_typ(button_t::posbutton_automatic);
 			b->set_targetpos(entry.pos.get_2d());
 
-			new_component<gui_schedule_entry_number_t>(entry_index, halt->get_owner()->get_player_color1(),
-				is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt, scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT,D_ENTRY_NO_HEIGHT)));
+			uint8 line_col_idx = (!mirrored && reversed) ? player->get_player_color2() : player->get_player_color1();
+			new_component<gui_schedule_entry_number_t>(entry_index, halt.is_bound() ? halt->get_owner()->get_player_color1() : line_col_idx,
+				halt.is_bound() ? (is_interchange ? gui_schedule_entry_number_t::number_style::interchange : gui_schedule_entry_number_t::number_style::halt)
+					: gui_schedule_entry_number_t::number_style::waypoint,
+				scr_size(D_ENTRY_NO_WIDTH, max(D_POS_BUTTON_HEIGHT,D_ENTRY_NO_HEIGHT)));
 			// convoy location
 			if (convoy.is_bound()) {
 				if (stopped_here) {
@@ -242,12 +246,11 @@ void gui_times_history_t::build_table()
 				}
 			}
 
-			new_component<gui_label_t>(halt->get_name());
+			new_component<gui_label_t>(halt.is_bound() ? halt->get_name() : "Wegpunkt");
 
 			new_component_span<gui_empty_t>(5);
 
 			// row2
-			uint8 line_col_idx = (!mirrored && reversed) ? player->get_player_color2() : player->get_player_color1();
 			if (i < schedule_indices->get_count() - 1) {
 				uint32 distance_to_next_stop = shortest_distance(entry.pos.get_2d(), entries[next_entry_index].pos.get_2d()) * world()->get_settings().get_meters_per_tile();
 				gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
