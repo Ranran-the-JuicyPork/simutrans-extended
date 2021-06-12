@@ -88,11 +88,12 @@ void gui_convoy_loading_info_t::update_list()
 				if (catg_index == goods_manager_t::INDEX_PAS && overcrowded_capacity > 0) {
 					if (skinverwaltung_t::pax_evaluation_icons) {
 						new_component<gui_image_t>(skinverwaltung_t::pax_evaluation_icons->get_image_id(1), 0, ALIGN_CENTER_V, true)->set_tooltip(translator::translate("overcrowded_capacity"));
+						new_component<gui_empty_t>();
 					}
 					else {
 						new_component<gui_empty_t>();
+						new_component<gui_label_t>("overcrowded_capacity");
 					}
-					new_component<gui_label_t>("overcrowded_capacity");
 
 					// 3: capacity text
 					gui_label_buf_t *lb = new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::right);
