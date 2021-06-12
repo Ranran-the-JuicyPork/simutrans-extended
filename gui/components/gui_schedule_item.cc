@@ -122,11 +122,11 @@ void gui_schedule_entry_number_t::draw(scr_coord offset)
 			text_colval = color_idx_to_rgb(COL_WHITE);
 			break;
 		case number_style::none:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + (size.w - D_ENTRY_NO_WIDTH/2)/2, pos.y+offset.y, D_ENTRY_NO_WIDTH/2, size.h, base_colval, true);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + size.w/2 - D_ENTRY_NO_WIDTH/4+1, pos.y+offset.y, (D_ENTRY_NO_WIDTH-4)/2, size.h, base_colval, true);
 			break;
 		case number_style::waypoint:
-			display_fillbox_wh_clip_rgb(pos.x+offset.x + D_ENTRY_NO_WIDTH/4, pos.y+offset.y, D_ENTRY_NO_WIDTH/2, size.h, base_colval, true);
-			display_filled_circle_rgb(pos.x+offset.x + size.w/2, pos.y+offset.y + size.h/2, size.h/2, base_colval);
+			display_fillbox_wh_clip_rgb(pos.x+offset.x + size.w/2 - D_ENTRY_NO_WIDTH/4+1, pos.y+offset.y, (D_ENTRY_NO_WIDTH-4)/2, size.h, base_colval, true);
+			display_filled_circle_rgb(  pos.x+offset.x + size.w/2, pos.y+offset.y + size.h/2, size.h/2, base_colval);
 			break;
 		default:
 			display_fillbox_wh_clip_rgb(pos.x+offset.x, pos.y+offset.y, size.w, size.h, base_colval, false);
