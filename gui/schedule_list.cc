@@ -340,7 +340,7 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	bt_mode_convois.init(button_t::roundbox, gui_convoy_formation_t::cnvlist_mode_button_texts[selected_cnvlist_mode[player->get_player_nr()]], scr_coord(BUTTON3_X, 2), scr_size(D_BUTTON_WIDTH+15, D_BUTTON_HEIGHT));
 	bt_mode_convois.add_listener(this);
 	cont_convoys.add_component(&bt_mode_convois);
-	info_tabs.add_tab(&cont_convoys, tab_name);
+	info_tabs.add_tab(&cont_convoys, translator::translate("Convoys"));
 
 
 	offset_y += D_BUTTON_HEIGHT;
@@ -349,9 +349,6 @@ schedule_list_gui_t::schedule_list_gui_t(player_t *player_) :
 	info_tabs.add_listener(this);
 	info_tabs.set_size(scr_size(get_windowsize().w- LINE_NAME_COLUMN_WIDTH+4+D_MARGIN_RIGHT, get_windowsize().h-offset_y));
 	add_component(&info_tabs);
-
-	tab_name.clear();
-	tab_name.printf("%s%5s",translator::translate("Convoys"),"(0)");
 
 	//CHART
 	chart.set_dimension(12, 1000);
@@ -671,10 +668,6 @@ void schedule_list_gui_t::draw(scr_coord pos, scr_size size)
 	gui_frame_t::draw(pos, size);
 
 	if(  line.is_bound()  ) {
-		tab_name.clear();
-		tab_name.append(translator::translate("Convoys"));
-		tab_name.printf(" (%u)", line->count_convoys());
-
 		if(  (!line->get_schedule()->empty()  &&  !line->get_schedule()->matches( welt, last_schedule ))  ||  last_vehicle_count != line->count_convoys()  ) {
 			update_lineinfo( line );
 		}
@@ -1043,8 +1036,6 @@ void schedule_list_gui_t::update_lineinfo(linehandle_t new_line)
 		scl.set_selection(-1);
 		bt_delete_line.disable();
 		bt_edit_line.disable();
-		tab_name.clear();
-		tab_name.printf("%s (0)",translator::translate("Convoys"));
 		for(int i=0; i<MAX_LINE_COST; i++)  {
 			chart.hide_curve(i);
 		}

@@ -90,8 +90,6 @@ private:
 	static uint16 livery_scheme_index;
 	vector_tpl<uint16> livery_scheme_indices;
 
-	cbuffer_t tab_name;
-
 	// sort stuff
 	static sort_mode_t sortby;
 	static bool sortreverse;
