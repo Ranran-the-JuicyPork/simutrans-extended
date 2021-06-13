@@ -29,11 +29,11 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	if (alert_level) {
 		switch (style) {
 		default:
-			display_blend_wh_rgb(offset.x + width/2-1, offset.y, width+2, LINESPACE, alert_colval, 60);
+			display_blend_wh_rgb(offset.x + offset_x-2, offset.y, width+4, LINESPACE, alert_colval, 60);
 			break;
 		case line_style::dashed:
 		case line_style::thin:
-			display_blend_wh_rgb(offset.x + offset_x,  offset.y, width,   LINESPACE, alert_colval, 60);
+			display_blend_wh_rgb(offset.x + offset_x,   offset.y, width,   LINESPACE, alert_colval, 60);
 			break;
 		case line_style::reversed:
 		case line_style::none:
