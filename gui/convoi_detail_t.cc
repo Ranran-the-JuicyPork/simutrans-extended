@@ -463,6 +463,8 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 	const uint8 pas_and_mail_rows = goods_manager_t::passengers->get_number_of_classes() + goods_manager_t::passengers->get_number_of_classes() + 1/* overcrowd capacity*/;
 	const uint8 payload_rows = goods_manager_t::get_max_catg_index() + pas_and_mail_rows;
 
+	const uint8 convoy_catering_level = cnv->get_catering_level(goods_manager_t::INDEX_PAS);
+
 	for (uint8 i = 0; i < payload_rows; i++) {
 		const uint8 freight_type_idx = i <= goods_manager_t::passengers->get_number_of_classes() ? goods_manager_t::INDEX_PAS :
 			i < pas_and_mail_rows ? goods_manager_t::INDEX_MAIL : i - pas_and_mail_rows;
@@ -547,9 +549,68 @@ void gui_convoy_spec_table_t::insert_payload_rows()
 			lb->update();
 		}
 	}
-	// TODO: add more info, SPECS_MIN_LOADING_TIME etc
-	//
-	//
+
+	// Catering
+	if (convoy_catering_level) {
+		new_component<gui_label_t>("Catering level");
+		for (uint8 j = 0; j < cnv->get_vehicle_count(); j++) {
+			const uint8 catering_level = cnv->get_vehicle(j)->get_desc()->get_catering_level();
+			if (catering_level && cnv->get_vehicle(j)->get_desc()->get_freight_type()->get_catg_index() == goods_manager_t::INDEX_PAS) {
+				new_component<gui_label_buf_t>(catering_level == convoy_catering_level ? SYSCOL_TEXT : SYSCOL_TEXT_WEAK, gui_label_t::centered)->buf().append(catering_level,0);
+			}
+			else {
+				new_component<gui_empty_t>();
+			}
+		}
+		// Convoy total value
+		if (cnv->get_vehicle_count() == 1) {
+			new_component<gui_empty_t>();
+		}
+		else {
+			new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered)->buf().append(convoy_catering_level, 0);
+		}
+	}
+	// traveling post office
+	bool has_tpo = cnv->get_catering_level(goods_manager_t::INDEX_MAIL);
+	if (has_tpo) {
+		new_component<gui_label_t>("travelling post office");
+		for (uint8 j = 0; j < cnv->get_vehicle_count(); j++) {
+			const uint8 catering_level = cnv->get_vehicle(j)->get_desc()->get_catering_level();
+			if (catering_level && cnv->get_vehicle(j)->get_desc()->get_freight_type()->get_catg_index() == goods_manager_t::INDEX_MAIL) {
+				new_component<gui_label_t>("is_tpo"); // TODO: add translation, or draw a circle
+			}
+			else {
+				new_component<gui_empty_t>();
+			}
+		}
+		// Convoy total value
+		new_component<gui_empty_t>();
+	}
+
+	// Loading time
+	for (uint8 i = 0; i < 2; i++) {
+		new_component<gui_label_t>(i==0 ? "min_loading_time" : "max_loading_time");
+		for (uint8 j = 0; j < cnv->get_vehicle_count(); j++) {
+			const vehicle_desc_t *veh = cnv->get_vehicle(j)->get_desc();
+			if (veh->get_capacity() || veh->get_overcrowded_capacity()) {
+				char time_as_clock[32];
+				world()->sprintf_ticks(time_as_clock, sizeof(time_as_clock), i==0 ? veh->get_min_loading_time() : veh->get_max_loading_time());
+				new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered)->buf().append(time_as_clock);
+			}
+			else {
+				new_component<gui_label_t>("-", SYSCOL_TEXT_INACTIVE);
+			}
+		}
+		// Convoy total value
+		if (cnv->get_vehicle_count() == 1) {
+			new_component<gui_empty_t>();
+		}
+		else {
+			char time_as_clock[32];
+			world()->sprintf_ticks(time_as_clock, sizeof(time_as_clock), i==0 ? cnv->calc_longest_min_loading_time() : cnv->calc_longest_max_loading_time());
+			new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::centered)->buf().append(time_as_clock);
+		}
+	}
 }
 
 void gui_convoy_spec_table_t::draw(scr_coord offset)
