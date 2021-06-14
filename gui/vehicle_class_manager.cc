@@ -1117,6 +1117,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 
 		old_reversed = cnv->is_reversed();
 		old_vehicle_count = cnv->get_vehicle_count();
+		old_player_nr = world()->get_active_player_nr();
 		const uint8 catering_level = cnv->get_catering_level(goods_manager_t::INDEX_PAS);
 
 		for (uint8 veh = 0; veh < cnv->get_vehicle_count(); veh++) {
@@ -1258,7 +1259,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 void gui_convoy_fare_class_changer_t::draw(scr_coord offset)
 {
 	if (!cnv.is_bound()) { return; }
-	if(cnv->is_reversed() != old_reversed || cnv->get_vehicle_count() != old_vehicle_count) {
+	if(cnv->is_reversed() != old_reversed || cnv->get_vehicle_count() != old_vehicle_count || old_player_nr != world()->get_active_player_nr() ) {
 		update_vehicles();
 	}
 	gui_aligned_container_t::draw(offset);

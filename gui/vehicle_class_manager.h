@@ -160,6 +160,7 @@ class gui_convoy_fare_class_changer_t : public gui_aligned_container_t, private 
 
 	uint8 old_vehicle_count=0;
 	bool old_reversed=false;
+	uint8 old_player_nr;
 
 	gui_aligned_container_t cont_vehicle_table;
 
