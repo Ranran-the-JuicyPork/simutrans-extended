@@ -161,7 +161,7 @@ class gui_convoy_fare_class_changer_t : public gui_aligned_container_t, private 
 	uint8 old_vehicle_count=0;
 	bool old_reversed=false;
 
-	gui_aligned_container_t cont_vehicle_row;
+	gui_aligned_container_t cont_vehicle_table;
 
 	button_t init_class;
 	void reset_fare_class();
