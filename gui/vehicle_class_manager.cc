@@ -1089,6 +1089,22 @@ gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t 
 	init_class.set_tooltip("resets_all_classes_to_their_defaults");
 	init_class.add_listener( this );
 	add_component(&init_class);
+	add_table(4,1)->set_alignment(ALIGN_TOP);
+	{
+		show_hide_accommodation_table.init(button_t::roundbox, "+");
+		show_hide_accommodation_table.set_width(display_get_char_width('+') + gui_theme_t::gui_button_text_offset.w + gui_theme_t::gui_button_text_offset_right.x);
+		show_hide_accommodation_table.add_listener(this);
+		add_component(&show_hide_accommodation_table);
+
+		lb_collapsed.set_text("fare_class_settings_based_on_accommodation");
+		add_component(&lb_collapsed);
+
+		cont_accommodation_table.set_table_layout(5,0);
+		add_component(&cont_accommodation_table);
+		new_component<gui_fill_t>();
+	}
+	end_table();
+
 	new_component<gui_margin_t>(0,D_V_SPACE);
 
 	cont_vehicle_table.set_table_layout(3,0);
@@ -1104,11 +1120,22 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 	any_class = false;
 	cont_vehicle_table.remove_all();
 	if (cnv.is_bound()) {
-		// draw headers
 		const PIXVAL owner_color = color_idx_to_rgb( cnv->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark);
+
+		cont_accommodation_table.remove_all();
+		// header
+		cont_accommodation_table.new_component_span<gui_label_t>("accommodation", owner_color, gui_label_t::left,2);
+		cont_accommodation_table.new_component_span<gui_label_buf_t>(owner_color, gui_label_t::left,3)->buf().printf("%s / %s", translator::translate("Capacity"), translator::translate("Comfort"));
+		// draw borders
+		cont_accommodation_table.new_component_span<gui_divider_t>(2);
+		cont_accommodation_table.new_component_span<gui_divider_t>(3);
+		add_accommodation_rows(goods_manager_t::INDEX_PAS);
+		add_accommodation_rows(goods_manager_t::INDEX_MAIL);
+
+		// draw headers
 		cont_vehicle_table.new_component<gui_label_t>("No.", owner_color, gui_label_t::left);
 		cont_vehicle_table.new_component<gui_label_t>("Name", owner_color, gui_label_t::left);
-		cont_vehicle_table.new_component<gui_label_t>("Capacity:", owner_color, gui_label_t::left);
+		cont_vehicle_table.new_component<gui_label_buf_t>(owner_color, gui_label_t::left)->buf().printf("%s / %s", translator::translate("Capacity"), translator::translate("Comfort"));
 
 		// draw borders
 		cont_vehicle_table.new_component<gui_divider_t>()->init(scr_coord(0,0), L_CAR_NUM_CELL_WIDTH, LINESPACE*0.5);
@@ -1159,7 +1186,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 							cont_vehicle_table.new_component<gui_empty_t>();
 						}
 
-						// 3-2: capacity of this accomodation class
+						// 3-2: capacity of this accommodation class
 						lb = cont_vehicle_table.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left);
 						lb->buf().printf("%3d", desc->get_capacity(cy));
 						if (is_passenger_vehicle && v->get_overcrowded_capacity(cy)) {
@@ -1168,7 +1195,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 						lb->set_fixed_width(proportional_string_width("8888(888)"));
 						lb->update();
 
-						// 3-3: comfort of this accomodation class
+						// 3-3: comfort of this accommodation class
 						if (is_passenger_vehicle) {
 							lb = cont_vehicle_table.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered);
 							lb->buf().printf(" %d ", desc->get_comfort(cy));
@@ -1247,12 +1274,76 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 				}
 				cont_vehicle_table.end_table();
 			}
+		}
+		const bool edit_enable = ((cnv->get_owner() == world()->get_active_player()) && !world()->get_active_player()->is_locked() && any_class);
+		init_class.enable( edit_enable );
 
-			if(!any_class && v->get_cargo_type()->get_number_of_classes()>1) {
-				any_class = true;
+		cont_accommodation_table.set_visible(edit_enable && any_class && show_accommodation_table);
+		show_hide_accommodation_table.set_visible(edit_enable && any_class);
+		lb_collapsed.set_visible(edit_enable && any_class && !show_accommodation_table);
+
+	}
+}
+
+// also check the convoy has any_class
+void gui_convoy_fare_class_changer_t::add_accommodation_rows(uint8 catg)
+{
+	if (!cnv->get_goods_catg_index().is_contained(catg)) {
+		return;
+	}
+	const uint8 g_classes = goods_manager_t::get_info_catg_index(catg)->get_number_of_classes();
+	bool lowest=true;
+	const uint8 catering_level = cnv->get_catering_level(catg);
+
+	for (uint8 c = 0; c < g_classes; c++) {
+		uint16 accomodation_capacity_sum = 0;
+		uint8 min_comfort = 255;
+		uint8 max_comfort = 0;
+		bool multiple_classes =false;
+		uint8 old_class = 255;
+		for (uint8 i = 0; i < cnv->get_vehicle_count(); i++) {
+			vehicle_t* veh = cnv->get_vehicle(i);
+			if (veh->get_cargo_type()->get_catg_index() == catg && veh->get_accommodation_capacity(c)>0) {
+				accomodation_capacity_sum += veh->get_accommodation_capacity(c);
+				if (catg == goods_manager_t::INDEX_PAS) {
+					min_comfort = min(min_comfort, veh->get_desc()->get_comfort(c));
+					max_comfort = max(max_comfort, veh->get_desc()->get_comfort(c));
+				}
+				if (old_class == 255) {
+					old_class = veh->get_reassigned_class(c);
+				}
+				else if(old_class != veh->get_reassigned_class(c)) {
+					multiple_classes = true;
+				}
 			}
 		}
-		init_class.enable( (cnv->get_owner()==world()->get_active_player()) && !world()->get_active_player()->is_locked() && any_class );
+		if (accomodation_capacity_sum) {
+			if (lowest) {
+				lowest = false;
+				cont_accommodation_table.new_component<gui_image_t>(goods_manager_t::get_info_catg_index(catg)->get_catg_symbol(), 0, ALIGN_NONE, true);
+			}
+			else {
+				cont_accommodation_table.new_component<gui_margin_t>(D_FIXED_SYMBOL_WIDTH);
+			}
+			cont_accommodation_table.new_component<gui_label_t>(goods_manager_t::get_translated_wealth_name(catg, c));
+			cont_accommodation_table.new_component<gui_label_buf_t>(SYSCOL_TEXT, gui_label_t::left)->buf().printf("%6u", accomodation_capacity_sum);
+
+			if (catg==goods_manager_t::INDEX_PAS) {
+				if (min_comfort == max_comfort) {
+					cont_accommodation_table.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered)->buf().append(min_comfort, 0);
+				}
+				else {
+					cont_accommodation_table.new_component<gui_label_buf_t>(SYSCOL_TEXT_HIGHLIGHT, gui_label_t::centered)->buf().printf("%d - %d", min_comfort, max_comfort);
+				}
+			}
+			else {
+				cont_accommodation_table.new_component<gui_empty_t>();
+			}
+
+			cont_accommodation_table.new_component<gui_accommodation_fare_changer_t>(linehandle_t(), cnv, catg, c, multiple_classes ? -1 : old_class);
+
+			any_class = true;
+		}
 	}
 }
 
@@ -1261,6 +1352,7 @@ void gui_convoy_fare_class_changer_t::draw(scr_coord offset)
 	if (!cnv.is_bound()) { return; }
 	if(cnv->is_reversed() != old_reversed || cnv->get_vehicle_count() != old_vehicle_count || old_player_nr != world()->get_active_player_nr() ) {
 		update_vehicles();
+		set_size(get_size());
 	}
 	gui_aligned_container_t::draw(offset);
 }
@@ -1271,6 +1363,22 @@ bool gui_convoy_fare_class_changer_t::action_triggered(gui_action_creator_t *com
 	if (comp == &init_class && cnv->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
 		reset_fare_class();
 		return true;
+	}
+	else if (comp == &show_hide_accommodation_table) {
+		show_accommodation_table = !show_accommodation_table;
+		show_hide_accommodation_table.set_text(show_accommodation_table ? "-" : "+");
+		show_hide_accommodation_table.pressed = show_accommodation_table;
+		//reset_min_windowsize();
+		if (show_accommodation_table) {
+			update_vehicles();
+		}
+		else {
+			lb_collapsed.set_visible(true);
+			cont_accommodation_table.set_visible(false);
+		}
+	}
+	else {
+		update_vehicles();
 	}
 	return false;
 }
@@ -1313,6 +1421,10 @@ gui_cabin_fare_changer_t::gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_
 
 void gui_cabin_fare_changer_t::draw(scr_coord offset)
 {
+	const uint8 g_classes = vehicle->get_cargo_type()->get_number_of_classes();
+	for (uint8 cx = 0; cx < g_classes; cx++) {
+		buttons[cx].pressed = (vehicle->get_reassigned_class(cabin_class) == cx);
+	}
 	set_size(get_size());
 	gui_aligned_container_t::draw(offset);
 }
@@ -1334,3 +1446,125 @@ bool gui_cabin_fare_changer_t::action_triggered(gui_action_creator_t *comp, valu
 	return false;
 }
 
+
+
+
+gui_accommodation_fare_changer_t::gui_accommodation_fare_changer_t(linehandle_t line_, convoihandle_t cnv_, uint8 goods_catg_index, uint8 original_class, uint8 fare_class_)
+{
+	line = line_;
+	cnv = cnv_;
+	catg = goods_catg_index;
+	accommodation_class = original_class;
+	fare_class = fare_class_;
+	old_temp = cnv->get_unique_fare_capacity(catg, fare_class);
+
+	if (line.is_bound()) {
+		player_nr = line->get_owner()->get_player_nr();
+	}
+	else if (cnv.is_bound()) {
+		player_nr = cnv->get_owner()->get_player_nr();
+	}
+
+	set_table_layout(1,0);
+	set_alignment(ALIGN_LEFT | ALIGN_TOP);
+	{
+		const uint8 g_classes = goods_manager_t::get_info_catg_index(catg)->get_number_of_classes();
+
+		add_table(g_classes+1,1)->set_spacing(scr_size(0,0));
+		{
+			for (uint8 cx = 0; cx<g_classes; cx++) {
+				char *button_text = new char[32]();
+				sprintf(button_text, "%s%s", accommodation_class == cx ? "*": "",
+					goods_manager_t::get_translated_wealth_name(catg, cx));
+
+				buttons[cx].init(cx==0 ? button_t::roundbox_left_state : cx==g_classes-1 ? button_t::roundbox_right_state : button_t::roundbox_middle_state, button_text);
+				if (fare_class == cx) {
+					buttons[cx].pressed = true;
+				}
+				buttons[cx].set_width( scr_coord_val(D_BUTTON_WIDTH*0.8) );
+				buttons[cx].enable( buttons[cx].pressed || (player_nr ==world()->get_active_player()->get_player_nr() && !world()->get_active_player()->is_locked()));
+				buttons[cx].add_listener(this);
+				add_component(&buttons[cx]);
+			}
+			new_component<gui_fill_t>();
+		}
+		end_table();
+	}
+}
+
+
+void gui_accommodation_fare_changer_t::draw(scr_coord offset)
+{
+	if (cnv.is_bound()) {
+		if (fare_class == 255 || (fare_class != 255 && old_temp != cnv->get_unique_fare_capacity(catg, fare_class))) {
+			update_button_state();
+			old_temp = fare_class == 255 ? 0 : cnv->get_unique_fare_capacity(catg, fare_class);
+		}
+	}
+
+	set_size(get_size());
+	gui_aligned_container_t::draw(offset);
+}
+
+
+// It seems that the class assignment has been changed by an operation from another component, so it needs to be rechecked.
+void gui_accommodation_fare_changer_t::update_button_state()
+{
+	fare_class = 255;
+	for (uint8 i = 0; i < cnv->get_vehicle_count(); i++) {
+		vehicle_t* veh = cnv->get_vehicle(i);
+		if (veh->get_cargo_type()->get_catg_index() == catg && veh->get_accommodation_capacity(accommodation_class) > 0) {
+			if (fare_class == 255) {
+				fare_class = veh->get_reassigned_class(accommodation_class);
+			}
+			else if (fare_class != veh->get_reassigned_class(accommodation_class)) {
+				// convoy has multiple classes
+				fare_class = 255;
+				break;
+			}
+		}
+	}
+	const uint8 g_classes = goods_manager_t::get_info_catg_index(catg)->get_number_of_classes();
+	for (uint8 cx = 0; cx < g_classes; cx++) {
+		buttons[cx].pressed = (fare_class == cx);
+	}
+}
+
+bool gui_accommodation_fare_changer_t::action_triggered(gui_action_creator_t *comp, value_t)
+{
+	if (player_nr == world()->get_active_player()->get_player_nr() && !world()->get_active_player()->is_locked()) {
+
+		for (uint8 i = 0; i < goods_manager_t::get_info_catg_index(catg)->get_number_of_classes(); i++) {
+			if (&buttons[i] == comp) {
+				fare_class = i;
+				buttons[i].pressed = true;
+				if (line.is_bound()) {
+					for (uint8 j = 0; j < line->count_convoys(); j++) {
+						set_class_reassignment(line->get_convoy(j));
+					}
+				}
+				else if (cnv.is_bound()) {
+					set_class_reassignment(cnv);
+					old_temp = cnv->get_unique_fare_capacity(catg, fare_class);
+				}
+			}
+			else {
+				buttons[i].pressed = false;
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
+
+void gui_accommodation_fare_changer_t::set_class_reassignment(convoihandle_t target_convoy)
+{
+	if (target_convoy.is_bound()) {
+		for (uint8 v = 0; v < target_convoy->get_vehicle_count(); v++){
+			vehicle_t* veh = cnv->get_vehicle(v);
+			if (veh->get_cargo_type()->get_catg_index() != catg) { continue; }
+			veh->set_class_reassignment(accommodation_class, fare_class);
+		}
+	}
+}

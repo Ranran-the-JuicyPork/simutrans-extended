@@ -162,12 +162,19 @@ class gui_convoy_fare_class_changer_t : public gui_aligned_container_t, private 
 	bool old_reversed=false;
 	uint8 old_player_nr;
 
+	// expand/collapse things
+	gui_aligned_container_t cont_accommodation_table;
+	gui_label_t lb_collapsed;
+	button_t show_hide_accommodation_table;
+	bool show_accommodation_table = false;
+
 	gui_aligned_container_t cont_vehicle_table;
 
 	button_t init_class;
 	void reset_fare_class();
 
 	void update_vehicles();
+	void add_accommodation_rows(uint8 catg);
 
 public:
 	gui_convoy_fare_class_changer_t(convoihandle_t cnv);
@@ -190,6 +197,30 @@ class gui_cabin_fare_changer_t : public gui_aligned_container_t, private action_
 
 public:
 	gui_cabin_fare_changer_t(vehicle_t *v, uint8 original_class);
+	void draw(scr_coord offset) OVERRIDE;
+	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
+};
+
+class gui_accommodation_fare_changer_t : public gui_aligned_container_t, private action_listener_t
+{
+	convoihandle_t cnv;
+	linehandle_t line;
+	uint8 catg;
+	uint8 accommodation_class;
+	uint8 fare_class; // 255 = assigned multiple
+
+	sint8 player_nr;
+
+	sint16 old_temp = 0;
+
+	button_t buttons[5];
+	char *class_name_untranslated[5];
+
+	void set_class_reassignment(convoihandle_t target_convoy);
+	void update_button_state();
+
+public:
+	gui_accommodation_fare_changer_t(linehandle_t line, convoihandle_t cnv, uint8 goods_catg_index, uint8 original_class=0, uint8 current_fare_class=0);
 	void draw(scr_coord offset) OVERRIDE;
 	bool action_triggered(gui_action_creator_t*, value_t) OVERRIDE;
 };
