@@ -14,13 +14,8 @@
 #include "gui_frame.h"
 #include "simwin.h"
 #include "components/gui_container.h"
-#include "components/gui_scrollpane.h"
-#include "components/gui_textarea.h"
-#include "components/gui_textinput.h"
-#include "components/gui_speedbar.h"
 #include "components/gui_button.h"
 #include "components/gui_label.h"
-#include "components/gui_combobox.h"
 #include "components/action_listener.h"
 #include "../convoihandle_t.h"
 

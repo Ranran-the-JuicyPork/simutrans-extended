@@ -11,7 +11,6 @@
 
 #include "vehicle_class_manager.h"
 
-#include "../simunits.h"
 #include "../simconvoi.h"
 #include "../simcolor.h"
 #include "../display/simgraph.h"
@@ -19,13 +18,11 @@
 
 #include "../dataobj/environment.h"
 #include "../dataobj/translator.h"
-#include "../dataobj/loadsave.h"
 #include "../simline.h"
 
 #include "../player/simplay.h"
 
 #include "../utils/simstring.h"
-#include "../utils/cbuffer_t.h"
 
 #include "components/gui_divider.h"
 #include "components/gui_image.h"
