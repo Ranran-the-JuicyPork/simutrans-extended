@@ -694,7 +694,7 @@ void gui_convoy_spec_table_t::draw(scr_coord offset)
 
 
 // main class
-convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
+convoi_detail_t::convoi_detail_t(convoihandle_t cnv, sint16 tab_index) :
 	gui_frame_t(""),
 	formation(cnv, true),
 	payload_info(cnv),
@@ -709,6 +709,7 @@ convoi_detail_t::convoi_detail_t(convoihandle_t cnv) :
 	scroll_fare_changer(&cont_fare_changer, true)
 {
 	if (cnv.is_bound()) {
+		tabstate = tab_index;
 		init(cnv);
 	}
 }
@@ -933,9 +934,8 @@ void convoi_detail_t::init(convoihandle_t cnv)
 	}
 	cont_force.end_table();
 
-	if (cnv->in_depot()) {
-		// UI TODO: Make the fare changer accessible from the depot
-		tabs.set_active_tab_index(CD_TAB_PHYSICS_CHARTS);
+	if (tabstate>=0 && tabstate<tabs.get_count()) {
+		tabs.set_active_tab_index(tabstate);
 	}
 
 	update_labels();

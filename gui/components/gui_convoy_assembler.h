@@ -18,6 +18,7 @@
 #include "gui_tab_panel.h"
 #include "gui_speedbar.h"
 #include "../gui_theme.h"
+#include "../convoi_detail_t.h"
 
 #include "gui_container.h"
 

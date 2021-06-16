@@ -691,7 +691,7 @@ bool gui_convoy_assembler_t::action_triggered( gui_action_creator_t *comp,value_
 			{
 				cnv = replace_frame->get_convoy();
 			}
-			create_win(20, 20, new vehicle_class_manager_t(cnv), w_info, magic_class_manager+ cnv.get_id());
+			create_win(20, 20, new convoi_detail_t(cnv, convoi_detail_t::CD_TAB_FARE_CHANGER), w_info, magic_convoi_detail + cnv.get_id());
 			return true;
 		}
 		else if(comp == &vehicle_filter)

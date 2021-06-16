@@ -671,7 +671,7 @@ bool depot_frame_t::action_triggered( gui_action_creator_t *comp, value_t p)
 			depot->call_depot_tool('v', cnv, NULL);
 		}
 		else if (comp == &bt_details) {
-			create_win(20, 20, new convoi_detail_t(cnv), w_info, magic_convoi_detail + cnv.get_id());
+			create_win(20, 20, new convoi_detail_t(cnv, convoi_detail_t::CD_TAB_PHYSICS_CHARTS), w_info, magic_convoi_detail + cnv.get_id());
 			return true;
 		}
 		else if(  comp == &bt_copy_convoi  )

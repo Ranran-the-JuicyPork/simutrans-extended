@@ -171,14 +171,6 @@ public:
  */
 class convoi_detail_t : public gui_frame_t , private action_listener_t
 {
-	enum {
-		CD_TAB_MAINTENANCE    = 0,
-		CD_TAB_LOADED_DETAIL  = 1,
-		CD_TAB_PHYSICS_CHARTS = 2,
-		CD_TAB_SPEC_TABLE     = 3,
-		CD_TAB_FARE_CHANGER   = 4
-	};
-
 public:
 	enum sort_mode_t {
 		by_destination = 0,
@@ -186,6 +178,14 @@ public:
 		by_amount_via  = 2,
 		by_amount      = 3,
 		SORT_MODES     = 4
+	};
+
+	enum {
+		CD_TAB_MAINTENANCE    = 0,
+		CD_TAB_LOADED_DETAIL  = 1,
+		CD_TAB_PHYSICS_CHARTS = 2,
+		CD_TAB_SPEC_TABLE     = 3,
+		CD_TAB_FARE_CHANGER   = 4
 	};
 
 private:
@@ -242,7 +242,7 @@ private:
 	void set_tab_opened();
 
 public:
-	convoi_detail_t(convoihandle_t cnv = convoihandle_t());
+	convoi_detail_t(convoihandle_t cnv = convoihandle_t(), sint16 access_tab_index = -1);
 
 	void draw(scr_coord pos, scr_size size) OVERRIDE;
 
