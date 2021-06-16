@@ -740,12 +740,7 @@ void convoi_detail_t::init(convoihandle_t cnv)
 		end_table();
 
 		// 2nd row
-		new_component_span<gui_empty_t>(2);
 
-		class_management_button.init(button_t::roundbox, "class_manager", scr_coord(0, 0), scr_size(D_BUTTON_WIDTH*1.5, D_BUTTON_HEIGHT));
-		class_management_button.set_tooltip("see_and_change_the_class_assignments");
-		add_component(&class_management_button);
-		class_management_button.add_listener(this);
 	}
 	end_table();
 
@@ -1026,31 +1021,10 @@ void convoi_detail_t::draw(scr_coord pos, scr_size size)
 		return;
 	}
 
-	bool any_class = false;
-	for (uint8 veh = 0; veh < cnv->get_vehicle_count(); ++veh)
-	{
-		vehicle_t* v = cnv->get_vehicle(veh);
-		if (v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_PAS || v->get_cargo_type()->get_catg_index() == goods_manager_t::INDEX_MAIL)
-		{
-			if (v->get_desc()->get_total_capacity() > 0)
-			{
-				any_class = true;
-			}
-		}
-	}
-
 	if(cnv->get_owner()==welt->get_active_player()  &&  !welt->get_active_player()->is_locked()) {
 		withdraw_button.enable();
 		sale_button.enable();
 		retire_button.enable();
-		if (any_class)
-		{
-			class_management_button.enable();
-		}
-		else
-		{
-			class_management_button.disable();
-		}
 		if (cnv->in_depot()) {
 			retire_button.disable();
 			withdraw_button.disable();
@@ -1060,11 +1034,9 @@ void convoi_detail_t::draw(scr_coord pos, scr_size size)
 		withdraw_button.disable();
 		sale_button.disable();
 		retire_button.disable();
-		class_management_button.disable();
 	}
 	withdraw_button.pressed = cnv->get_withdraw();
 	retire_button.pressed = cnv->get_depot_when_empty();
-	class_management_button.pressed = win_get_magic(magic_class_manager);
 
 	if (tabs.get_active_tab_index() == CD_TAB_PHYSICS_CHARTS) {
 		// common existing_convoy_t for acceleration curve and weight/speed info.
@@ -1188,10 +1160,6 @@ bool convoi_detail_t::action_triggered(gui_action_creator_t *comp, value_t)
 		}
 		else if(comp==&retire_button) {
 			cnv->call_convoi_tool( 'T', NULL );
-			return true;
-		}
-		else if (comp == &class_management_button) {
-			create_win(20, 40, new vehicle_class_manager_t(cnv), w_info, magic_class_manager + cnv.get_id());
 			return true;
 		}
 		else if (comp == &display_detail_button) {

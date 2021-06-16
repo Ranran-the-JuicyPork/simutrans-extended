@@ -215,7 +215,6 @@ private:
 	button_t sale_button;
 	button_t withdraw_button;
 	button_t retire_button;
-	button_t class_management_button;
 	button_t display_detail_button;
 	button_t bt_spec_table, bt_payload_table;
 
