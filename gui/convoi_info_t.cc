@@ -314,6 +314,7 @@ void convoi_info_t::init(convoihandle_t cnv)
 
 	// we update this ourself!
 	route_bar.init(&cnv_route_index, 0);
+	route_bar.set_reservation(&route_reservation_index);
 	route_bar.set_height(9);
 
 	update_labels();
@@ -585,10 +586,35 @@ void convoi_info_t::update_labels()
 			lb_working_method.buf().append("");
 		}
 		else {
+			route_reservation_index = cnv->get_next_reservation_index();
 			// Current working method
 			rail_vehicle_t* rv1 = (rail_vehicle_t*)v1;
 			rail_vehicle_t* rv2 = (rail_vehicle_t*)cnv->get_vehicle(cnv->get_vehicle_count() - 1);
-			lb_working_method.buf().printf("%s: %s", translator::translate("Current working method"), translator::translate(rv1->is_leading() ? roadsign_t::get_working_method_name(rv1->get_working_method()) : roadsign_t::get_working_method_name(rv2->get_working_method())));
+			const working_method_t wm = rv1->is_leading() ? rv1->get_working_method() : rv2->get_working_method();
+			lb_working_method.buf().printf("%s: %s", translator::translate("Current working method"), translator::translate(roadsign_t::get_working_method_name(wm)));
+			PIXVAL reserved_col = color_idx_to_rgb(COL_DARK_RED);
+			switch (wm) {
+				case time_interval:
+					reserved_col = color_idx_to_rgb(28); break;
+				case absolute_block:
+					reserved_col = color_idx_to_rgb(157); break;
+				case token_block:
+					reserved_col = color_idx_to_rgb(148); break;
+				case track_circuit_block:
+					reserved_col = color_idx_to_rgb(150); break;
+				case cab_signalling:
+					reserved_col = color_idx_to_rgb(103); break;
+				case moving_block:
+					reserved_col = color_idx_to_rgb(79); break;
+				case one_train_staff:
+					reserved_col = color_idx_to_rgb(117); break;
+				case time_interval_with_telegraph:
+					reserved_col = color_idx_to_rgb(30); break;
+				case drive_by_sight:
+				default:
+					break;
+			}
+			route_bar.set_reserved_color(reserved_col);
 		}
 	}
 	else if (uint16 minimum_runway_length = cnv->get_vehicle(0)->get_desc()->get_minimum_runway_length()) {

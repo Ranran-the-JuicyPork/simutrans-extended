@@ -100,6 +100,7 @@ private:
 
 	// current pointer to route ...
 	sint32 cnv_route_index;
+	sint32 route_reservation_index;
 
 	char cnv_name[256],old_cnv_name[256];
 
