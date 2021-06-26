@@ -89,7 +89,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 	any_class = false;
 	cont_vehicle_table.remove_all();
 	if (cnv.is_bound()) {
-		const PIXVAL owner_color = color_idx_to_rgb( cnv->get_owner()->get_player_color1() + env_t::env_t::gui_player_color_dark);
+		const PIXVAL owner_color = color_idx_to_rgb( cnv->get_owner()->get_player_color1() + env_t::gui_player_color_dark);
 
 		cont_accommodation_table.remove_all();
 		// header
