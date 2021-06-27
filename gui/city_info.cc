@@ -55,7 +55,6 @@ public:
 	// set size of minimap, decide for horizontal or vertical arrangement
 	void set_size(scr_size size) OVERRIDE
 	{
-		gui_world_component_t::set_size(size);
 		// calculate new minimaps size : expand horizontally or vertically ?
 		const float world_aspect = (float)welt->get_size().x / (float)welt->get_size().y;
 		const scr_coord space(size.w, size.h);
@@ -98,6 +97,8 @@ public:
 		add_pax_dest( pax_dest_old, city->get_pax_destinations_old() );
 		add_pax_dest( pax_dest_new, city->get_pax_destinations_new() );
 		pax_destinations_last_change = city->get_pax_destinations_new_change();
+
+		gui_world_component_t::set_size(scr_size(min(size.w, minimap2_offset.x + minimaps_size.w),min(size.h, minimap2_offset.y + minimaps_size.h)));
 	}
 	// handle clicks into minimaps
 	bool infowin_event(const event_t *ev) OVERRIDE
@@ -436,6 +437,9 @@ void city_info_t::draw(scr_coord pos, scr_size size)
 	// update chart seed
 	chart.set_seed(welt->get_last_year());
 	update_labels();
+	const scr_coord_val margin_above_tab = name_input.get_pos().y + name_input.get_size().h + D_V_SPACE * 2 + max(allow_growth.get_pos().y + allow_growth.get_size().h, pax_map->get_pos().y + pax_map->get_size().h);
+	year_month_tabs.set_pos(scr_coord(0, margin_above_tab));
+	year_month_tabs.set_size(scr_size(year_month_tabs.get_size().w, get_client_windowsize().h-margin_above_tab));
 	gui_frame_t::draw(pos, size);
 }
 
