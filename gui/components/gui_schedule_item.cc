@@ -23,17 +23,18 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 	const uint8 width = (D_ENTRY_NO_WIDTH-4)/2;
 	scr_coord_val offset_x = D_ENTRY_NO_WIDTH/4-1;
 	PIXVAL base_colval = color_idx_to_rgb(p_color_idx-p_color_idx%8 + 3);
+	size = scr_size(D_ENTRY_NO_WIDTH, LINESPACE);
 
 	const PIXVAL alert_colval = (alert_level==1) ? COL_CAUTION : (alert_level==2) ? COL_WARNING : color_idx_to_rgb(COL_RED+1);
 	// edge lines
 	if (alert_level) {
 		switch (style) {
 		default:
-			display_blend_wh_rgb(offset.x + width/2-1, offset.y, width+2, LINESPACE, alert_colval, 60);
+			display_blend_wh_rgb(offset.x + offset_x-2, offset.y, width+4, LINESPACE, alert_colval, 60);
 			break;
 		case line_style::dashed:
 		case line_style::thin:
-			display_blend_wh_rgb(offset.x + offset_x,  offset.y, width,   LINESPACE, alert_colval, 60);
+			display_blend_wh_rgb(offset.x + offset_x,   offset.y, width,   LINESPACE, alert_colval, 60);
 			break;
 		case line_style::reversed:
 		case line_style::none:
@@ -60,6 +61,11 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 			display_fillbox_wh_clip_rgb(offset.x + D_ENTRY_NO_WIDTH-4-offset_x-border_width, offset.y, border_width, LINESPACE, base_colval, true);
 			break;
 		}
+		case line_style::downward:
+			for (uint8 i = 0; i < width; i++) {
+				display_vline_wh_clip_rgb(offset.x+offset_x+i, offset.y, LINESPACE-abs(width/2-i), base_colval, true);
+			}
+			break;
 		case line_style::dashed:
 			for (uint8 h=1; h+2 < LINESPACE; h+=4) {
 				display_fillbox_wh_clip_rgb(offset.x + offset_x+1, offset.y + h, width-2, 2, base_colval, true);
@@ -74,14 +80,16 @@ void gui_colored_route_bar_t::draw(scr_coord offset)
 			}
 			break;
 		case line_style::none:
-			size= scr_size(0,0);
+			size = scr_size(0,0);
 			break;
 	}
-	set_size(size);
+	if (size != get_size()) {
+		set_size(size);
+	}
 }
 
 
-gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint number_, uint8 p_col, uint8 style_, scr_size size_)
+gui_schedule_entry_number_t::gui_schedule_entry_number_t(uint8 number_, uint8 p_col, uint8 style_, scr_size size_)
 {
 	number = number_ + 1;
 	style = style_;
@@ -133,7 +141,7 @@ void gui_schedule_entry_number_t::draw(scr_coord offset)
 			text_colval = color_idx_to_rgb(COL_WHITE);
 			break;
 	}
-	if (style != number_style::waypoint) {
+	if (style != number_style::waypoint && number>0) {
 		lb_number.buf().printf("%u", number);
 		lb_number.set_color(text_colval);
 	}

@@ -24,6 +24,7 @@ public:
 		thin,
 		doubled,
 		dashed,
+		downward,
 		reversed, // display reverse symbol
 		none
 	};
@@ -46,7 +47,7 @@ class gui_schedule_entry_number_t : public gui_container_t
 {
 	uint8 p_color_idx;
 	uint8 style;
-	uint number;
+	uint8 number;
 	gui_label_buf_t lb_number;
 public:
 	enum number_style {
@@ -57,11 +58,11 @@ public:
 		none
 	};
 
-	gui_schedule_entry_number_t(uint number, uint8 p_color_idx = 8, uint8 style_ = number_style::halt, scr_size size = scr_size(D_ENTRY_NO_WIDTH, D_ENTRY_NO_HEIGHT));
+	gui_schedule_entry_number_t(uint8 number, uint8 p_color_idx = 8, uint8 style_ = number_style::halt, scr_size size = scr_size(D_ENTRY_NO_WIDTH, D_ENTRY_NO_HEIGHT));
 
 	void draw(scr_coord offset);
 
-	void init(uint number_, uint8 color_idx, uint8 style_ = number_style::halt) { number = number_; p_color_idx = color_idx; style = style_; };
+	void init(uint8 number_, uint8 color_idx, uint8 style_ = number_style::halt) { number = number_+1; p_color_idx = color_idx; style = style_; };
 
 	void set_number_style(uint8 style_) { style = style_; };
 	void set_color(uint8 color_idx) { p_color_idx = color_idx; };
