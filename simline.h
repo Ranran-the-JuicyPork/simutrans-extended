@@ -280,6 +280,8 @@ public:
 
 	uint16 get_min_range() const;
 
+	inline uint32 get_travel_distance() { return schedule->get_travel_distance(); }
+
 	void set_withdraw( bool yes_no );
 
 	bool get_withdraw() const { return withdraw; }

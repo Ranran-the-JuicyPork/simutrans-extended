@@ -22,8 +22,11 @@
 #include "../simline.h"
 
 #include "times_history_container.h"
+#include "components/gui_vehicle_capacitybar.h"
+#include "components/gui_schedule_item.h"
 
 class player_t;
+
 class schedule_list_gui_t : public gui_frame_t, public action_listener_t
 {
 public:
@@ -36,12 +39,13 @@ private:
 	button_t bt_new_line, bt_edit_line, bt_delete_line, bt_withdraw_line, bt_line_class_manager, bt_mode_convois;
 	button_t sort_order;
 	gui_container_t cont, cont_haltestellen, cont_charts, cont_convoys;
-	gui_aligned_container_t cont_times_history;
-	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scroll_times_history;
+	gui_aligned_container_t cont_times_history, cont_line_info;
+	gui_convoy_loading_info_t cont_line_capacity_by_catg;
+	gui_scrollpane_t scrolly_convois, scrolly_haltestellen, scroll_times_history, scrolly_line_info;
 	gui_scrolled_list_t scl;
-	gui_speedbar_t filled_bar;
 	gui_textinput_t inp_name, inp_filter;
 	gui_label_t lbl_filter;
+	gui_label_buf_t lb_line_origin, lb_line_destination, lb_travel_distance, lb_service_frequency, lb_convoy_count;
 	gui_chart_t chart;
 	button_t filterButtons[MAX_LINE_COST];
 	gui_tab_panel_t tabs; // line selector
@@ -54,7 +58,12 @@ private:
 	// vector of stop info objects that are being displayed
 	vector_tpl<halt_list_stats_t *> stop_infos;
 
-	sint32 selection, capacity, load, loadfactor;
+	// line info item
+	gui_schedule_entry_number_t halt_entry_origin, halt_entry_dest;
+	gui_colored_route_bar_t routebar_middle;
+	uint8 halt_entry_idx[2];
+
+	sint32 selection;
 
 	uint32 old_line_count;
 	schedule_t *last_schedule;
