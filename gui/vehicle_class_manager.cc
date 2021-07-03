@@ -28,6 +28,8 @@
 #include "components/gui_image.h"
 
 
+#define L_CAR_NUM_CELL_WIDTH ( proportional_string_width(translator::translate("LOCO_SYM"))+proportional_string_width("188") )
+
 // Since the state before editing is not recorded, it is returned to the initial (recomended) value
 void gui_convoy_fare_class_changer_t::reset_fare_class()
 {
@@ -83,7 +85,6 @@ gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t 
 	update_vehicles();
 }
 
-#define L_CAR_NUM_CELL_WIDTH ( proportional_string_width(translator::translate("LOCO_SYM"))+proportional_string_width("188") )
 void gui_convoy_fare_class_changer_t::update_vehicles()
 {
 	any_class = false;
