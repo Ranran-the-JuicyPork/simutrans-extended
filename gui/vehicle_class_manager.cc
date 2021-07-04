@@ -36,10 +36,10 @@ gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t 
 
 	set_table_layout(1,0);
 	set_margin(scr_size(D_H_SPACE, D_V_SPACE), scr_size(D_SCROLLBAR_WIDTH+D_H_SPACE, D_MARGIN_BOTTOM));
-	init_class.init(button_t::roundbox, "reset_all_classes");
-	init_class.set_tooltip("resets_all_classes_to_their_defaults");
-	init_class.add_listener( this );
-	add_component(&init_class);
+	bt_init_class.init(button_t::roundbox, "reset_all_classes");
+	bt_init_class.set_tooltip("resets_all_classes_to_their_defaults");
+	bt_init_class.add_listener( this );
+	add_component(&bt_init_class);
 	add_table(4,1)->set_alignment(ALIGN_TOP);
 	{
 		show_hide_accommodation_table.init(button_t::roundbox, "+");
@@ -226,7 +226,7 @@ void gui_convoy_fare_class_changer_t::update_vehicles()
 			}
 		}
 		const bool edit_enable = ((cnv->get_owner() == world()->get_active_player()) && !world()->get_active_player()->is_locked() && any_class);
-		init_class.enable( edit_enable );
+		bt_init_class.enable( edit_enable );
 
 		cont_accommodation_table.set_visible(edit_enable && any_class && show_accommodation_table);
 		show_hide_accommodation_table.set_visible(edit_enable && any_class);
@@ -310,7 +310,7 @@ void gui_convoy_fare_class_changer_t::draw(scr_coord offset)
 bool gui_convoy_fare_class_changer_t::action_triggered(gui_action_creator_t *comp, value_t)
 {
 	if (!cnv.is_bound()) { return false; }
-	if (comp == &init_class && cnv->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
+	if (comp == &bt_init_class && cnv->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
 		cnv->init_fare_class();
 		update_vehicles();
 		return true;
