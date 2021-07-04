@@ -426,12 +426,13 @@ gui_accommodation_fare_changer_t::gui_accommodation_fare_changer_t(linehandle_t 
 	catg = goods_catg_index;
 	accommodation_class = original_class;
 	fare_class = fare_class_;
-	old_temp = cnv->get_unique_fare_capacity(catg, fare_class);
 
 	if (line.is_bound()) {
+		old_temp = 0; // FIXME
 		player_nr = line->get_owner()->get_player_nr();
 	}
 	else if (cnv.is_bound()) {
+		old_temp = cnv->get_unique_fare_capacity(catg, fare_class);
 		player_nr = cnv->get_owner()->get_player_nr();
 	}
 
@@ -532,7 +533,7 @@ void gui_accommodation_fare_changer_t::set_class_reassignment(convoihandle_t tar
 {
 	if (target_convoy.is_bound()) {
 		for (uint8 v = 0; v < target_convoy->get_vehicle_count(); v++){
-			vehicle_t* veh = cnv->get_vehicle(v);
+			vehicle_t* veh = target_convoy->get_vehicle(v);
 			if (veh->get_cargo_type()->get_catg_index() != catg) { continue; }
 			veh->set_class_reassignment(accommodation_class, fare_class);
 		}
