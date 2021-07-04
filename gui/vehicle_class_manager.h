@@ -43,7 +43,6 @@ class gui_convoy_fare_class_changer_t : public gui_aligned_container_t, private 
 	gui_aligned_container_t cont_vehicle_table;
 
 	button_t init_class;
-	void reset_fare_class();
 
 	void update_vehicles();
 	void add_accommodation_rows(uint8 catg);

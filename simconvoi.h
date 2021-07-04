@@ -1478,6 +1478,8 @@ public:
 
 	void calc_classes_carried();
 
+	void init_fare_class();
+
 	uint16 get_total_cargo_by_fare_class(uint8 catg, uint8 g_class) const;
 	uint16 get_unique_fare_capacity(uint8 catg, uint8 g_class) const;
 

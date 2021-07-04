@@ -8338,6 +8338,22 @@ void convoi_t::calc_classes_carried()
 	}
 }
 
+void convoi_t::init_fare_class()
+{
+	for (uint8 veh = 0; veh < vehicle_count; veh++) {
+		vehicle_t *v = vehicle[veh];
+		const uint8 g_classes = v->get_cargo_type()->get_number_of_classes();
+		if (g_classes == 1) {
+			continue; // no classes in this goods
+		}
+		// init all capacities in this vehicle
+		for (uint8 c = 0; c < g_classes; c++) {
+			v->set_class_reassignment(c, c);
+		}
+	}
+}
+
+
 uint16 convoi_t::get_total_cargo_by_fare_class(uint8 catg, uint8 g_class) const
 {
 	if ((catg == goods_manager_t::INDEX_PAS && g_class >= goods_manager_t::passengers->get_number_of_classes())

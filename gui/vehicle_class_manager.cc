@@ -30,26 +30,6 @@
 
 #define L_CAR_NUM_CELL_WIDTH ( proportional_string_width(translator::translate("LOCO_SYM"))+proportional_string_width("188") )
 
-// Since the state before editing is not recorded, it is returned to the initial (recomended) value
-void gui_convoy_fare_class_changer_t::reset_fare_class()
-{
-	if (!cnv.is_bound()) { return; }
-	if (cnv->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
-		for (uint8 veh = 0; veh < cnv->get_vehicle_count(); veh++) {
-			vehicle_t *v = cnv->get_vehicle(veh);
-			const uint8 g_classes = v->get_cargo_type()->get_number_of_classes();
-			if (g_classes == 1) {
-				continue; // no classes in this goods
-			}
-			// init all capacities in this vehicle
-			for (uint8 c = 0; c < g_classes; c++) {
-				v->set_class_reassignment(c, c);
-			}
-		}
-		update_vehicles();
-	}
-}
-
 gui_convoy_fare_class_changer_t::gui_convoy_fare_class_changer_t(convoihandle_t cnv)
 {
 	this->cnv = cnv;
@@ -331,7 +311,8 @@ bool gui_convoy_fare_class_changer_t::action_triggered(gui_action_creator_t *com
 {
 	if (!cnv.is_bound()) { return false; }
 	if (comp == &init_class && cnv->get_owner() == world()->get_active_player() && !world()->get_active_player()->is_locked()) {
-		reset_fare_class();
+		cnv->init_fare_class();
+		update_vehicles();
 		return true;
 	}
 	else if (comp == &show_hide_accommodation_table) {
