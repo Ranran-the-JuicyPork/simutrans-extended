@@ -1843,6 +1843,19 @@ void minimap_t::draw(scr_coord pos)
 			p += pos;
 			display_proportional_clip_rgb( p.x, p.y, name, ALIGN_LEFT, col, true );
 		}
+
+		// region name
+		if(  !world->get_settings().regions.empty()  ) {
+			FOR( vector_tpl<region_definition_t>, region, world->get_settings().regions ) {
+				koord region_center = koord( (region.top_left.x+region.bottom_right.x)/2, (region.top_left.y+region.bottom_right.y)/2 );
+				if( world->lookup_kartenboden(region_center) ) {
+					// region exists in the map
+					scr_coord p = map_to_screen_coord( region_center );
+					p += pos;
+					display_proportional_clip_rgb( p.x, p.y, translator::translate(region.name.c_str()), ALIGN_LEFT, COL_CAUTION, true );
+				}
+			}
+		}
 	}
 
 	// draw city limit
